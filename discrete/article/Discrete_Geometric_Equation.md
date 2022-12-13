@@ -48,15 +48,15 @@ This leaves open the question, if a suitable discrete operator can be constructe
 We will approach these questions by generalizing the logic implicit in the Yee scheme, to fields of arbitrary grade.
 
 
-[^1] To our knowledge, the space-time view of the Yee scheme was first explicitly articulated in [GEOMETRIC COMPUTATIONAL ELECTRODYNAMICS](https://arxiv.org/pdf/0707.4470.pdf)
+[^1]: To our knowledge, the space-time view of the Yee scheme was first explicitly articulated in [GEOMETRIC COMPUTATIONAL ELECTRODYNAMICS](https://arxiv.org/pdf/0707.4470.pdf)
 
-[^2] In exterior calculus, the geometric derivative can be written as `d + *d*`. Both encompass the same idea, in a somewhat different mathematical dialect; in both cases it is a combination of a grade-lowering inner term and a grade-raising outer term. 
+[^2]: In exterior calculus, the geometric derivative can be written as `d + *d*`. Both encompass the same idea, in a somewhat different mathematical dialect; in both cases it is a combination of a grade-lowering inner term and a grade-raising outer term. 
 
 Our viewpoint on the discrete domain is very well articulated in [Discrete Exterior Calculus](https://thesis.library.caltech.edu/1885/3/thesis_hirani.pdf). In line with the research direction articulated there, our outlook is to explore the internal logic of a discrete representation of core geometric ideas, and follow that logic where it may lead.
 
 Yet we feel the term Discrete Geometric Calculus is more appropriate; both to be congruent with the line of thinking that led us to this work, but also because the key aspects of this work concerns itself equally with the interior and exterior part of the geometric product. Moreover, this work is orthogonal to concerns specific to the strict seperation of topology and metric, which tend to take a central role in expositions of exterior calculus. We feel that framing it in these terms would unnecessarily complicate ideas, which are of a rather striking conceptual simplicity by themselves. In this we second the opinions of [Hestenes](https://geocalc.clas.asu.edu/pdf-preAdobe8/MathViruses.pdf)
 
-[^3] We prefer to refer to the equation `geometric_derivative(phi) = 0`, or `d(phi) = 0` for shorthand in appropriate context, as ‘the (first order homogenous) geometric equation’. If it is important that we restrict our attention to particular subspaces, we prefer to speak of ‘the geometric equation over the bivectors’ rather than 'the Maxwell equation'. Such a language is not merely a label based on superficial similarities; in all cases, we are speaking of the same operator; a geometric product of the field, with a 1-vector of the (differential) elements in our domain. 
+[^3]: We prefer to refer to the equation `geometric_derivative(phi) = 0`, or `d(phi) = 0` for shorthand in appropriate context, as ‘the (first order homogenous) geometric equation’. If it is important that we restrict our attention to particular subspaces, we prefer to speak of ‘the geometric equation over the bivectors’ rather than 'the Maxwell equation'. Such a language is not merely a label based on superficial similarities; in all cases, we are speaking of the same operator; a geometric product of the field, with a 1-vector of the (differential) elements in our domain. 
 
 
 
@@ -148,11 +148,11 @@ Where terms `idt` and `edt` reflect interior and exterior temporal differences r
 Generalizing the logic behind the above steps, we may construct a general algorithm for timestepping the geometric equation, `d(phi) = 0`, over algebras of arbitrary dimension and signature:
 
 1. We construct all terms of the geometric product of `phi`, with a 1-vector of all (differential) elements in the domain of the field (this could be a subset of the basis elements of the algebra)
-2. Each collection of terms corresponding to a single resultant geometric type forms a single equation. Each such equation contains (at most [^3]) one `dt` term, which we collect to one side.
+2. Each collection of terms corresponding to a single resultant geometric type forms a single equation. Each such equation contains (at most [^4]) one `dt` term, which we collect to one side.
 3. We observe that we may partition these equations into two independent sets, those updating space-like variables using differences of time-like variables, and those updating time-like variables using differences of space-like variables, respectively.
 4. Profit
 
-[^3] for instance, doing this for a domain `xy` in an algebra `xyzt`, over a field of a subset of bivector components `xt, yt, xy`, to simulate 2d transverse-magnetic fields, we obtain one equation `idx(xt) + idy(yt) = 0`; this has no time derivative, but can be viewed as a compatibility initial equation on the field; and can simply be ignored for the purpose of constructing the timestepping scheme.
+[^4]: for instance, doing this for a domain `xy` in an algebra `xyzt`, over a field of a subset of bivector components `xt, yt, xy`, to simulate 2d transverse-magnetic fields, we obtain one equation `idx(xt) + idy(yt) = 0`; this has no time derivative, but can be viewed as a compatibility initial equation on the field; and can simply be ignored for the purpose of constructing the timestepping scheme.
 
 Assuming the availability of a software library for managing the bookkeeping of signs involved in geometric algebra, the above steps can be readily implemented in a handful of lines of code, to produce a code-generator, for algebras of any dimension and signature; see [X].
 
@@ -226,9 +226,9 @@ Geometric equation over the even subalgebra of x+y+z+t-, xy/xt plot. Compact z d
 The even grade homogenous equation can be viewed as a model of the massless neutrino, exhibiting lightlike waves propagating outward. Here too, the initial condition excites a stationary mode in the compact setting, which is absent in the non-compact setting.
 
 
-In the preceeding examples, we assumed the most simple form of metric, where all n-cubes have a size of 1. Allowing for a metric that is variable in space, though static in time `dt = 1 - guassian(x) / 2`, we can gain further insight into the character of the different modes in excitations in space `x+y+t-` where the dimension `y` is compact. This is a Newton-Cartan model of linearized gravity. Note that such a modification to the metric is isomorphic to allowing for a spatial variation in the 'speed of light'. [^4]
+In the preceeding examples, we assumed the most simple form of metric, where all n-cubes have a size of 1. Allowing for a metric that is variable in space, though static in time `dt = 1 - guassian(x) / 2`, we can gain further insight into the character of the different modes in excitations in space `x+y+t-` where the dimension `y` is compact. This is a Newton-Cartan model of linearized gravity. Note that such a modification to the metric is isomorphic to allowing for a spatial variation in the 'speed of light'. [^5]
 
-[^4] Note that in such a setting, a two-way measurement of the speed of light, would find a constant value, independent of its location inside or outside a gravity well. The matter of which the apparatus consists would find its equilibrium configuration through two-way exchange of forces, via the same medium that we are testing the two-way speed of. The ratio of two identical things is a constant, and like any tautology worth its salt, this does not depend on a reference frame, amongst other things.
+[^5]: Note that in such a setting, a two-way measurement of the speed of light, would find a constant value, independent of its location inside or outside a gravity well. The matter of which the apparatus consists would find its equilibrium configuration through two-way exchange of forces, via the same medium that we are testing the two-way speed of. The ratio of two identical things is a constant, and like any tautology worth its salt, this does not depend on a reference frame, amongst other things.
 
 <img src="21_mv_compact_dilation_xt.gif" width="256" height="1024"/>
 
