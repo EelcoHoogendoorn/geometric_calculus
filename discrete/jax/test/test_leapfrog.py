@@ -1,89 +1,93 @@
+"""Jax based tests
 """
-ok... we have something working but its unconditionally unstable.
-what gives?
-"""
-# from jax.config import config
-# config.update("jax_enable_x64", True)
 
 import jax
 import jax.numpy as jnp
+import numpy as np
 
 from discrete.jax.field import SpaceTimeField
 
+import imageio.v3 as iio
+import os
 
-# def step_raw(field):
-# 	"""raw gp step for full gp on x+t-"""
-# 	id = lambda x, a: x - jnp.roll(x, shift=+1, axis=a)
-# 	ed = lambda x, a: jnp.roll(x, shift=-1, axis=a) - x
-#
-# 	arr = field.arr.copy()
-# 	speed = 0.5
-#
-# 	arr = arr.at[0].add( id(arr[3], 0) * +speed)        # et
-# 	arr = arr.at[1].add( ed(arr[2], 0) * -speed)        # et
-#
-# 	arr = arr.at[2].add( id(arr[1], 0) * -speed)        # it
-# 	arr = arr.at[3].add( ed(arr[0], 0) * +speed)        # it
-#
-# 	return field.copy(arr=arr)
+
+# FIXME: make writer part of abstract base class?
+def tonemap(field, components, norm, gamma):
+	frames = getattr(field, components)
+	# print(frames.shape)
+	frames = np.abs(frames) * 1.5
+	if isinstance(norm, int):
+		frames = frames / jnp.percentile(frames.flatten(), norm)
+	if isinstance(norm, float):
+		frames = frames / norm
+	if gamma:
+		frames = np.sqrt(frames)
+	frames = jnp.clip(frames * 255, 0, 255).astype(np.uint8)
+
+	frames = np.moveaxis(frames, 0, -1) # color components last
+	frames = np.moveaxis(frames, -2, 0) # t first
+
+	return frames
+
+
+def write_gif_1d(basepath, field, components, pre='', post='', norm=None, gamma=True):
+	basename = '_'.join([pre, str(field.shape), field.algebra.description.description_str, field.subspace.pretty_str, components, post])
+	os.makedirs(basepath, exist_ok=True)
+
+	frames = tonemap(field, components, norm, gamma)
+
+	iio.imwrite(os.path.join(basepath, basename+'_xt.gif'), frames[::-1])
+
+
+def write_gif_2d(basepath, field, components, pre='', post='', norm=None, gamma=True):
+	basename = '_'.join([pre, str(field.shape), field.algebra.description.description_str, field.subspace.pretty_str, components, post])
+	os.makedirs(basepath, exist_ok=True)
+	frames = tonemap(field, components, norm, gamma)
+
+	iio.imwrite(os.path.join(basepath, basename+'_anim.gif'), frames)
+	iio.imwrite(os.path.join(basepath, basename+'_xt.gif'), frames[::-1, field.shape[0]//2])
+
+
+def write_gif_2d_compact(basepath, field, components, pre='', post='', norm=None, gamma=True):
+	basename = '_'.join([pre, str(field.shape), field.algebra.description.description_str, field.subspace.pretty_str, components, post])
+	os.makedirs(basepath, exist_ok=True)
+	frames = tonemap(field, components, norm, gamma)
+	iio.imwrite(os.path.join(basepath, basename+'_xt.gif'), frames[::-1].mean(axis=1).astype(np.uint8))
+
+
+def write_gif_3d(basepath, field, components, pre='', post='', norm=None, gamma=True):
+	basename = '_'.join([pre, str(field.shape), field.algebra.description.description_str, field.subspace.pretty_str, components, post])
+	os.makedirs(basepath, exist_ok=True)
+	frames = tonemap(field, components, norm, gamma)
+
+	iio.imwrite(os.path.join(basepath, basename+'_anim.gif'), frames[:, field.shape[0]//2])
+	iio.imwrite(os.path.join(basepath, basename+'_xt.gif'), frames[::-1, field.shape[0]//2, field.shape[1]//2])
+
+
+def random_gaussian(field, sigma, location=0, seed=11):
+	"""initialize a field with a random gaussian"""
+	gauss = field.gauss(jnp.array(sigma), jnp.array(location))
+	key = jax.random.PRNGKey(seed)
+	vec = jax.random.normal(key, (field.components,))
+	vec = vec / jnp.linalg.norm(vec)
+	q = jnp.einsum('c, ...->c...', vec, gauss)
+	return field.copy(arr=q)
 
 
 def test_1d():
-	# FIXME: x-t+ sig does not support mass terms!? not sure i understand why?
 	print()
 	from numga.algebra.algebra import Algebra
 	algebra = Algebra.from_str('x+t-')
 	shape = (256,)
+	steps = 256
 	field = SpaceTimeField.from_subspace(algebra.subspace.multivector(), shape)
-	# field = SpaceTimeField.from_subspace(algebra.subspace.even_grade(), shape)
-	# field = SpaceTimeField.from_subspace(algebra.subspace.vector(), shape)
-	x = field.meshgrid()
-	x2 = (x ** 2).sum(axis=0, keepdims=False)
-	gauss = jnp.exp(-x2*50)
-	# gauss = jnp.roll(gauss, 30, axis=-1)
-	key = jax.random.PRNGKey(4)
-	vec = jax.random.normal(key, (field.components,))
-	vec = vec / jnp.linalg.norm(vec)
-	q = jnp.outer(vec, gauss)
-	field.arr = q
+	field = random_gaussian(field, 0.1)
 
-	speed = 0.5 #* (1-jnp.exp(-x2 * 3)*0.5)
-	mass = (x2 *0 + 0.1) * 0
-	@jax.jit
-	def step(state, unroll):
-		def inner(_, field):
-			return field.geometric_derivative_leapfrog(speed=speed, mass=mass)
-		return jax.lax.fori_loop(0, unroll, inner, state)
+	mass = (field.quadratic() *0 + 0.1) * 0
 
+	full_field = field.rollout(steps, mass=mass)
 
-	frames = []
-	for i in range(256):
-		field = step(field, unroll=2)
-		frames.append(field.x_t_xt.T)
-		# frames.append(field.arr[jnp.array([0, 0, 1])] .T)
-		# frames.append(field.arr[jnp.array([0, 0, 1])] .T)
-
-
-	path = r'../../output/leapfrog_1d'
-	import imageio.v3 as iio
-	import os
-	os.makedirs(path, exist_ok=True)
-	frames = jnp.array(frames)[::-1]
-	frames = jnp.abs(frames)
-	# frames = frames / 0.15  # arr.max()
-	# frames = frames / jnp.percentile(frames.flatten(), 95)
-	frames = jnp.clip(frames * 255, 0, 255).astype(jnp.uint8)
-	frames = jnp.array(frames)
-	iio.imwrite(os.path.join(path, 'anim.gif'), frames)
-
-
-def kink(field):
-	"""
-	apply a rotor to a 4d field
-	how to construct rotor? exp(k.dot(X).dual)?
-	"""
-
-	return field
+	write_gif_1d('../../output', full_field, 'x_t_xt', post='mass')
 
 
 def test_1d_mass():
@@ -91,159 +95,56 @@ def test_1d_mass():
 	from numga.algebra.algebra import Algebra
 	algebra = Algebra.from_str('x+t-')
 	shape = (256,)
+	steps = 256
 	field = SpaceTimeField.from_subspace(algebra.subspace.multivector(), shape)
-	# field = SpaceTimeField.from_subspace(algebra.subspace.even_grade(), shape)
-	# field = SpaceTimeField.from_subspace(algebra.subspace.vector(), shape)
-	x = field.meshgrid()
-	x2 = (x ** 2).sum(axis=0, keepdims=False)
-	gauss = jnp.exp(-x2*30)
-	gauss = jnp.roll(gauss, 30, axis=-1)
-	key = jax.random.PRNGKey(11)
-	vec = jax.random.normal(key, (field.components,))
-	vec = vec / jnp.linalg.norm(vec)
-	q = jnp.outer(vec, gauss)
-	field.arr = q
-	# mass = 0.3 + x2 /6# + 0.1
-	mass = 0.2 #+ (1 - jnp.exp(-x2 * 3)) / 13
-	# mass = 0
-	# print(mass.max(), mass.shape)
-	speed = 1/2 * (1-jnp.exp(-x2 * 3)*0.5)
 
+	field = random_gaussian(field, 0.1)
 
-	@jax.jit
-	def step(state, unroll):
-		def inner(_, field):
-			return field.geometric_derivative_leapfrog(mass=mass, speed=speed)
-		return jax.lax.fori_loop(0, unroll, inner, state)
+	mass = (field.quadratic() *0 + 0.1)
 
+	metric = {'t': (1-field.gauss(0.3)*0.5)}
 
-	frames = []
-	for i in range(256*4):
-		field = step(field, unroll=2)
-		# frames.append(field.x_t_xt.T)
-		# frames.append(field.arr[jnp.array([0, 0, 1])] .T)
-		frames.append(field.arr[jnp.array([0, 1, 2])] .T)
+	full_field = field.rollout(steps, mass=mass, metric=metric)
 
-
-	path = r'../../output/leapfrog_1d_massl_g'
-	import imageio.v3 as iio
-	import os
-	os.makedirs(path, exist_ok=True)
-	frames = jnp.array(frames)
-	frames = jnp.abs(frames) / 2
-	# frames = frames / 0.15  # arr.max()
-	# frames = frames / jnp.percentile(frames.flatten(), 99)
-	frames = jnp.clip(frames * 255, 0, 255).astype(jnp.uint8)
-	frames = jnp.array(frames)
-	iio.imwrite(os.path.join(path, 'xt.gif'), frames[::-1])
+	write_gif_1d('../../output', full_field, 'x_t_xt', post='mass_metric')
 
 
 def test_1d_massI():
-	print()
 	from numga.algebra.algebra import Algebra
 	algebra = Algebra.from_str('x-t+')
 	shape = (256,)
+	steps = 256*4
 	field = SpaceTimeField.from_subspace(algebra.subspace.multivector(), shape)
-	# field = SpaceTimeField.from_subspace(algebra.subspace.even_grade(), shape)
-	# field = SpaceTimeField.from_subspace(algebra.subspace.vector(), shape)
-	x = field.meshgrid()
-	x2 = (x ** 2).sum(axis=0, keepdims=False)
-	gauss = jnp.exp(-x2*30)
-	gauss = jnp.roll(gauss, 30, axis=-1)
-	key = jax.random.PRNGKey(11)
-	vec = jax.random.normal(key, (field.components,))
-	vec = vec / jnp.linalg.norm(vec)
-	q = jnp.outer(vec, gauss)
-	field.arr = q
-	# mass = 0.3 + x2 /6# + 0.1
-	mass = 0.0 #+ (1 - jnp.exp(-x2 * 3)) / 13
-	# mass = 0
-	# print(mass.max(), mass.shape)
-	speed = 1/2 * (1-jnp.exp(-x2 * 3)*0.5)
+	field = random_gaussian(field, 0.1, 0.1)
+	mass = 0.0 #+ (1-field.gauss(0.3)) / 13
+	metric = {'t': (1-field.gauss(0.3)*0.5)}
 	mass_I = 0.2
 
+	full_field = field.rollout(steps, mass_I=mass_I, metric=metric)
 
-	@jax.jit
-	def step(state, unroll):
-		def inner(_, field):
-			return field.geometric_derivative_leapfrog(mass=mass, mass_I=mass_I, speed=speed)
-		return jax.lax.fori_loop(0, unroll, inner, state)
-
-
-	frames = []
-	for i in range(256*4):
-		field = step(field, unroll=2)
-		# frames.append(field.x_t_xt.T)
-		# frames.append(field.arr[jnp.array([0, 0, 1])] .T)
-		frames.append(field.arr[jnp.array([0, 1, 2])] .T)
-
-
-	path = r'../../output/leapfrog_1d_mass_I'
-	import imageio.v3 as iio
-	import os
-	os.makedirs(path, exist_ok=True)
-	frames = jnp.array(frames)
-	frames = jnp.abs(frames) / 2
-	# frames = frames / 0.15  # arr.max()
-	# frames = frames / jnp.percentile(frames.flatten(), 99)
-	frames = jnp.clip(frames * 255, 0, 255).astype(jnp.uint8)
-	frames = jnp.array(frames)
-	iio.imwrite(os.path.join(path, 'xt.gif'), frames[::-1])
+	write_gif_1d('../../output', full_field, 'x_t_xt', post='mass_I')
 
 
 def test_1d_mass_sig():
 	"""attempted deep dive into flipped sigs
-	mass term appears broken?
+	mass term appears broken? or is this sig just to blame?
 	"""
 	print()
 	from numga.algebra.algebra import Algebra
 	algebra = Algebra.from_str('x-t+')
 	shape = (256,)
+	steps = 256
+
 	field = SpaceTimeField.from_subspace(algebra.subspace.multivector(), shape)
-	# field = SpaceTimeField.from_subspace(algebra.subspace.even_grade(), shape)
-	# field = SpaceTimeField.from_subspace(algebra.subspace.vector(), shape)
-	x = field.meshgrid()
-	x2 = (x ** 2).sum(axis=0, keepdims=False)
-	gauss = jnp.exp(-x2*20)
-	gauss = jnp.roll(gauss, 30, axis=-1)
-	key = jax.random.PRNGKey(11)
-	vec = jax.random.normal(key, (field.components,))
-	vec = vec / jnp.linalg.norm(vec)
-	q = jnp.outer(vec, gauss)
-	field.arr = q
-	# mass = 0.3 + x2 /6# + 0.1
+	field = random_gaussian(field, 0.1)
 	mass = -0.3 #+ (1 - jnp.exp(-x2 * 3)) / 13
-	# mass = 0
-	# print(mass.max(), mass.shape)
-	speed = 1/2 * (1-jnp.exp(-x2 * 3)*0.5)
 
+	metric = {'t': (1-field.gauss(0.3)) * 0.5}
 
-	@jax.jit
-	def step(state, unroll):
-		def inner(_, field):
-			return field.geometric_derivative_leapfrog(mass=mass, speed=speed)
-		return jax.lax.fori_loop(0, unroll, inner, state)
+	full_field = field.rollout(steps, mass=mass, metric=metric)
 
+	write_gif_1d('../../output', full_field, 'x_t_xt', post='sig_mass')
 
-	frames = []
-	for i in range(256*4):
-		field = step(field, unroll=2)
-		# frames.append(field.x_t_xt.T)
-		# frames.append(field.arr[jnp.array([0, 0, 1])] .T)
-		frames.append(field.arr[jnp.array([0, 1, 2])] .T)
-
-
-	path = r'../../output/leapfrog_1d_sig_mass_g'
-	import imageio.v3 as iio
-	import os
-	os.makedirs(path, exist_ok=True)
-	frames = jnp.array(frames)
-	frames = jnp.abs(frames) / 2
-	# frames = frames / 0.15  # arr.max()
-	# frames = frames / jnp.percentile(frames.flatten(), 99)
-	frames = jnp.clip(frames * 255, 0, 255).astype(jnp.uint8)
-	frames = jnp.array(frames)
-	iio.imwrite(os.path.join(path, 'xt.gif'), frames[::-1])
 
 
 def test_2d():
@@ -251,95 +152,33 @@ def test_2d():
 	from numga.algebra.algebra import Algebra
 	algebra = Algebra.from_str('x+y+t-')
 	shape = (128, 128)
+	steps = 256
 	field = SpaceTimeField.from_subspace(algebra.subspace.multivector(), shape)
-	# field = SpaceTimeField.from_subspace(algebra.subspace.odd_grade(), shape)
-	# field = SpaceTimeField.from_subspace(algebra.subspace.vector(), shape)
-	x = field.meshgrid()
-	x2 = (x ** 2).sum(axis=0, keepdims=False)
-	gauss = jnp.exp(-x2*50)
-	# gauss = jnp.roll(gauss, 5, axis=-1)
+	field = random_gaussian(field, 0.1)
+	mass = 0.4 + field.quadratic() / 2# + 0.1
 
-	key = jax.random.PRNGKey(1)
-	vec = jax.random.normal(key, (field.components,))
-	vec = vec / jnp.linalg.norm(vec)
-	# vec = vec.at[0].add(2)
-	q = jnp.einsum('c, ...->c...', vec, gauss)
-	field.arr = q
-	mass = 0.4 + x2 / 2# + 0.1
-	speed = 1/3 #* (1-jnp.exp(-x2 * 3) *0.5)
-	@jax.jit
-	def step(state, unroll):
-		def inner(_, field):
-			return field.geometric_derivative_leapfrog(speed=speed)
-		return jax.lax.fori_loop(0, unroll, inner, state)
+	# metric = {'t': (1-field.gauss(0.3)*0.5)}
 
+	full_field = field.rollout(steps, mass=mass, metric={})
 
-	frames = []
-	for i in range(256):
-		field = step(field, unroll=3)
-		frames.append(field.xt_yt_xy.T)
-		# frames.append(field.x_y_t.T)
-
-
-	path = r'../../output/leapfrog_2d_mv'
-	import imageio.v3 as iio
-	import os
-	os.makedirs(path, exist_ok=True)
-	frames = jnp.array(frames)#[::-1]
-	frames = jnp.abs(frames)
-	# frames = frames / 0.15  # arr.max()
-	frames = frames / jnp.percentile(frames.flatten(), 99)
-	frames = jnp.clip(frames * 255, 0, 255).astype(jnp.uint8)
-	frames = jnp.array(frames)
-	iio.imwrite(os.path.join(path, 'anim.gif'), frames)
-	iio.imwrite(os.path.join(path, 'xy.gif'), frames[50])
-	iio.imwrite(os.path.join(path, 'xt.gif'), frames[:128][::-1, 64])
+	write_gif_2d('../../output', full_field, 'xt_yt_xy', post='mass', norm=99)
 
 
 def test_2d_1vec():
+	"""note: like all equations over a non-closed subspace, this thing has non-propagating residual,
+	because we are too lazy to implement a compatible initalization yet"""
 	print()
 	from numga.algebra.algebra import Algebra
 	algebra = Algebra.from_str('x+y+t-')
 	shape = (128, 128)
+	steps = 128
 	field = SpaceTimeField.from_subspace(algebra.subspace.vector(), shape)
-	x = field.meshgrid()
-	x2 = (x ** 2).sum(axis=0, keepdims=False)
-	gauss = jnp.exp(-x2*50)
-	gauss = jnp.roll(gauss, 20, axis=-1)
 
-	key = jax.random.PRNGKey(12)
-	vec = jax.random.normal(key, (field.components,))
-	vec = vec / jnp.linalg.norm(vec)
-	vec = vec.at[0].add(2)
-	q = jnp.einsum('c, ...->c...', vec, gauss)
-	field.arr = q
-	mass = 0.4 + x2 / 2# + 0.1
+	field = random_gaussian(field, 0.1)
 
-	@jax.jit
-	def step(state, unroll):
-		def inner(_, field):
-			return field.geometric_derivative_leapfrog()
-		return jax.lax.fori_loop(0, unroll, inner, state)
+	full_field = field.rollout(steps, metric={})
 
-
-	frames = []
-	for i in range(256):
-		field = step(field, unroll=3)
-		# frames.append(field.xt_yt_xy.T)
-		frames.append(field.x_y_t.T)
-
-
-	path = r'../../output/leapfrog_2d_1vec'
-	import imageio.v3 as iio
-	import os
-	os.makedirs(path, exist_ok=True)
-	frames = jnp.array(frames)#[::-1]
-	frames = jnp.abs(frames)
-	# frames = frames / 0.15  # arr.max()
-	frames = frames / jnp.percentile(frames.flatten(), 99)
-	frames = jnp.clip(frames * 255, 0, 255).astype(jnp.uint8)
-	frames = jnp.array(frames)
-	iio.imwrite(os.path.join(path, 'anim.gif'), frames)
+	write_gif_2d('../../output', full_field, 'x_y_t', post='mass')
 
 
 def test_2d_compact():
@@ -348,52 +187,16 @@ def test_2d_compact():
 	algebra = Algebra.from_str('x+y+t-')
 	nx = 2
 	shape = (nx, 256)
+	steps = 256*2
 	field = SpaceTimeField.from_subspace(algebra.subspace.multivector(), shape)
-	x = field.meshgrid()
-	x2 = (x[1:] ** 2).sum(axis=0, keepdims=False)
-	gauss = jnp.exp(-x2*30)
-	gauss = jnp.roll(gauss, 30, axis=-1)
+	field = random_gaussian(field, 0.1, 0.1)
+	dimple = (1-field.gauss(jnp.array([1e16, 0.3]))*0.3)
+	metric = {'x': dimple * 0.2}
 
-	key = jax.random.PRNGKey(2)
-	vec = jax.random.normal(key, (field.components, nx))
-	vec = vec + vec[:, 1:] * 1
-	vec = vec / jnp.linalg.norm(vec)
-	# vec = vec.at[0].add(2)
-	q = jnp.einsum('cx, x...->cx...', vec, gauss)
-	field.arr = q
-	mass = None #+ x2 / 2# + 0.1
-	speed = 1/3 #* (1-jnp.exp(-x2 * 3)*0.5)
-	dy = (1-jnp.exp(-x2 * 3)*0.5)
-	metric = [0.2*dy, 1]
+	full_field = field.rollout(steps, metric=metric, mass=0)
+	write_gif_2d_compact('../../output', full_field, 'xy_xt_yt', post='compact_slow', norm=99)
 
 
-	@jax.jit
-	def step(state, unroll):
-		def inner(_, field):
-			return field.geometric_derivative_leapfrog(speed=speed, mass=mass, metric=metric)
-		return jax.lax.fori_loop(0, unroll, inner, state)
-
-
-	frames = []
-	for i in range(256*4):
-		field = step(field, unroll=3)
-		# frames.append(field.xt_yt_xy.T)
-		# frames.append(field.x_y_t.T[:, 0])
-		frames.append(jnp.abs(field.xt_yt_xy).T.mean(axis=1))
-
-
-	path = r'../../output/leapfrog_2d_compact_slow'
-	import imageio.v3 as iio
-	import os
-	os.makedirs(path, exist_ok=True)
-	frames = jnp.array(frames)[::-1]
-	frames = jnp.abs(frames)
-	# frames = frames / 0.15  # arr.max()
-	frames = frames / jnp.percentile(frames.flatten(), 99)
-	frames = jnp.clip(frames * 255, 0, 255).astype(jnp.uint8)
-	frames = jnp.array(frames)
-	# iio.imwrite(os.path.join(path, 'anim.gif'), frames)
-	iio.imwrite(os.path.join(path, 'xt.gif'), frames)
 
 
 def test_2d_compact_sig():
@@ -403,147 +206,47 @@ def test_2d_compact_sig():
 	algebra = Algebra.from_str('x-y-t+')
 	nx = 2
 	shape = (nx, 256)
+	steps = 256
 	field = SpaceTimeField.from_subspace(algebra.subspace.full(), shape)
-	x = field.meshgrid()
-	x2 = (x[1:] ** 2).sum(axis=0, keepdims=False)
-	gauss = jnp.exp(-x2*50)
-	gauss = jnp.roll(gauss, 20, axis=-1)
+	field = random_gaussian(field, 0.1, 0.1)
+	dimple = (1-field.gauss(jnp.array([1e16, 0.3]))*0.3)
+	metric = {'x': dimple * 0.2}
+	mass = 0.2
 
-	key = jax.random.PRNGKey(5)
-	vec = jax.random.normal(key, (field.components, nx))
-	vec = vec + vec[:, 1:] * 1
-	vec = vec / jnp.linalg.norm(vec)
-	# vec = vec.at[0].add(2)
-	q = jnp.einsum('cx, x...->cx...', vec, gauss)
-	field.arr = q
-	mass = 0.0 #+ x2 / 2# + 0.1
-	speed = 1/3 * (1-jnp.exp(-x2 * 3)*0.5)
+	full_field = field.rollout(steps, metric=metric, mass=mass)
 
+	write_gif_2d_compact('../../output', full_field, 'xy_xt_yt', post='compact_sig')
 
-	@jax.jit
-	def step(state, unroll):
-		def inner(_, field):
-			return field.geometric_derivative_leapfrog(speed=speed, mass=mass)
-		return jax.lax.fori_loop(0, unroll, inner, state)
-
-
-	frames = []
-	for i in range(256*4):
-		field = step(field, unroll=3)
-		# frames.append(field.xt_yt_xy.T)
-		# frames.append(field.x_y_t.T[:, 0])
-		frames.append(jnp.abs(field.x_y_t).T.mean(axis=1))
-
-
-	path = r'../../output/leapfrog_2d_compact_sig'
-	import imageio.v3 as iio
-	import os
-	os.makedirs(path, exist_ok=True)
-	frames = jnp.array(frames)[::-1]
-	frames = jnp.abs(frames)
-	# frames = frames / 0.15  # arr.max()
-	frames = frames / jnp.percentile(frames.flatten(), 99)
-	frames = jnp.clip(frames * 255, 0, 255).astype(jnp.uint8)
-	frames = jnp.array(frames)
-	# iio.imwrite(os.path.join(path, 'anim.gif'), frames)
-	iio.imwrite(os.path.join(path, 'xt.gif'), frames)
 
 
 def test_3d():
 	print()
 	from numga.algebra.algebra import Algebra
 	algebra = Algebra.from_str('x+y+z+t-')
+	steps = 64
 	shape = (64, 64, 64)
 	field = SpaceTimeField.from_subspace(algebra.subspace.multivector(), shape)
-	# field = SpaceTimeField.from_subspace(algebra.subspace.even_grade(), shape)
-	# field = SpaceTimeField.from_subspace(algebra.subspace.vector(), shape)
-	x = field.meshgrid()
-	x2 = (x ** 2).sum(axis=0, keepdims=False)
-	gauss = jnp.exp(-x2*30)
-	gauss = jnp.roll(gauss, 10, axis=-1)
 
-	key = jax.random.PRNGKey(10)
-	vec = jax.random.normal(key, (field.components,))
-	vec = vec / jnp.linalg.norm(vec)
-	# vec = vec.at[0].add(2)
-	q = jnp.einsum('c, ...->c...', vec, gauss)
-	field.arr = q
-	mass = 0.2 + x2 / 4# + 0.1
+	field = random_gaussian(field, 0.1, 0.1)
+	mass = 0.2 + field.quadratic() / 4
+	metric = {}
 
-	@jax.jit
-	def step(state, unroll):
-		def inner(_, field):
-			return field.geometric_derivative_leapfrog()
-		return jax.lax.fori_loop(0, unroll, inner, state)
-
-
-	frames = []
-	for i in range(400):
-		field = step(field, unroll=1)
-		# frames.append(field.xt_yt_xy.T[:, 32])
-		frames.append(field.xt_yt_xy.T[:, 32])
-
-
-	path = r'../../output/leapfrog_3d_1'
-	import imageio.v3 as iio
-	import os
-	os.makedirs(path, exist_ok=True)
-	frames = jnp.array(frames)#[::-1]
-	frames = jnp.abs(frames)
-	# frames = frames / 0.15  # arr.max()
-	frames = frames / jnp.percentile(frames.flatten(), 99)
-	frames = jnp.clip(frames * 255, 0, 255).astype(jnp.uint8)
-	frames = jnp.array(frames)
-	iio.imwrite(os.path.join(path, 'anim.gif'), frames)
-	iio.imwrite(os.path.join(path, 'static.gif'), frames[-1])
+	full_field = field.rollout(steps, metric=metric, mass=mass)
+	write_gif_3d('../../output', full_field, 'xy_xt_yt', post='', norm=99)
 
 
 def test_3d_bivector():
 	print()
 	from numga.algebra.algebra import Algebra
 	algebra = Algebra.from_str('x+y+z+t-')
-	shape = (128, 128, 128)
+	shape = (64, 64, 64)
+	steps = 64
 	field = SpaceTimeField.from_subspace(algebra.subspace.bivector(), shape)
-	x = field.meshgrid()
-	x2 = (x ** 2).sum(axis=0, keepdims=False)
-	gauss = jnp.exp(-x2*10)
-	# gauss = jnp.roll(gauss, 10, axis=-1)
+	field = random_gaussian(field, 0.1)
+	metric = {}
 
-	key = jax.random.PRNGKey(10)
-	vec = jax.random.normal(key, (field.components,))
-	vec = vec / jnp.linalg.norm(vec)
-	# vec = vec.at[0].add(2)
-	q = jnp.einsum('c, ...->c...', vec, gauss)
-	field.arr = q
-	mass = 0.2 +0* x2 / 4# + 0.1
-
-	@jax.jit
-	def step(state, unroll):
-		def inner(_, field):
-			return field.geometric_derivative_leapfrog(speed=1/4)
-		return jax.lax.fori_loop(0, unroll, inner, state)
-
-
-	frames = []
-	for i in range(128):
-		field = step(field, unroll=4)
-		# frames.append(field.xy_yz_xz.T[:, 32])
-		frames.append(field.xt_yt_zt.T[:, 64])
-
-
-	path = r'../../output/leapfrog_3d_bivector'
-	import imageio.v3 as iio
-	import os
-	os.makedirs(path, exist_ok=True)
-	frames = jnp.array(frames)#[::-1]
-	frames = jnp.abs(frames)
-	# frames = frames / 0.15  # arr.max()
-	frames = frames / jnp.percentile(frames.flatten(), 99)
-	frames = jnp.clip(frames * 255, 0, 255).astype(jnp.uint8)
-	frames = jnp.array(frames)
-	iio.imwrite(os.path.join(path, 'xyt.gif'), frames)
-	iio.imwrite(os.path.join(path, 'xy.gif'), frames[50])
-	iio.imwrite(os.path.join(path, 'xt.gif'), frames[:, 64])
+	full_field = field.rollout(steps, metric=metric)
+	write_gif_3d('../../output', full_field, 'xt_yt_zt', post='', norm=99)
 
 
 def test_3d_even_compact():
@@ -552,52 +255,14 @@ def test_3d_even_compact():
 	algebra = Algebra.from_str('x+y+z+t-')
 	nx = 2
 	shape = (nx, 128, 128)
+	steps = 128
 	field = SpaceTimeField.from_subspace(algebra.subspace.even_grade(), shape)
-	# field = SpaceTimeField.from_subspace(algebra.subspace.from_grades([1]), shape)
-	x = field.meshgrid()
-	x = jnp.einsum('cxyz, c-> cxyz', x, jnp.array([0.1, 1, 1]))
-	x2 = (x ** 2).sum(axis=0, keepdims=False)
-	gauss = jnp.exp(-x2*40)
-	# gauss = jnp.roll(gauss, 10, axis=-1)
 
-	key = jax.random.PRNGKey(0)
-	vec = jax.random.normal(key, (field.components, nx))
-	vec = vec / jnp.linalg.norm(vec)
-	# vec = vec.at[0].add(2)
-	q = jnp.einsum('cx, x...->cx...', vec, gauss)
-	field.arr = q
-	mass = 0.2 +0* x2 / 4# + 0.1
-	speed = 1/4
+	field = random_gaussian(field, 0.1)
+	mass = 0.2 +0* field.quadratic() / 4# + 0.1
 	mass_I = -0.2
-	metric = [mass, 1, 1]
 
-	@jax.jit
-	def step(state, unroll):
-		def inner(_, field):
-			return field.geometric_derivative_leapfrog(speed=speed, mass_I=mass_I, metric=metric)
-		return jax.lax.fori_loop(0, unroll, inner, state)
+	metric = {'x': mass}
 
-
-	frames = []
-	for i in range(128):
-		field = step(field, unroll=4)
-		# frames.append(field.xt_yt_xy.T[:, 32])
-		# frames.append(field.xt_yt_xy.T[:, 32])
-		frames.append(field.xt_yt_zt.T[:, :, 0])
-		# frames.append(field.y_z_t.T[:, :, 0])
-		# frames.append(field.arr[jnp.array([0, 0, 1])].T[:, :, 0])
-
-
-	path = r'../../output/leapfrog_3d_2_even_massI'
-	import imageio.v3 as iio
-	import os
-	os.makedirs(path, exist_ok=True)
-	frames = jnp.array(frames)#[::-1]
-	frames = jnp.abs(frames)
-	# frames = frames / 0.15  # arr.max()
-	frames = frames / jnp.percentile(frames.flatten(), 99)
-	frames = jnp.clip(frames * 255, 0, 255).astype(jnp.uint8)
-	frames = jnp.array(frames)
-	iio.imwrite(os.path.join(path, 'anim.gif'), frames, loop=0)
-	iio.imwrite(os.path.join(path, 'static.gif'), frames[50])
-	iio.imwrite(os.path.join(path, 'xt.gif'), frames[::-1, 64])
+	full_field = field.rollout(steps, metric=metric, mass_I=mass_I)
+	write_gif_3d('../../output', full_field, 'xt_yt_zt', post='mass_I', norm=99)

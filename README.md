@@ -12,9 +12,19 @@ It contains a submodule for both continuous and discrete geometric calculus, bot
 
 Examples
 --------
-Since vector calculus is a subset of geometric calculus, a wide range of physical models can be expressed using the geometric derivative in a concise, coordinate independent, and dimension independent manner. However, geometric calculus also permits the formulation of more 'exotic' types of equations:
+Since vector calculus is a subset of geometric calculus, a wide range of physical models can be expressed using the geometric derivative in a concise, coordinate independent, and dimension independent manner. And if this library lives up to its design goals, also in an efficient and convenient manner.
 
-<img src="discrete/article/31_compact_even_sps_mass_xy.gif" width="256" height="256"/> 
+For instance, we can simulate elastic solids by solving the biharmonic 4th order equation `d(d(d(d(phi)))) = 0`, for a grade 0+2, or even-grade compressible elasticity potential `phi` over the space `x+y+`, and plot its grade-1 geometric derivative displacement `u = d(phi)`, to make figures such as these, of a solid block pressed between two flat plates:
+
+<img src="elastic_solid.gif" width="256" height="256"/> 
+
+Any mechanical engineer should be able to appreciate as much.
+
+However, geometric calculus also permits the formulation of ' more complicated' types of equations, such as for instance `d(phi) = 0` over the even grade subalgebra of `x+y+z+t-`:
+
+<img src="discrete/article/31_compact_even_sps_mass_xy.gif" width="256" height="256"/>
+
+However, this is a topic that one can only hope to begin to understand with a few postdocs worth of group theory and algebraic topology. Ask anyone.
 
 
 Discrete

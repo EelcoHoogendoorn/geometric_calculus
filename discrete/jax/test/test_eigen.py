@@ -101,3 +101,44 @@ def test_scalar_wave_1d():
 	# 		ax[1, i].plot(force.arr[i])
 	# 		# ax[i].colorbar()
 	# plt.show()
+
+def smooth_noise(field, sigma):
+	arr = np.random.normal(size=field.arr.shape)
+	import scipy
+	sigma = [0, sigma, 0]
+	arr = scipy.ndimage.gaussian_filter(arr, sigma=sigma, mode='wrap')
+	return field.copy(arr=jnp.array(arr))
+
+def test_first_order_wave_11():
+	"""compute eigenmodes by expliticly constructing a periodic time domain"""
+	from numga.algebra.algebra import Algebra
+	algebra = Algebra.from_str('x+t-')
+	shape = (64, 2)
+	field = Field.from_subspace(algebra.subspace.full(), shape)
+	# x = field.meshgrid()
+	# x2 = (x ** 2).sum(axis=0, keepdims=False)
+	# gauss = jnp.exp(-x2*10*2)
+	# field.arr = field.arr.at[0].set(gauss)
+	field = smooth_noise(field, 8)
+
+	metric = {'t': jnp.array(1e-2)}
+	residual = field.geometric_derivative(metric=metric)
+
+	print(residual.arr)
+
+	# import matplotlib.pyplot as plt
+	#
+	# path = r'../../output/wave_scalar_1d_0'
+	#
+	# import imageio.v3 as iio
+	# import os
+	# os.makedirs(path, exist_ok=True)
+	# frames = jnp.array(frames)
+	# frames = jnp.abs(frames)
+	# print(frames.shape)
+	# # frames = frames / 0.15  # arr.max()
+	# frames = frames / jnp.percentile(frames.flatten(), 95)
+	# frames = jnp.clip(frames * 255, 0, 255).astype(jnp.uint8)
+	# frames = np.array(frames)
+	# print(frames.shape, type(frames))
+	# iio.imwrite(os.path.join(path, 'anim.gif'), frames[..., [0, 0, 0]])

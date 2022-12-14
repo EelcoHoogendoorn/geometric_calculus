@@ -1,5 +1,6 @@
 """JAX based discrete calculus implementation
 """
+import jax
 import jax.numpy as jnp
 import numpy as np
 from numga.backend.jax.pytree import register
@@ -13,7 +14,6 @@ class Field(AbstractField):
 	def __init__(self, subspace, domain, arr):
 		super(Field, self).__init__(subspace, domain)
 		self.arr = arr
-		self.shape = arr.shape[1:]
 		assert len(arr) == len(subspace)
 		assert len(self.shape) == len(self.domain)
 
@@ -62,30 +62,22 @@ class Field(AbstractField):
 			return self.copy(self.arr * other.arr)
 		return self.copy(self.arr * other)
 
-	def meshgrid(self):
-		xs = [jnp.linspace(-1, 1, s) for s in self.shape]
-		c = jnp.array(jnp.meshgrid(*xs, indexing='ij'))
-		# d = deltas(self.subspace.algebra.subspace.scalar(), self.subspace)[:, 0, :]
-		from discrete.util import deltas
-		d = deltas(self.subspace, self.algebra.subspace.scalar())
-		return c    # FIXME: add version with per element offset
-
 	def restrict(self, subspace):
 		op = self.subspace.algebra.operator.restrict(self.subspace, subspace)
 		return self.copy(subspace=subspace, arr=jnp.einsum('io,i...->o...', op.kernel, self.arr))
 
-	def geometric_derivative(self, output=None):
+	def geometric_derivative(self, output=None, metric={}):
 		op = self.algebra.operator.geometric_product(self.domain, self.subspace)
 		if output:
 			op = op.select_subspace(output)
-		return self.make_derivative(op)
+		return self.make_derivative(op, metric)
 
-	def make_derivative(self, op):
+	def make_derivative(self, op, metric):
 		"""plain direct derivative, no leapfrog"""
 		arr = jnp.zeros(shape=(len(op.subspace),) + self.shape)
 		d = {   # NOTE: these are derivatives, not including metric signs; those enter below
-			1: lambda x, a: x - jnp.roll(x, shift=+1, axis=a),
-			0: lambda x, a: jnp.roll(x, shift=-1, axis=a) - x
+			1: lambda x, a: (x - jnp.roll(x, shift=+1, axis=a)) * metric.get(a, 1),
+			0: lambda x, a: (jnp.roll(x, shift=-1, axis=a) - x) * metric.get(a, 1),
 		}
 		for eq_idx, eq in self.process_op(op):
 			total = sum(
@@ -98,13 +90,10 @@ class Field(AbstractField):
 
 @register
 class SpaceTimeField(Field, AbstractSpaceTimeField):
-	# __pytree_ignore__ = ('subspace', 'domain', 'shape', 'algebra')
-
-	""""""
+	"""Field with one axis that is stepped over, rather than allocated"""
 	def __init__(self, subspace, domain, arr):
 		super(AbstractSpaceTimeField, self).__init__(subspace, domain)
 		self.arr = arr
-		self.shape = arr.shape[1:]
 		assert len(arr) == len(subspace)
 		assert len(self.shape) == len(domain) - 1
 		assert 't' in str(self.algebra)
@@ -117,23 +106,20 @@ class SpaceTimeField(Field, AbstractSpaceTimeField):
 	def courant(self):
 		return float(self.dimensions) ** (-0.5)
 
-	def geometric_derivative_leapfrog(self, mass=None, mass_I=None, cubic=None, speed=None, metric=None):
+	def geometric_derivative_leapfrog(self, mass=None, mass_I=None, cubic=None, metric={}):
 		arr = self.arr.copy()
-		if metric is None:
-			metric = [1] * self.dimensions
 		op = self.algebra.operator.geometric_product(self.domain, self.subspace)
 		# FIXME: comp just xyz based dual? prod from other side? not sure if working relative to eq is correct
 		dual = self.algebra.operator.geometric_product(self.algebra.subspace.pseudoscalar(), self.subspace)
 		kernel = dual.kernel[0]
-		dual_map = {k:(v, kernel[k, v]) for k,v in zip(*np.nonzero(kernel))}
+		dual_map = {k: (v, kernel[k, v]) for k, v in zip(*np.nonzero(kernel))}
+		domain = self.domain.named_str.split(',')
 
 		# FIXME: this only now works with t axis last
 		derivative = {   # NOTE: these are plain derivatives, not including metric signs
-			1: lambda x, a: (x - jnp.roll(x, shift=+1, axis=a)) * metric[a],
-			0: lambda x, a: (jnp.roll(x, shift=-1, axis=a) - x) * metric[a]
+			1: lambda x, a: (x - jnp.roll(x, shift=+1, axis=a)) * metric.get(domain[a], 1),
+			0: lambda x, a: (jnp.roll(x, shift=-1, axis=a) - x) * metric.get(domain[a], 1)
 		}
-
-		speed = self.courant * 0.95 if speed is None else speed
 
 		T, S = self.process_op_leapfrog(op)
 		for eq_idx, (t_term, s_terms) in T+S:
@@ -157,7 +143,29 @@ class SpaceTimeField(Field, AbstractSpaceTimeField):
 				fdi, v = dual_map[t_term.f_idx]
 				total += arr[fdi] * mass_I * v
 
-			arr = arr.at[t_term.f_idx].add(total * speed * t_term.sign)
+			arr = arr.at[t_term.f_idx].add(total * metric['t'] * t_term.sign)
 
 		return self.copy(arr=arr)
 
+	def rollout(self, steps, metric=None, **kwargs) -> Field:
+		"""perform a rollout of a leapfrog field into a whole field"""
+		# work safe CFL condition into metric scaling
+		unroll = self.dimensions
+		if metric is None:
+			metric = {}
+		metric['t'] = metric.get('t', 1) / unroll
+
+		@jax.jit
+		def step(state):
+			def inner(_, field):
+				return field.geometric_derivative_leapfrog(metric=metric, **kwargs)
+			return jax.lax.fori_loop(0, unroll, inner, state)
+
+		output = Field.from_subspace(self.subspace, self.shape + (steps,))
+		arr = np.asfortranarray(output.arr) # more contiguous if t is last
+		# FIXME: compile the whole thing?
+		for t in range(steps):
+			self = step(self)   # Eww self reassign; not cool?
+			arr[..., t] = self.arr
+		output.arr = jnp.array(arr)
+		return output

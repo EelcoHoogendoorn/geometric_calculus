@@ -389,12 +389,19 @@ It is characterized by light-like modes that oscillate between different field c
 
 
 
-
 ## Systems of equations
 
 have been implemented, look like they do interesting things, but need to be caught up with the latest code rewrite
 
+## Nonlinear terms
 
+Various nonlinear terms have historically been proposed, as modifications to the relativistic wave equations. 
+
+We note that geometric calculus, and discrete geometric calculus in particular, offer a more structured perspective on such nonlinear terms. We can think of geometric algebra as a more 'strongly typed' language, compared to a non-geometric algebra. And similarly, not every term that seems natural in a continuous setting, seems equally natural in the discrete setting, where considerations of colocation of variables take on a more acute form, which would be swept under the rug, wisely or not, by a continuum limit.
+
+We note that in the discrete geometric calculus setting, one operation that is always permitted, is to reduce graded elements to scalars via an inner product with themselves; and any (polynomials of such) scalar expressions can again be multiplied with the original element, to obtain cubic terms.
+
+Aside from nonlinearities of this kind, it is of course interesting to consider those nonlinearities that may arise, by coupling the metric variations encoded in the basis blades from which we construct our derivative operators, to the field variables themselves. For any field that does admit a grade-1 component, or for which one can be derived through application of the geometric derivative, the simplest form of such nonlinearity is straightforward indeed. However, should we seek some polynomial expression of such 1-vectors, we should again be mindful of the fact that raising a vector to some power naively, does not result in an expression of a 1-vector type.
 
 
 ## Open questions
@@ -421,7 +428,7 @@ At present we lack a full taxonomy of all possible combinations influential in d
  * Some spacelike signatures are compatible with a SPS zero order term.
  * Some timelike signatures are compatible with a SPS zero order term.
 
-NOTE: there are still some known and suspected shortcomings and bugs in this code; this section is all quite tentative
+NOTE: there are still some known and suspected shortcomings and bugs in the code relating to SPS terms; and conclusions regarding SPS are all quite tentative
 
 
 
