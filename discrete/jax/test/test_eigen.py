@@ -105,40 +105,77 @@ def test_scalar_wave_1d():
 def smooth_noise(field, sigma):
 	arr = np.random.normal(size=field.arr.shape)
 	import scipy
-	sigma = [0, sigma, 0]
+	sigma = [0] + [sigma] * (field.dimensions - 1) + [0]
 	arr = scipy.ndimage.gaussian_filter(arr, sigma=sigma, mode='wrap')
 	return field.copy(arr=jnp.array(arr))
 
+
+def solve_eigen(field, l, mass):
+	"""solve first order eigenproblem via periodic discretized time axis
+
+	not very fast; and not sure its bugfree either
+	the nice thing is that we need not make any assumption about temporal axis
+	"""
+	def func(params):
+		arr, l = params
+		q = field.copy(arr=arr)
+		residual = q.geometric_derivative(metric={'t': l})
+		res = residual.arr - arr * mass
+		return optax.huber_loss(res, delta=1).sum() + optax.huber_loss((arr**2).sum(), 1, delta=1)
+
+	l = jnp.array(l)
+	params = field.arr, l
+
+	import optax
+	learning_rate = 3e-3
+	tx = optax.adam(learning_rate=learning_rate)
+	opt_state = tx.init(params)
+	loss_grad_fn = jax.jit(jax.value_and_grad(func))
+	for i in range(10001):
+		if i % 100 == 0:
+			learning_rate *= 0.7
+		loss_val, grads = loss_grad_fn(params)
+		updates, opt_state = tx.update(grads, opt_state)
+		params = optax.apply_updates(params, updates)
+		if i % 10 == 0:
+			print('Loss step {}: '.format(i), loss_val)
+
+	new_field, new_l = params
+	print(new_l)
+	field = field.copy(arr=new_field)
+	slc = field.slice(0)
+	return slc, new_l
+
+
+from discrete.jax.test.test_leapfrog import write_gif_1d, write_gif_2d
+from numga.algebra.algebra import Algebra
+
 def test_first_order_wave_11():
 	"""compute eigenmodes by expliticly constructing a periodic time domain"""
-	from numga.algebra.algebra import Algebra
 	algebra = Algebra.from_str('x+t-')
 	shape = (64, 2)
 	field = Field.from_subspace(algebra.subspace.full(), shape)
-	# x = field.meshgrid()
-	# x2 = (x ** 2).sum(axis=0, keepdims=False)
-	# gauss = jnp.exp(-x2*10*2)
-	# field.arr = field.arr.at[0].set(gauss)
-	field = smooth_noise(field, 8)
+	field = smooth_noise(field, 4)
+	mass = 1 - field.gauss(jnp.array([0.4, 1e16])) / 2
 
-	metric = {'t': jnp.array(1e-2)}
-	residual = field.geometric_derivative(metric=metric)
+	slc, new_l = solve_eigen(field, 5.0, mass)
 
-	print(residual.arr)
+	mass = mass[..., 0]
+	anim = slc.rollout(64, metric={'t': new_l / 128}, mass=mass)
+	write_gif_1d('../../output', anim, 'x_t_xt', post='eigen', norm=99, gamma=False)
 
-	# import matplotlib.pyplot as plt
-	#
-	# path = r'../../output/wave_scalar_1d_0'
-	#
-	# import imageio.v3 as iio
-	# import os
-	# os.makedirs(path, exist_ok=True)
-	# frames = jnp.array(frames)
-	# frames = jnp.abs(frames)
-	# print(frames.shape)
-	# # frames = frames / 0.15  # arr.max()
-	# frames = frames / jnp.percentile(frames.flatten(), 95)
-	# frames = jnp.clip(frames * 255, 0, 255).astype(jnp.uint8)
-	# frames = np.array(frames)
-	# print(frames.shape, type(frames))
-	# iio.imwrite(os.path.join(path, 'anim.gif'), frames[..., [0, 0, 0]])
+
+def test_first_order_wave_21():
+	"""compute eigenmodes by expliticly constructing a periodic time domain"""
+	algebra = Algebra.from_str('x+y+t-')
+	shape = (64, 64, 4)
+	field = Field.from_subspace(algebra.subspace.full(), shape)
+	field = smooth_noise(field, 1)
+	mass = 1 - field.gauss(jnp.array([0.6, 0.6, 1e16])) / 3
+
+	slc, new_l = solve_eigen(field, 40., mass)
+
+	mass = mass[..., 0]
+	# NOTE: need division here, since we have dt metric term on 'wrong side' in leapfrog
+	anim = slc.rollout(64, metric={'t': 8/new_l}, mass=mass)
+	write_gif_2d('../../output', anim, 'xy_xt_yt', post='eigen', norm=99, gamma=False)

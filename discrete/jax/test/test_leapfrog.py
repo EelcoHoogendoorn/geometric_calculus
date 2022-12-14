@@ -184,17 +184,16 @@ def test_2d_1vec():
 def test_2d_compact():
 	print()
 	from numga.algebra.algebra import Algebra
-	algebra = Algebra.from_str('x+y+t-')
-	nx = 2
-	shape = (nx, 256)
+	algebra = Algebra.from_str('w+y+t-')
+	shape = (2, 256)
 	steps = 256*2
 	field = SpaceTimeField.from_subspace(algebra.subspace.multivector(), shape)
 	field = random_gaussian(field, 0.1, 0.1)
 	dimple = (1-field.gauss(jnp.array([1e16, 0.3]))*0.3)
-	metric = {'x': dimple * 0.2}
+	metric = {'w': dimple * 0.3}
 
 	full_field = field.rollout(steps, metric=metric, mass=0)
-	write_gif_2d_compact('../../output', full_field, 'xy_xt_yt', post='compact_slow', norm=99)
+	write_gif_2d_compact('../../output', full_field, 'wy_wt_yt', post='compact_slow', norm=99)
 
 
 
@@ -204,8 +203,7 @@ def test_2d_compact_sig():
 	print()
 	from numga.algebra.algebra import Algebra
 	algebra = Algebra.from_str('x-y-t+')
-	nx = 2
-	shape = (nx, 256)
+	shape = (2, 256)
 	steps = 256
 	field = SpaceTimeField.from_subspace(algebra.subspace.full(), shape)
 	field = random_gaussian(field, 0.1, 0.1)
@@ -253,8 +251,7 @@ def test_3d_even_compact():
 	print()
 	from numga.algebra.algebra import Algebra
 	algebra = Algebra.from_str('x+y+z+t-')
-	nx = 2
-	shape = (nx, 128, 128)
+	shape = (2, 128, 128)
 	steps = 128
 	field = SpaceTimeField.from_subspace(algebra.subspace.even_grade(), shape)
 

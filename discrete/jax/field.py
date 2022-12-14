@@ -75,9 +75,11 @@ class Field(AbstractField):
 	def make_derivative(self, op, metric):
 		"""plain direct derivative, no leapfrog"""
 		arr = jnp.zeros(shape=(len(op.subspace),) + self.shape)
+
+		domain = self.domain.named_str.split(',')
 		d = {   # NOTE: these are derivatives, not including metric signs; those enter below
-			1: lambda x, a: (x - jnp.roll(x, shift=+1, axis=a)) * metric.get(a, 1),
-			0: lambda x, a: (jnp.roll(x, shift=-1, axis=a) - x) * metric.get(a, 1),
+			1: lambda x, a: (x - jnp.roll(x, shift=+1, axis=a)) * metric.get(domain[a], 1),
+			0: lambda x, a: (jnp.roll(x, shift=-1, axis=a) - x) * metric.get(domain[a], 1),
 		}
 		for eq_idx, eq in self.process_op(op):
 			total = sum(
@@ -87,6 +89,8 @@ class Field(AbstractField):
 			arr = arr.at[eq_idx, ...].set(total)
 		return self.copy(arr=arr, subspace=op.subspace)
 
+	def slice(self, idx):
+		return SpaceTimeField(self.subspace, self.domain, self.arr[..., idx])
 
 @register
 class SpaceTimeField(Field, AbstractSpaceTimeField):
