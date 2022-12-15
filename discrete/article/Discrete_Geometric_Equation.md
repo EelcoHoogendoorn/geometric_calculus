@@ -21,7 +21,7 @@ However, to the best of the authors knowledge, no conceptually or practically si
 
 The Dirac equation describes the massive counterpart to the Maxwell force carrier, and as such is of similar practical and theoretical interest. A number of different formulations of the Dirac equation have been put forward in its near century since publication, which capture the same essential algebraic properties, motivated by the physical goal to model a concept of spin. 
 
-Arguably, the complex-valued matrix-representation as originally formulated by Dirac is not the easiest to intuit. Hestenes set out to reframe the Dirac equation in terms of geometric algebra, seeking a real valued representation, dispensing of the imaginary root. In such a geometric formulation, the algebraic elements squaring to -1 are the result of the anti-commutativity of the exterior product, and hence directly map onto a geometric entity such as a plane, which one may interpret as the plane in which a rotations is occurring.
+Arguably, the complex-valued matrix-representation as originally formulated by Dirac is not the easiest to intuit. Hestenes set out to reframe the Dirac equation in terms of geometric algebra, seeking a real valued representation. In such a geometric formulation, the algebraic elements squaring to -1 are the result of the anti-commutativity of the exterior product, and hence directly map onto a geometric entity such as a plane, which one may interpret as the plane of rotation.
 
 In geometric calculus notation, we may state the Dirac operator as: 
 
@@ -48,13 +48,16 @@ This leaves open the question, if a suitable discrete operator can be constructe
 We will approach these questions by generalizing the logic implicit in the Yee scheme, to fields of arbitrary grade.
 
 
-[^1]: To our knowledge, the space-time view of the Yee scheme was first explicitly articulated in [GEOMETRIC COMPUTATIONAL ELECTRODYNAMICS](https://arxiv.org/pdf/0707.4470.pdf)
+[^1]: 
+    To our knowledge, the space-time view of the Yee scheme was first explicitly articulated in [Geometric Computational Electrodynamics](https://arxiv.org/pdf/0707.4470.pdf)
 
-[^2]: In exterior calculus, the geometric derivative can be written as `d + *d*`. Both encompass the same idea, in a somewhat different mathematical dialect; in both cases it is a combination of a grade-lowering inner term and a grade-raising outer term. 
-Our viewpoint on the discrete domain is very well articulated in [Discrete Exterior Calculus](https://thesis.library.caltech.edu/1885/3/thesis_hirani.pdf). In line with the research direction articulated there, our outlook is to explore the internal logic of a discrete representation of core geometric ideas, and follow that logic where it may lead.
-Yet we feel the term Discrete Geometric Calculus is more appropriate; both to be congruent with the line of thinking that led us to this work, but also because the key aspects of this work concerns itself equally with the interior and exterior part of the geometric product. Moreover, this work is orthogonal to concerns specific to the strict seperation of topology and metric, which tend to take a central role in expositions of exterior calculus. We feel that framing it in these terms would unnecessarily complicate ideas, which are of a rather striking conceptual simplicity by themselves. In this we second the opinions of [Hestenes](https://geocalc.clas.asu.edu/pdf-preAdobe8/MathViruses.pdf)
+[^2]: 
+    In exterior calculus, the geometric derivative can be written as `d + *d*`. Both encompass the same idea, in a somewhat different mathematical dialect; in both cases it is a combination of a grade-lowering inner term and a grade-raising outer term. 
+    Our viewpoint on the discrete domain is very well articulated in [Discrete Exterior Calculus](https://thesis.library.caltech.edu/1885/3/thesis_hirani.pdf). In line with the research direction articulated there, our outlook is to explore the internal logic of a discrete representation of core geometric ideas, and follow that logic where it may lead.
+    Yet we feel the term Discrete Geometric Calculus is more appropriate; both to be congruent with the line of thinking that led us to this work, but also because the key aspects of this work concerns itself equally with the interior and exterior part of the geometric product. Moreover, this work is orthogonal to concerns specific to the strict seperation of topology and metric, which tend to take a central role in expositions of exterior calculus. We feel that framing it in these terms would unnecessarily complicate ideas, which are of a rather striking conceptual simplicity by themselves. In this we second the opinions of [Hestenes](https://geocalc.clas.asu.edu/pdf-preAdobe8/MathViruses.pdf)
 
-[^3]: We prefer to refer to the equation `geometric_derivative(phi) = 0`, or `d(phi) = 0` for shorthand in appropriate context, as ‘the (first order homogenous) geometric equation’. If it is important that we restrict our attention to particular subspaces, we prefer to speak of ‘the geometric equation over the bivectors’ rather than 'the Maxwell equation'. Such a language is not merely a label based on superficial similarities; in all cases, we are speaking of the same operator; a geometric product of the field, with a 1-vector of the (differential) elements in our domain. 
+[^3]: 
+    We prefer to refer to the equation `geometric_derivative(phi) = 0`, or `d(phi) = 0` for shorthand in appropriate context, as ‘the (first order homogenous) geometric equation’. If it is important that we restrict our attention to particular subspaces, we prefer to speak of ‘the geometric equation over the bivectors’ rather than 'the Maxwell equation'. Such a language is not merely a label based on superficial similarities; in all cases, we are speaking of the same operator; a geometric product of the field, with a 1-vector of the (differential) elements in our domain. 
 
 
 
@@ -79,9 +82,7 @@ t00 xt00 t10 xt10 t20
 ### Geometric derivative
 From the DEC perspective, the discrete exterior derivative over any component of the field, amounts to a summation over all boundary elements, defining that element. For instance, the exterior derivative of the 1-vector edges, through oriented summation, gives us a value defined on all 2-vector faces.
 
-Alternatively, we may view the discrete geometric derivative, as the commutator product of all elements in the field, with a 1-vector of all 1-elements, or lines in the domain. Take for instance the element `t10` above; the commutator product with the 1-blade `x` would span the element `xt10` on the right; and its negative `-x` would span the element `-xt00` on its left. Similarly we can interpret an inner product with `t` as projecting the edge `t` up or down onto its boundary vertices. We can employ identical logic for all other terms we thus encounter in the product; and if we collect all resultant colocated field elements, as applied to a grid of (hyper)cubes, this will give rise to the same familiar finite difference, or DEC stencil as derived from an oriented topology. In practice, working on a grid of hypercubes, all differential operators can be expressed as simple differencing operations between contiguous elements of an array.
-
-NOTE: do the reordering signs of the commutator product drop out? or should we not call it a commutator, but rather just a multiplicaton with [+x, -x]?
+From a discrete geometric perspective, we may view the discrete geometric derivative, as the product of all elements in the field, with a 1-vector of all positive and negative 1-elements, or lines in the domain. Take for instance the element `t10` above; the product with the 1-blade `x` would span the element `xt10` on the right; and its negative `-x` would span the element `-xt00` on its left. Similarly we can interpret an inner product with `t` as projecting the edge `t` up or down onto its boundary vertices. We can employ identical logic for all other terms we thus encounter in the product; and if we collect all resultant colocated field elements, as applied to a grid of (hyper)cubes, this will give rise to the same familiar finite difference, or DEC stencil as derived from an oriented topology. In practice, working on a grid of hypercubes, all differential operators can be expressed as simple differencing operations between contiguous elements of an array.
 
 In summary, we note that the geometric derivative for any element of the algebra, states a relationship between its boundary and incident elements, or those of one grade up and one grade down. 
 
@@ -134,7 +135,7 @@ t00 xt00 t10 xt10 t20
 This completes one cycle of the discrete geometric derivative over the full multivector field in the algebra `xt`.
 
 We may summarize the above in the following notation, in terms of component-wise 1-dimensional interior and exterior derivative operators:
-```
+```python
 +edt(s)  = +idx(xt)
 -edt(x)  = +edx(t)
 
@@ -150,9 +151,10 @@ Generalizing the logic behind the above steps, we may construct a general algori
 3. We observe that we may partition these equations into two independent sets, those updating space-like variables using differences of time-like variables, and those updating time-like variables using differences of space-like variables, respectively.
 4. Profit
 
-[^4]: for instance, doing this for a domain `xy` in an algebra `xyzt`, over a field of a subset of bivector components `xt, yt, xy`, to simulate 2d transverse-magnetic fields, we obtain one equation `idx(xt) + idy(yt) = 0`; this has no time derivative, but can be viewed as a compatibility initial equation on the field; and can simply be ignored for the purpose of constructing the timestepping scheme.
+[^4]: 
+    for instance, doing this in an algebra `xyzt`, for a domain `xyt` (no derivatives in `z`), over a field of a subset of bivector components `xt, yt, xy`, to simulate 2d transverse-electric fields, we obtain one equation `idx(xt) + idy(yt) = 0`; this has no time derivative, but can be viewed as a compatibility initial equation on the field; and can simply be ignored for the purpose of constructing the timestepping scheme.
 
-Assuming the availability of a software library for managing the bookkeeping of signs involved in geometric algebra, the above steps can be readily implemented in a handful of lines of code, to produce a code-generator, for algebras of any dimension and signature; see [X].
+Assuming the availability of a software library for managing the bookkeeping of signs involved in geometric algebra, the above steps can be readily implemented in a handful of lines of code, to produce a code-generator, for algebras of any dimension and signature; see [this](./../field.py) code example.
 
 As an illustration of the structure of the resultant equations, we write this out for a full multivector valued field over `x+y+z+t-` to obtain:
 
@@ -179,7 +181,7 @@ idt(xyzt) = +edx(yz)   -edy(xz)   +edz(xy)
 
 Note that there is no direct coupling between even and odd grades through the discrete geometric derivative in any dimension; as one would expect. Hence it is possible to split the update scheme into independent blocks of even and odd grade, and the equations have been ordered to reflect that split. However, since we may introduce interactions between even and odd grades through additional terms (treated in proceeding chapters), we do present the scheme over the full algebra here.
 
-Equations over subspaces of the full algebra, or lower dimensions, are contained in this scheme, and can be isolated by simply zeroing the relevant variables or derivatives. Note that we may observe the Yee scheme embedded as a special case, if we isolate only the bivector terms.
+Equations over subspaces of the full algebra, or lower dimensions, are contained in this scheme, and can be isolated by simply zeroing the relevant variables or derivatives. Note that we may observe the Yee scheme embedded in these equations, if we isolate only the bivector terms.
 
 Terms accrue a sign according to the usual rules of geometric algebra; through the parity of the number of swaps required to bring the basis blades in a single (arbitrarily chosen but consistent) order. Furthermore, interior derivatives will accrue a sign according to the chosen metric.
 
@@ -198,6 +200,7 @@ We note that it would appear impossible to construct a leapfrog scheme of this n
 ### Results
 
 All the figures below pertain to the impulse-response of a pure geometric equation `d(phi) = 0`, (initial condition formed as the product of a gaussian of the spatial variables, with a random sampled value for each field component.) Unless otherwise stated, these are results over the full algebra. All spatial boundary conditions are periodic.
+
 
 <img src="11_mv_xt.gif" width="256" height="256"/> 
 <img src="21_mv_compact_xt.gif" width="256" height="256"/> 
@@ -334,6 +337,21 @@ For instance, it is not obvious how to model both attraction and repulsion. Seei
 Again, our intent is to set the scope of this article to a self-contained presentation of the discrete geometric derivative, with some illustration of its properties amd utility. This limited scope should not be construed, as an exhaustive exploration of all such possibilities appearing to be in sight.
 
 But for those purposes, in summary, we note that the dynamics of a direct zero order 'mass' term, can be viewed as a subset of the dynamics of a one-up-compact model. And that 'spatially varying mass'; or 'potential' terms are homologous to a spatial variation in the one-up-compact metric.
+
+## Alternative field excitations
+
+So far we have only considered simple dirac-delta, or gaussian impulse type excitations. These have two limitations as a tool; for wave equations over single grades, such as the Maxwell equations, such an initial condition contains non-propagating components, that do not satisfy the compatibility conditions. Secondly, such an initial condition excites mixtures of different modes of the equation, which complicates our ability to observe such modes in isolation.
+
+Non-propagating field components can be removed by simply taking a difference of a field with itself once timestepped. Indeed this gives the intended result for the geometric equation over the bivectors, leaving only propagating components, no stationary ones.
+
+
+
+In case of fields with a compact dimension, having both massless and massive excitations, the massless excitations are those travelling purely orthogonal to the compact dimension; and hence its field components should be constant along the compact dimension. As such, we can eliminate those components from any field, by substracting the mean over the compact dimension. This indeed reveals another interesting aspect of the geometric equation with a compact dimension. on first inspection, our attempt to remove the lightlike components may appear to have failed. On second inspection, what we see brought into focus is a wave component resembling the lightlike excitations; but traveling within the light cone. This wave component needs to have some motion around the compact dimension; by construction, and by its apparent subluminal motion from the non-compact dimension. However, it succeeds in doing so, without being influenced by our imposed profile on the metric of `w`. 
+
+Moreover, these subluminal excitations are also 'lightlike' in their response to a metric variation in `t`. Despite traveling arbitrarily slow, they may escape an arbitrarily deep gravity well, incurring only a change in wavelength as they do so.
+
+Arguably these type of excitation defy our previous binary classification, in terms of lightlike and massive. In these qualities, one may be reminded of the massive bosons.
+
 
 ## Alternative zero order terms
 

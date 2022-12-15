@@ -1,66 +1,35 @@
-"""minimal self contained numpy example"""
+"""Minimal self contained numpy example of the leapfrog scheme
+for the equation geometric_derivative(phi) = 0,
+in the even subalgebra of x+y+w+t-, where w is a compact dimension
+"""
 import numpy as np
+import matplotlib.pyplot as plt
 
-def ed(a, d):
-	"""first order exterior derivative with periodic bcs"""
-	return np.diff(a, axis=d, append=np.take(a, [0], axis=d))
-def id(a, d):
-	"""first order interior derivative with periodic bcs"""
-	return np.diff(a, axis=d, prepend=np.take(a, [-1], axis=d))
+def edt(lhs, rhs, courant=0.33):
+	lhs -= rhs * courant
+idt = edt
 
-speed = 0.5
-def edt(lhs, rhs):
-	lhs -= rhs * speed
-def edx(a):
-	return ed(a, 0)
-def edy(a):
-	return ed(a, 1)
-def edz(a):
-	return ed(a, 2)
+ed = lambda d: lambda a: np.roll(a, shift=-1, axis=d) - a
+id = lambda d: lambda a: a - np.roll(a, shift=+1, axis=d)
+edx, edy, edw = [ed(d) for d in range(3)]
+idx, idy, idw = [id(d) for d in range(3)]
 
-def idt(lhs, rhs):
-	lhs -= rhs * speed
-def idx(a):
-	return id(a, 0)
-def idy(a):
-	return id(a, 1)
-def idz(a):
-	return id(a, 2)
+def leapfrog(phi):
+	s, xy, xw, yw, xt, yt, wt, xywt = phi
+	edt(s, +idx(xt) + idy(yt) + idw(wt))  # t
+	edt(xy, +edx(yt) - edy(xt) + idw(xywt))  # xyt
+	edt(xw, +edx(wt) - idy(xywt) - edw(xt))  # xzt
+	edt(yw, +idx(xywt) + edy(wt) - edw(yt))  # yzt
+	idt(xt, +edx(s) - idy(xy) - idw(xw))  # x
+	idt(yt, +idx(xy) + edy(s) - idw(yw))  # y
+	idt(wt, +idx(xw) + idy(yw) + edw(s))  # z
+	idt(xywt, +edx(yw) - edy(xw) + edw(xy))  # xyz
 
-
-class Field:
-	def __init__(self, shape, components):
-		self.shape = shape
-		self.ndim = len(shape)
-		self.dtype = np.float32
-		self.arr = np.zeros((components,) + shape, dtype=self.dtype)
-
-	def meshgrid(self):
-		xs = [np.linspace(-1, 1, s) for s in self.shape]
-		return np.array(np.meshgrid(*xs, indexing='ij'))
-
-
-class MultiVectorField4(Field):
-	def __init__(self, shape):
-		assert len(shape) == 3
-		super(MultiVectorField4, self).__init__(shape, 16)
-
-	def step_mass(self, m=1):
-		s, x, y, z, t, xy, xz, yz, xt, yt, zt, xyz, xyt, xzt, yzt, xyzt = self.arr
-		edt(s,    m*t    +idx(xt)+idy(yt)+idz(zt))
-		edt(x,    m*xt   +edx(t)-idy(xyt)-idz(xzt))
-		edt(y,    m*yt   +idx(xyt)+edy(t)-idz(yzt))
-		edt(z,    m*zt   +idx(xzt)+idy(yzt)+edz(t))
-		edt(xy,   m*xyt  +edx(yt)-edy(xt)+idz(xyzt))
-		edt(xz,   m*xzt  +edx(zt)-idy(xyzt)-edz(xt))
-		edt(yz,   m*yzt  +idx(xyzt)+edy(zt)-edz(yt))
-		edt(xyz,  m*xyzt +edx(yzt)-edy(xzt)+edz(xyt))
-
-		idt(t,    -m*s    +idx(x)+idy(y)+idz(z))
-		idt(xt,   -m*x    +edx(s)-idy(xy)-idz(xz))
-		idt(yt,   -m*y    +idx(xy)+edy(s)-idz(yz))
-		idt(zt,   -m*z    +idx(xz)+idy(yz)+edz(s))
-		idt(xyt,  -m*xy   +edx(y)-edy(x)+idz(xyz))
-		idt(xzt,  -m*xz   +edx(z)-idy(xyz)-edz(x))
-		idt(yzt,  -m*yz   +idx(xyz)+edy(z)-edz(y))
-		idt(xyzt, -m*xyz  +edx(yz)-edy(xz)+edz(xy))
+phi = np.zeros((8, 64, 64, 2))
+x2 = np.linspace(-1, 1, 64) ** 2
+phi[..., 0] = np.random.normal(size=(8, 1, 1)) * np.exp(-np.add.outer(x2, x2) * 16)
+for i in range(4):
+	plt.imshow(np.abs(phi[1:4]).mean(axis=-1).T * 8)
+	plt.show()
+	for t in range(64):
+		leapfrog(phi)

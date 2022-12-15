@@ -1,10 +1,12 @@
 import numpy as np
 
 def split(seq, f):
+	"""split iterable into two lists based on predicate f"""
 	seqs = [], []
 	for item in seq:
 		seqs[f(item)].append(item)
 	return seqs
+
 
 class AbstractField:
 	"""Field without specific array backing storage, just doing symbolic manipulation"""
@@ -38,10 +40,40 @@ class AbstractField:
 	def gauss(self, sigma=0.1, location=0):
 		return np.exp(-self.quadratic(sigma, location))
 
+	def smooth_noise(self, sigma):
+		arr = np.random.normal(size=self.arr.shape)
+		import scipy
+		s = [0] * arr.ndim
+		s[1:] = sigma
+		arr = scipy.ndimage.gaussian_filter(arr, sigma=s, mode='wrap')
+		return self.copy(arr=arr)
+
+	def random_gaussian(self, sigma, location=0, seed=None):
+		"""initialize a field with a random gaussian"""
+		if seed:
+			np.random.seed(seed)
+		gauss = self.gauss(np.array(sigma), np.array(location))
+		vec = np.random.normal(size=(self.components,))
+		vec = vec / np.linalg.norm(vec)
+		q = np.einsum('c, ...->c...', vec, gauss)
+		return self.copy(arr=q)
+
+	def upscale_array(self, arr, nums):
+		import scipy.signal
+		for i, s in enumerate(arr.shape):
+			if nums[i] > 1:
+				arr = scipy.signal.resample(arr, num=s*nums[i], axis=i)
+		return arr
+
+	def upscale(self, s=None):
+		if s is None:
+			s = [2]*self.dimensions
+		return self.copy(arr=self.upscale_array(self.arr, [1]+s))
 
 	def process_op(self, op):
 		"""preprocess operator into easily consumable terms"""
 		from collections import namedtuple
+		# FIXME: add string names here
 		Term = namedtuple('Term', ['contraction', 'd_idx', 'f_idx', 'sign'])
 
 		is_id = lambda di, fi: 1 if np.bitwise_and(self.domain.blades[di], self.subspace.blades[fi]) else 0
@@ -81,6 +113,48 @@ class AbstractField:
 		return self.generate(self.algebra.operator.inner_product(self.domain, self.subspace))
 
 
+	def tonemap(self, components, norm, gamma):
+		frames = getattr(self, components)
+		# print(frames.shape)
+		frames = np.abs(frames) * 1.5
+		if isinstance(norm, int):
+			frames = frames / np.percentile(frames.flatten(), norm)
+		if isinstance(norm, float):
+			frames = frames / norm
+		if gamma:
+			frames = np.sqrt(frames)
+		frames = np.clip(frames * 255, 0, 255).astype(np.uint8)
+		frames = np.moveaxis(frames, 0, -1) # color components last
+		frames = np.moveaxis(frames, -2, 0) # t first
+		return frames
+
+	def write_gif_1d(self, basepath, components, pre='', post='', norm=None, gamma=True):
+		basename = '_'.join([pre, str(self.shape), self.algebra.description.description_str, self.subspace.pretty_str, components, post])
+		os.makedirs(basepath, exist_ok=True)
+		frames = self.tonemap(components, norm, gamma)
+		iio.imwrite(os.path.join(basepath, basename+'_xt.gif'), frames[::-1])
+
+	def write_gif_2d(self, basepath, components, pre='', post='', norm=None, gamma=True):
+		basename = '_'.join([pre, str(self.shape), self.algebra.description.description_str, self.subspace.pretty_str, components, post])
+		os.makedirs(basepath, exist_ok=True)
+		frames = self.tonemap(components, norm, gamma)
+		iio.imwrite(os.path.join(basepath, basename+'_anim.gif'), frames)
+		iio.imwrite(os.path.join(basepath, basename+'_xt.gif'), frames[::-1, self.shape[0]//2])
+
+	def write_gif_2d_compact(self, basepath, components, pre='', post='', norm=None, gamma=True):
+		basename = '_'.join([pre, str(self.shape), self.algebra.description.description_str, self.subspace.pretty_str, components, post])
+		os.makedirs(basepath, exist_ok=True)
+		frames = self.tonemap(components, norm, gamma)
+		iio.imwrite(os.path.join(basepath, basename+'_xt.gif'), frames[::-1].mean(axis=1).astype(np.uint8))
+
+	def write_gif_3d(self, basepath, components, pre='', post='', norm=None, gamma=True):
+		basename = '_'.join([pre, str(self.shape), self.algebra.description.description_str, self.subspace.pretty_str, components, post])
+		os.makedirs(basepath, exist_ok=True)
+		frames = self.tonemap(components, norm, gamma)
+		iio.imwrite(os.path.join(basepath, basename+'_anim.gif'), frames[:, self.shape[0]//2])
+		iio.imwrite(os.path.join(basepath, basename+'_xt.gif'), frames[::-1, self.shape[0]//2, self.shape[1]//2])
+
+
 class AbstractSpaceTimeField(AbstractField):
 	"""Spacetime field with domain axis t, where we assume a full field over t is never allocated,
 	but rather traversed by timestepping"""
@@ -118,3 +192,9 @@ class AbstractSpaceTimeField(AbstractField):
 
 	def generate_geometric(self) -> str:
 		return self.generate(self.algebra.operator.geometric_product(self.domain, self.subspace))
+
+
+
+import imageio.v3 as iio
+import os
+

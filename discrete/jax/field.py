@@ -49,7 +49,7 @@ class Field(AbstractField):
 		return type(self)(
 			subspace=self.subspace if subspace is None else subspace,
 			domain=self.domain,
-			arr=arr.copy() if arr is None else arr
+			arr=arr.copy() if arr is None else jnp.array(arr)
 		)
 	def __add__(self, other):
 		if isinstance(other, type(self)):
@@ -91,6 +91,7 @@ class Field(AbstractField):
 
 	def slice(self, idx):
 		return SpaceTimeField(self.subspace, self.domain, self.arr[..., idx])
+
 
 @register
 class SpaceTimeField(Field, AbstractSpaceTimeField):
@@ -147,23 +148,23 @@ class SpaceTimeField(Field, AbstractSpaceTimeField):
 				fdi, v = dual_map[t_term.f_idx]
 				total += arr[fdi] * mass_I * v
 
-			arr = arr.at[t_term.f_idx].add(total * metric['t'] * t_term.sign)
+			arr = arr.at[t_term.f_idx].add(total * metric.get('t', 1) * t_term.sign)
 
 		return self.copy(arr=arr)
 
-	def rollout(self, steps, metric=None, **kwargs) -> Field:
+	def rollout(self, steps, unroll=1, metric=None, **kwargs) -> Field:
 		"""perform a rollout of a leapfrog field into a whole field"""
 		# work safe CFL condition into metric scaling
-		unroll = self.dimensions
+		cfl_unroll = self.dimensions
 		if metric is None:
 			metric = {}
-		metric['t'] = metric.get('t', 1) / unroll
+		metric['t'] = metric.get('t', 1) / cfl_unroll
 
 		@jax.jit
 		def step(state):
 			def inner(_, field):
 				return field.geometric_derivative_leapfrog(metric=metric, **kwargs)
-			return jax.lax.fori_loop(0, unroll, inner, state)
+			return jax.lax.fori_loop(0, unroll*cfl_unroll, inner, state)
 
 		output = Field.from_subspace(self.subspace, self.shape + (steps,))
 		arr = np.asfortranarray(output.arr) # more contiguous if t is last

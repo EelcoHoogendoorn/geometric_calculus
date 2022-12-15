@@ -3,6 +3,8 @@ import jax
 import jax.numpy as jnp
 import numpy as np
 import scipy
+
+from numga.algebra.algebra import Algebra
 from discrete.jax.field import Field
 
 
@@ -38,7 +40,6 @@ def eigen(lhs, rhs, x, M=None, nullspace=None):
 def test_scalar_wave_1d():
 	# FIXME: set up variable material property fields
 	#  would that help with funny linear propagation? why so lnear now?
-	from numga.algebra.algebra import Algebra
 	algebra = Algebra.from_str('x+')
 	shape = (64,)
 	displacement = Field.from_subspace(algebra.subspace.scalar(), shape)
@@ -102,26 +103,21 @@ def test_scalar_wave_1d():
 	# 		# ax[i].colorbar()
 	# plt.show()
 
-def smooth_noise(field, sigma):
-	arr = np.random.normal(size=field.arr.shape)
-	import scipy
-	sigma = [0] + [sigma] * (field.dimensions - 1) + [0]
-	arr = scipy.ndimage.gaussian_filter(arr, sigma=sigma, mode='wrap')
-	return field.copy(arr=jnp.array(arr))
 
-
-def solve_eigen(field, l, mass):
+def solve_eigen(field, l, mass=0, iterations=1001, metric={}):
 	"""solve first order eigenproblem via periodic discretized time axis
 
 	not very fast; and not sure its bugfree either
-	the nice thing is that we need not make any assumption about temporal axis
+	the nice thing is that we need not make any assumption about temporal axis,
+	and should in nonlinear setting as well
 	"""
 	def func(params):
 		arr, l = params
 		q = field.copy(arr=arr)
-		residual = q.geometric_derivative(metric={'t': l})
-		res = residual.arr - arr * mass
-		return optax.huber_loss(res, delta=1).sum() + optax.huber_loss((arr**2).sum(), 1, delta=1)
+		metric['t'] = l
+		residual = q.geometric_derivative(metric=metric)
+		res = residual.arr #- arr * mass
+		return optax.huber_loss(res, delta=1).mean() + optax.huber_loss((arr**2).sum(), 1, delta=1)
 
 	l = jnp.array(l)
 	params = field.arr, l
@@ -131,7 +127,7 @@ def solve_eigen(field, l, mass):
 	tx = optax.adam(learning_rate=learning_rate)
 	opt_state = tx.init(params)
 	loss_grad_fn = jax.jit(jax.value_and_grad(func))
-	for i in range(10001):
+	for i in range(iterations):
 		if i % 100 == 0:
 			learning_rate *= 0.7
 		loss_val, grads = loss_grad_fn(params)
@@ -143,26 +139,23 @@ def solve_eigen(field, l, mass):
 	new_field, new_l = params
 	print(new_l)
 	field = field.copy(arr=new_field)
-	slc = field.slice(0)
-	return slc, new_l
+	return field, new_l
 
 
-from discrete.jax.test.test_leapfrog import write_gif_1d, write_gif_2d
-from numga.algebra.algebra import Algebra
 
 def test_first_order_wave_11():
 	"""compute eigenmodes by expliticly constructing a periodic time domain"""
 	algebra = Algebra.from_str('x+t-')
-	shape = (64, 2)
+	shape = (64, 64)
 	field = Field.from_subspace(algebra.subspace.full(), shape)
-	field = smooth_noise(field, 4)
+	field = field.smooth_noise([4, 4])
 	mass = 1 - field.gauss(jnp.array([0.4, 1e16])) / 2
 
-	slc, new_l = solve_eigen(field, 5.0, mass)
+	field, new_l = solve_eigen(field, 0.5, mass)
 
-	mass = mass[..., 0]
-	anim = slc.rollout(64, metric={'t': new_l / 128}, mass=mass)
-	write_gif_1d('../../output', anim, 'x_t_xt', post='eigen', norm=99, gamma=False)
+	# mass = mass[..., 0]
+	# anim = slc.rollout(64, metric={'t': new_l / 128}, mass=mass)
+	field.write_gif_1d('../../output', 'x_t_xt', post='eigen', norm=99, gamma=False)
 
 
 def test_first_order_wave_21():
@@ -170,12 +163,37 @@ def test_first_order_wave_21():
 	algebra = Algebra.from_str('x+y+t-')
 	shape = (64, 64, 4)
 	field = Field.from_subspace(algebra.subspace.full(), shape)
-	field = smooth_noise(field, 1)
+	field = field.smooth_noise(field, [1, 0])
 	mass = 1 - field.gauss(jnp.array([0.6, 0.6, 1e16])) / 3
 
-	slc, new_l = solve_eigen(field, 40., mass)
+	field, new_l = solve_eigen(field, 40., mass)
+	slc = field.slice(0)
 
 	mass = mass[..., 0]
 	# NOTE: need division here, since we have dt metric term on 'wrong side' in leapfrog
 	anim = slc.rollout(64, metric={'t': 8/new_l}, mass=mass)
-	write_gif_2d('../../output', anim, 'xy_xt_yt', post='eigen', norm=99, gamma=False)
+	anim.write_gif_2d('../../output', 'xy_xt_yt', post='eigen', norm=99, gamma=False)
+
+
+def test_first_order_wave_21_direct():
+	"""compute eigenmodes by expliticly constructing a periodic time domain"""
+	algebra = Algebra.from_str('w+x+y+t-')
+	shape = (2, 8, 8, 8)
+	field = Field.from_subspace(algebra.subspace.even_grade(), shape)
+	field = field.smooth_noise([0.1,1, 1, 1])
+	# field.arr -= field.arr.mean()
+	field.arr = field.arr - field.arr.mean(axis=1, keepdims=True)
+
+	mass = 1 - field.gauss(jnp.array([1e16, 0.6, 0.6, 1e16])) / 3
+	metric = {'w': mass}
+	l = 1.
+	# field, l = solve_eigen(field, l)
+	for i in range(0):
+		metric = {'w': mass}
+		field, l = solve_eigen(field, l, iterations=3000, metric=metric)
+		mass = field.upscale_array(mass, [1, 2, 2, 2])
+		# l = l / 2
+		field = field.upscale([1, 2, 2, 2])
+		# field.arr = field.arr / 8**(0.5)
+
+	field.write_gif_3d('../../output', 'xy_xt_yt', pre='eigen_direct_5', norm=99, gamma=False)
