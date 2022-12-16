@@ -344,21 +344,24 @@ So far we have only considered simple dirac-delta, or gaussian impulse type exci
 
 Non-propagating field components can be removed by simply taking a difference of a field with itself once timestepped. Indeed this gives the intended result for the geometric equation over the bivectors, leaving only propagating components, no stationary ones. Repeated application of this filtering operation generates increasingly high frequency wave packets, and we may think of it as a power-iteration, amplifying high frequency components at the expense of lower frequency ones.
 
-<img src="./figures/filtered0_(128,%20128,%20128,%20128)_x+y+z+t-_is_bivector_xt_yt_zt__xt.gif" width="256" height="256"/>
-<img src="./figures/filtered1_(128,%20128,%20128,%20128)_x+y+z+t-_is_bivector_xt_yt_zt__xt.gif" width="256" height="256"/>
-<img src="./figures/filtered2_(128,%20128,%20128,%20128)_x+y+z+t-_is_bivector_xt_yt_zt__xt.gif" width="256" height="256"/>
+<table>
+    <th><img src="./figures/filtered0_(128,%20128,%20128,%20128)_x+y+z+t-_is_bivector_xt_yt_zt__xt.gif" width="256" height="256"/></th>
+    <th><img src="./figures/filtered1_(128,%20128,%20128,%20128)_x+y+z+t-_is_bivector_xt_yt_zt__xt.gif" width="256" height="256"/></th>
+    <th><img src="./figures/filtered2_(128,%20128,%20128,%20128)_x+y+z+t-_is_bivector_xt_yt_zt__xt.gif" width="256" height="256"/></th>
+</table>
 
 *0, 1 and 2 power iterations on a gaussian excitation of a bivector field. After the first application, the non-Maxwellian non-propagating mode vanishes, and subsequent iterations continue to bring bring out higher frequencies contained in the original gaussian.*
 
 
 The same filtering operation can be applied to a scenario having a compact dimension, and there we may observe dynamics that hitherto were not apparent. Rather than selecting out the lightlike modes, we see the modes traveling along the light cone vanish, under application of this filtering. Upon reflection this makes sense, as the power iteration selects out the highest frequency components, which given the way our initialization is constructed in the compact scenario, are the frequencies pertaining to the compact dimension.
 
-<img src="./figures/filtered0_(2,%20128,%20128,%20128)_w+x+y+t-_is_bivector_xt_yt_wt__xt.gif" width="256" height="256"/>
-<img src="./figures/filtered1_(2,%20128,%20128,%20128)_w+x+y+t-_is_bivector_xt_yt_wt__xt.gif" width="256" height="256"/>
-<img src="./figures/filtered2_(2,%20128,%20128,%20128)_w+x+y+t-_is_bivector_xt_yt_wt__xt.gif" width="256" height="256"/>
+<table>
+    <th><img src="./figures/filtered0_(2,%20128,%20128,%20128)_w+x+y+t-_is_bivector_xt_yt_wt__xt.gif" width="256" height="256"/></th>
+    <th><img src="./figures/filtered1_(2,%20128,%20128,%20128)_w+x+y+t-_is_bivector_xt_yt_wt__xt.gif" width="256" height="256"/></th>
+    <th><img src="./figures/filtered2_(2,%20128,%20128,%20128)_w+x+y+t-_is_bivector_xt_yt_wt__xt.gif" width="256" height="256"/></th>
+</table>
 
-*0, 1 and 2 power iterations on an off-center gaussian excitation of a bivector field, with one compact dimension `w`, and a variable `w` potential well. Time has been sped up by [1, 8, 64] times respectively; without such scaling the subluminal excitations move too slow to manifest themselves as a seperate component; and the last frame would not notiably evolve at all in the given timeframe. Convergence to a true stationary solution seems faster than any polynomial power we have tried. Note that the trapped massive state radiates as it is accelerated by the potential, but that these are only true lightlike excitations in the first picture*
-
+*0, 1 and 2 power iterations on an off-center gaussian excitation of a bivector field, with one compact dimension `w`, and a variable `w` potential well. Time has been sped up by [1, 8, 64] times respectively; without such scaling the untrapped excitations move too slow to manifest themselves as a seperate component; and the last frame would not notiably evolve at all in the given timeframe. Convergence to a true stationary solution seems faster than any polynomial power we have tried. Note that the trapped massive state radiates as it is accelerated by the potential, but that these are only a true lightlike radiation in the first picture.*
 
 What we then see brought into focus is a wave component resembling the lightlike excitations; but traveling within the light cone. This wave component needs to have some motion around the compact dimension; by construction, and by its apparent subluminal motion from the non-compact dimension. However, it succeeds in doing so, without being influenced in its propagation by our imposed profile on the metric of `w`. 
 
