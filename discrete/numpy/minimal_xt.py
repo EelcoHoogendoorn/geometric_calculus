@@ -11,13 +11,11 @@ idt = edt
 
 ed = lambda d: lambda a: np.roll(a, shift=-1, axis=d) - a
 id = lambda d: lambda a: a - np.roll(a, shift=+1, axis=d)
-edx, _edw = [ed(d) for d in range(2)]
-idx, _idw = [id(d) for d in range(2)]
-edw = lambda a: _edw(a) * 0.1
-idw = lambda a: _idw(a) * 0.1
+edx, edw = ed(0), lambda a: ed(1)(a) * 0.1
+idx, idw = id(0), lambda a: id(1)(a) * 0.1
 
 x2 = np.linspace(-1, 1, 64) ** 2
-m = x2[:, None] * 0.3
+m = x2[:, None] * 0.5
 
 def leapfrog(phi):
 	s, w, x, t, wx, wt, xt, wxt = phi
@@ -38,5 +36,5 @@ for t in range(64):
 	for _ in range(3):
 		leapfrog(phi)
 
-plt.imshow((np.abs(xt[1:4,:, ::-1]).mean(axis=-1).T * 4))
+plt.imshow((np.abs(xt[1:4, :, ::-1]).mean(axis=-1).T * 2))
 plt.show()

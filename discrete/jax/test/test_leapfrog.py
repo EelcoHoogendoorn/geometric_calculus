@@ -175,15 +175,32 @@ def filter_stationary(field, n=1, mean_axis=None, **kwargs):
 def test_3d_bivector():
 	print()
 	algebra = Algebra.from_str('x+y+z+t-')
-	shape = (64, 64, 64)
-	steps = 64
+	shape = (128, 128, 128)
+	steps = 128
 	field = SpaceTimeField.from_subspace(algebra.subspace.bivector(), shape)
 	field = field.random_gaussian(0.1)
 
-	field = filter_stationary(field)
+	for n in range(3):
+		field = filter_stationary(field, n=n)
+		full_field = field.rollout(steps)
+		full_field.write_gif_3d('../../output', 'xt_yt_zt', pre=f'filtered{n}', norm=99, anim=False)
 
-	full_field = field.rollout(steps)
-	full_field.write_gif_3d('../../output', 'xt_yt_zt', pre='filtered', norm=99)
+
+def test_3d_bivector_compact():
+	print()
+	algebra = Algebra.from_str('w+x+y+t-')
+	shape = (2, 128, 128)
+	steps = 128
+	field = SpaceTimeField.from_subspace(algebra.subspace.bivector(), shape)
+	field = field.random_gaussian(0.1, [0, 0, 0.1])
+	dimple = (1-field.gauss(jnp.array([1, 0.3, 0.3]))*0.9)
+	# metric = {'t': dimple}
+	metric = {'w': dimple / 2}
+
+	for n in range(3):
+		field = filter_stationary(field, n=n, metric=metric)
+		full_field = field.rollout(steps, metric=metric, unroll=8**n)
+		full_field.write_gif_3d('../../output', 'xt_yt_wt', pre=f'filtered{n}', norm=99, anim=False)
 
 
 def test_3d_even_compact():
@@ -191,7 +208,7 @@ def test_3d_even_compact():
 	algebra = Algebra.from_str('x+y+z+t-')
 	shape = (2, 128, 128)
 	steps = 128
-	field = SpaceTimeField.from_subspace(algebra.subspace.even_grade(), shape)
+	field = SpaceTimeField.from_subspace(algebra.subspace.bivector(), shape)
 
 	field = field.random_gaussian(0.1)
 	mass = 0.2 +0* field.quadratic() / 4# + 0.1

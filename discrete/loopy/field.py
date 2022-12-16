@@ -82,6 +82,9 @@ class Field(AbstractField):
 		assert len(arr) == len(subspace)
 		assert len(self.shape) == len(self.domain)
 
+	def __hash__(self):
+		return self.subspace, self.domain, self.shape
+
 	# @classmethod
 	# def from_subspace(cls, subspace, shape, domain=None):
 	# 	return cls(
@@ -126,14 +129,6 @@ class Field(AbstractField):
 			assert self.subspace == other.subspace
 			return self.copy(self.arr * other.arr)
 		return self.copy(self.arr * other)
-
-	def meshgrid(self):
-		xs = [np.linspace(-1, 1, s) for s in self.shape]
-		c = np.array(np.meshgrid(*xs, indexing='ij'))
-		# d = deltas(self.subspace.algebra.subspace.scalar(), self.subspace)[:, 0, :]
-		from discrete.util import deltas
-		d = deltas(self.subspace, self.algebra.subspace.scalar())
-		return c    # FIXME: add version with per element offset
 
 	def restrict(self, subspace):
 		op = self.subspace.algebra.operator.restrict(self.subspace, subspace)

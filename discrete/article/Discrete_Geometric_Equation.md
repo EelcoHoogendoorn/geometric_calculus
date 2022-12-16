@@ -142,7 +142,7 @@ We may summarize the above in the following notation, in terms of component-wise
 -idt(t)  = +idx(x) 
 +idt(xt) = +edx(s)
 ```
-Where terms `idt` and `edt` reflect interior and exterior temporal differences respectively, (which could be implemented as an in-place update of the field component with the right hand side, scaled by an appropriate Courant number). Using the indexing scheme denoted above, the terms `edx` and `idx` reduce to simple upwind and downwind first order differences. For complete code examples, one may browse this repository.
+Where terms `idt` and `edt` reflect interior and exterior temporal differences respectively, (which could be implemented as an in-place update of the field component with the right hand side, scaled by an appropriate Courant number). Using the indexing scheme denoted above, the terms `edx` and `idx` reduce to simple upwind and downwind first order differences. [Here](./../numpy/minimal.py) one may find a self contained example illustrating these principles.
 
 Generalizing the logic behind the above steps, we may construct a general algorithm for timestepping the geometric equation, `d(phi) = 0`, over algebras of arbitrary dimension and signature:
 
@@ -152,7 +152,7 @@ Generalizing the logic behind the above steps, we may construct a general algori
 4. Profit
 
 [^4]: 
-    for instance, doing this in an algebra `xyzt`, for a domain `xyt` (no derivatives in `z`), over a field of a subset of bivector components `xt, yt, xy`, to simulate 2d transverse-electric fields, we obtain one equation `idx(xt) + idy(yt) = 0`; this has no time derivative, but can be viewed as a compatibility initial equation on the field; and can simply be ignored for the purpose of constructing the timestepping scheme.
+    for instance, doing this in an algebra `x+y+z+t-`, for a domain `xyt` (derivatives in `z` implied zero), over a field of a subset of bivector components `xt, yt, xy`, to simulate 2d transverse-electric fields, we obtain one equation `idx(xt) + idy(yt) = 0`; this has no time derivative, but can be viewed as a compatibility initial equation on the field; and can simply be ignored for the purpose of constructing the timestepping scheme.
 
 Assuming the availability of a software library for managing the bookkeeping of signs involved in geometric algebra, the above steps can be readily implemented in a handful of lines of code, to produce a code-generator, for algebras of any dimension and signature; see [this](./../field.py) code example.
 
@@ -261,7 +261,7 @@ We emphasize that this represents only a cursory exploration of the type of dyna
 
 ### Direct zero order
 
-Aside from the pure geometric equation `d(phi) = 0`, it is inviting to consider equations of the form `d(phi) = m*phi`. Here, `m` could be a single constant or a function of the domain variables. 
+Aside from the pure geometric equation `d(phi) = 0`, it is inviting to consider equations of the form `d(phi) = m * phi`. Here, `m` could be a single constant or a function of the domain variables. 
 
 Written out for a full multivector in `x+t-`, collecting and equating colocated and geometrically identical elements, we would thus have:
 
@@ -275,11 +275,11 @@ Written out for a full multivector in `x+t-`, collecting and equating colocated 
 
 Note that this added mass term does not compromise the leapfrog structure of the scheme. We still have two blocks of equations, updating timelike with spacelike and vice versa. Every equation in the leapfrog scheme, now involves not only boundary and incident elements, but also accrues a contribution from the variable that is being leapfrogged. 
 
-By definition of collecting and equating geometric-algebraic identical terms, such terms can be added to the scheme in a consistent manner. Moreover, we emphasize that the addition of this term does not involve any ‘action at a distance’.
+By definition of collecting and equating colocated geometric-algebraic identical terms, such terms can be added to the scheme in a consistent manner. Moreover, we emphasize that the addition of this term does not involve any ‘action at a distance’.
 
 Also, note that through the addition of this zero order term, the equations no longer split into independent even and odd grade parts; but those even and odd grade components now interact. The above observations apply in spaces of any dimension and signature.
 
-We suggestively use the name `m`, noting that such a zero-order addition to the equation leads to the emergence of solutions to the multivector wave equation that not merely lie along the light-cone, but may in fact be stationary in space, or follow any path within the lightcone, and obey a frequency/momentum relationship, as one would expect of massive excitations of a field.
+We suggestively use the name `m`, noting that such a zero-order addition to the equation, also leads to the emergence of solutions to the multivector wave equation that not merely lie along the light-cone, but may be stationary in space, or follow any path within the lightcone, and obey a frequency/momentum relationship, as one would expect of massive excitations of a field.
 
 Should we make the mass term a function of the domain variables, we may realize a ‘potential’ term, where increasing overlap between the potential and the wave function is associated with higher energies, which the evolution of the wave function will seek to minimize. Unlike a potential well formed by a variable time dilation, such a potential term may trap both massive and massless excitations alike. 
 
@@ -342,15 +342,42 @@ But for those purposes, in summary, we note that the dynamics of a direct zero o
 
 So far we have only considered simple dirac-delta, or gaussian impulse type excitations. These have two limitations as a tool; for wave equations over single grades, such as the Maxwell equations, such an initial condition contains non-propagating components, that do not satisfy the compatibility conditions. Secondly, such an initial condition excites mixtures of different modes of the equation, which complicates our ability to observe such modes in isolation.
 
-Non-propagating field components can be removed by simply taking a difference of a field with itself once timestepped. Indeed this gives the intended result for the geometric equation over the bivectors, leaving only propagating components, no stationary ones.
+Non-propagating field components can be removed by simply taking a difference of a field with itself once timestepped. Indeed this gives the intended result for the geometric equation over the bivectors, leaving only propagating components, no stationary ones. Repeated application of this filtering operation generates increasingly high frequency wave packets, and we may think of it as a power-iteration, amplifying high frequency components at the expense of lower frequency ones.
+
+<img src="./figures/filtered0_(128,%20128,%20128,%20128)_x+y+z+t-_is_bivector_xt_yt_zt__xt.gif" width="256" height="256"/>
+<img src="./figures/filtered1_(128,%20128,%20128,%20128)_x+y+z+t-_is_bivector_xt_yt_zt__xt.gif" width="256" height="256"/>
+<img src="./figures/filtered2_(128,%20128,%20128,%20128)_x+y+z+t-_is_bivector_xt_yt_zt__xt.gif" width="256" height="256"/>
+
+*0, 1 and 2 power iterations on a gaussian excitation of a bivector field. After the first application, the non-Maxwellian non-propagating mode vanishes, and subsequent iterations continue to bring bring out higher frequencies contained in the original gaussian.*
 
 
+The same filtering operation can be applied to a scenario having a compact dimension, and there we may observe dynamics that hitherto were not apparent. Rather than selecting out the lightlike modes, we see the modes traveling along the light cone vanish, under application of this filtering. Upon reflection this makes sense, as the power iteration selects out the highest frequency components, which given the way our initialization is constructed in the compact scenario, are the frequencies pertaining to the compact dimension.
 
-In case of fields with a compact dimension, having both massless and massive excitations, the massless excitations are those travelling purely orthogonal to the compact dimension; and hence its field components should be constant along the compact dimension. As such, we can eliminate those components from any field, by substracting the mean over the compact dimension. This indeed reveals another interesting aspect of the geometric equation with a compact dimension. on first inspection, our attempt to remove the lightlike components may appear to have failed. On second inspection, what we see brought into focus is a wave component resembling the lightlike excitations; but traveling within the light cone. This wave component needs to have some motion around the compact dimension; by construction, and by its apparent subluminal motion from the non-compact dimension. However, it succeeds in doing so, without being influenced by our imposed profile on the metric of `w`. 
+<img src="./figures/filtered0_(2,%20128,%20128,%20128)_w+x+y+t-_is_bivector_xt_yt_wt__xt.gif" width="256" height="256"/>
+<img src="./figures/filtered1_(2,%20128,%20128,%20128)_w+x+y+t-_is_bivector_xt_yt_wt__xt.gif" width="256" height="256"/>
+<img src="./figures/filtered2_(2,%20128,%20128,%20128)_w+x+y+t-_is_bivector_xt_yt_wt__xt.gif" width="256" height="256"/>
 
-Moreover, these subluminal excitations are also 'lightlike' in their response to a metric variation in `t`. Despite traveling arbitrarily slow, they may escape an arbitrarily deep gravity well, incurring only a change in wavelength as they do so.
+*0, 1 and 2 power iterations on an off-center gaussian excitation of a bivector field, with one compact dimension `w`, and a variable `w` potential well. Time has been sped up by [1, 8, 64] times respectively; without such scaling the subluminal excitations move too slow to manifest themselves as a seperate component; and the last frame would not notiably evolve at all in the given timeframe. Convergence to a true stationary solution seems faster than any polynomial power we have tried. Note that the trapped massive state radiates as it is accelerated by the potential, but that these are only true lightlike excitations in the first picture*
+
+
+What we then see brought into focus is a wave component resembling the lightlike excitations; but traveling within the light cone. This wave component needs to have some motion around the compact dimension; by construction, and by its apparent subluminal motion from the non-compact dimension. However, it succeeds in doing so, without being influenced in its propagation by our imposed profile on the metric of `w`. 
+
+Moreover, these subluminal excitations are also 'lightlike' in their response to a metric variation in `t`. Despite traveling arbitrarily slow within the light cone, they may escape an arbitrarily deep well in `t`, incurring only a change in wavelength as they do so, and unlike 'proper' massive excitations not being inclined to reverse their direction of travel.
 
 Arguably these type of excitation defy our previous binary classification, in terms of lightlike and massive. In these qualities, one may be reminded of the massive bosons.
+
+More curious still, is the effect of this power iteration on what we would formerly refer to as the massive excitaton. It too has its motion refocussed into the compact dimension. This excitation too, becomes more 'massive', in the sense that it is slower to accelerate into the potential well formed by the metric variation in `w`. But our justification for that terminology weakens, seeing as how this excitation is also slower to accelerate into a metric variation in `t`, which is contrary to our expectation of physical mass. With repeated application of the power iteration in a scenario having such a potential well, we may produce excitations that are **arbitrarily insensitive** to the influence of such potential wells and their gradients; like a surfer riding a wave in equilibrium. If they have not previously been named, we would propose to call these excitations 'grommet-solitons'.
+
+It is interesting to reflect on the fact that we are still considering a homogenous first order linear equation here, `d(phi) = 0` in 3 spatial dimensions. The only 'exotic' thing we have done is to consider high frequency waves in one of the spatial dimensions; its 'compactness' or lack thereof being a mere matter of convenience.
+
+Experimentally observing a levitating particle formed by some balance of internally recirculating neutrino-current excitatitions, balancing the effect of gravity, would be quite something; but if such compact dimensions exist in nature, is an open question, and even if they do and are stable, it would seem like quite the feat of experimental physics.
+
+However, we can observe all the same phenomena equally, both to fields over the even subalgebra, as well as the bivectors. They are a consequence of the compact dimension interacting with a potential, not of the mixing of multivector grades.
+
+As such, one might actually expect to be able to observe such grommet-solitons in physical electromagnetic waves. A coaxial cable or waveguide with a variable radius, excited with a wave travelling primarily around the waveguide, may actually serve as a physical realization. If so, one may expect these modes to already have a name in waveguide theory (do they?); however, they might be difficult to realize for substantial duration in a dissipative system, nor is it obvious how to efficiently excite them, either by accident or intentionally, seeing as how they are orthogonal to the more common modes. We emphasize that these solitons distinguish themselves from a usual trapped mode in a resonant waveguide cavity, by their stationary localization on one of the sides of the cavity, as opposed to a more common standing wave, which is distributed and can be viewed as a superposition of traveling waves reflecting off both sides of the cavity.
+
+
+
 
 
 ## Alternative zero order terms
@@ -420,6 +447,8 @@ We note that geometric calculus, and discrete geometric calculus in particular, 
 We note that in the discrete geometric calculus setting, one operation that is always permitted, is to reduce graded elements to scalars via an inner product with themselves; and any (polynomials of such) scalar expressions can again be multiplied with the original element, to obtain cubic terms.
 
 Aside from nonlinearities of this kind, it is of course interesting to consider those nonlinearities that may arise, by coupling the metric variations encoded in the basis blades from which we construct our derivative operators, to the field variables themselves. For any field that does admit a grade-1 component, or for which one can be derived through application of the geometric derivative, the simplest form of such nonlinearity is straightforward indeed. However, should we seek some polynomial expression of such 1-vectors, we should again be mindful of the fact that raising a vector to some power naively, does not result in an expression of a 1-vector type.
+
+
 
 
 ## Open questions
