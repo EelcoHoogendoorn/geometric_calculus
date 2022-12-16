@@ -203,9 +203,11 @@ We note that it would appear impossible to construct a leapfrog scheme of this n
 
 All the figures below pertain to the impulse-response of a pure geometric equation `d(phi) = 0`, (initial condition formed as the product of a gaussian of the spatial variables, with a random sampled value for each field component.) Unless otherwise stated, these are results over the full algebra. All spatial boundary conditions are periodic.
 
-
-<img src="11_mv_xt.gif" width="256" height="256"/> 
-<img src="21_mv_compact_xt.gif" width="256" height="256"/> 
+<table>
+    <th><img src="11_mv_xt.gif" width="256" height="256"/></th>
+    <th><img src="21_mv_compact_xt.gif" width="256" height="256"/></th>
+</table>
+ 
 
 Geometric equation over x+t-, xt plot, and geometric equation over x+y+t-, xt plot. 
 
@@ -213,16 +215,21 @@ In the left plot, an initial disturbance generates only light-like waves propaga
 
 In the right plot, the y dimension is a compact dimension, of a length of 2 elements; the minimum required to sustain nonvanishing gradients in that dimension, and to facilitate a notion of a wave travelling 'around' the compact dimension. We may observe the emergence of excitations capable of traveling within the light cone, as viewed from the non-compact dimension x.
 
-<img src="21_mv_xt.gif" width="256" height="256"/> 
-<img src="21_mv_xy.gif" width="256" height="256"/> 
+
+<table>
+    <th><img src="21_mv_xt.gif" width="256" height="256"/></th>
+    <th><img src="21_mv_xy.gif" width="256" height="256"/></th>
+</table>
 
 Geometric equation over x+y+t-, xt/xy plot. 
 
 The sole difference with the above result, is that this view represents a slice from a non-compact dimension; and indeed we observe only propagation along the light cone.
 
 
-<img src="31_even_compact_xy.gif" width="256" height="256"/>
-<img src="31_even_compact_xt.gif" width="256" height="256"/> 
+<table>
+    <th><img src="31_even_compact_xy.gif" width="256" height="256"/></th>
+    <th><img src="31_even_compact_xt.gif" width="256" height="256"/></th>
+</table>
 
 Geometric equation over the even subalgebra of x+y+z+t-, xy/xt plot. Compact z dimension.
 
@@ -292,8 +299,13 @@ The natural zero order term couples variables being updated, to the element they
 
 ### Results
 
-<img src="1d_mass_g.gif" width="256" height="1024"/>
-<img src="2d_compact_g.gif" width="256" height="1024"/>
+<table>
+    <th><img src="1d_mass_g.gif" width="256" height="1024"/></th>
+    <th><img src="2d_compact_g.gif" width="256" height="1024"/></th>
+</table>
+
+
+
 
 On the left, an `x+t-` simulation, with mass=2
 On the right, `x+y+t-` simulation, without zero order term, and a y-dimension of size 2.
@@ -375,9 +387,7 @@ More curious still, is the effect of this power iteration on what we would forme
 
 It is interesting to reflect on the fact that we are still considering a homogenous first order linear equation here, `d(phi) = 0` in 3 spatial dimensions. The only 'exotic' thing we have done is to consider high frequency waves in one of the spatial dimensions; its 'compactness' or lack thereof being a mere matter of convenience.
 
-Experimentally observing a levitating particle formed by some balance of internally recirculating neutrino-current excitatitions, balancing the effect of gravity, would be quite something; but if such compact dimensions exist in nature, is an open question, and even if they do and are stable, it would seem like quite the feat of experimental physics. [^superconductors]
-
-[^superconductors]: Perhaps a feat of experimental physics that has already been performed? Thinking about it some more, 'levitation' and 'disregard for gravity fields' are known experimental phenomena, as observed with supercooled magnets, or superfluids. Suggestively, these also occur as the spatial momentum of particles is annealed close to zero, as our power iteration does; however, we have not noticed any mechanisms for a sudden phase transition in this sense.
+Experimentally observing a levitating particle formed by some balance of internally recirculating neutrino-current excitatitions, balancing the effect of gravity, would be quite something; but if such compact dimensions exist in nature, is an open question, and even if they do and are stable, it would seem like quite the feat of experimental physics. 
 
 However, we can observe all the same phenomena equally, both to fields over the even subalgebra, as well as the bivectors. They are a consequence of the compact dimension interacting with a potential, not of the mixing of multivector grades.
 
@@ -494,10 +504,3 @@ We find that it readily lends itself to efficient and stable simulations of rela
 
 Its dimension and grade agnostic formulation, deriving from its geometric algebraic roots, combined with code generation in any dimension and signature, lends itself readily to experimental investigation of the dynamics implied by a variety of types of equations.
 
-
-
-We note that our reflections on the one-up compact models, can be seen as a partial geometric algebraic perspective on the Kaluza-Klein model. It is our impression that a lot of exploration is yet to be done, at the intersection of geometric calculus, extra dimensions, and mathematical tools for prying solutions from such equations. We note that the Kaluza-Klein model predates both geometric calculus and modern experimental constraints on known particles, and an exploration of the synthesis of these ideas still seems forthcoming.
-
-It is claimed that the first bug-free derivation of the equations implied by the Kaluza-Klein one-up model was published in 2015; some 100 years after the initial core ideas were formulated. One can only speculate how many more centuries we would have to wait, before we can convince ourselves we have a full appreciation of the solutions implied by those continuum equations. By contrast, it took us 2 days, to go from initial idea, to a bugfree code generator for the discrete geometric derivative, for arbitrary grades, dimensions and signatures. Coming to a basic understanding of compact dimensions and their properties happened the day after
-
-This certainly is not intended as a claim about our abstract reasoning skills; which I have no doubt are dwarfed by anyone with the mental capacity to make progress working on continuum theories in higher dimensions. It is a claim about the comparative properties of tools. In this we feel that the mathematical philosophy of Millicent-Roberts still stands as comprehensive, except that from a 21th century perspective one might add 'haha discrete operator goes brrrrr'

@@ -32,7 +32,7 @@ phi = np.zeros((8, 64, 2))
 phi[..., 0] = np.random.normal(size=(8, 1)) * np.exp(-x2 * 16)
 xt = np.empty((8, 64, 64, 2))
 for t in range(64):
-	xt[:, :, t] = phi
+	xt[..., t, :] = phi
 	for _ in range(3):
 		leapfrog(phi)
 
