@@ -147,11 +147,11 @@ Where terms `idt` and `edt` reflect interior and exterior temporal differences r
 Generalizing the logic behind the above steps, we may construct a general algorithm for timestepping the geometric equation, `d(phi) = 0`, over algebras of arbitrary dimension and signature:
 
 1. We construct all terms of the geometric product of `phi`, with a 1-vector of all (differential) elements in the domain of the field (this could be a subset of the basis elements of the algebra)
-2. Each collection of terms corresponding to a single resultant geometric type forms a single equation. Each such equation contains (at most [^4]) one `dt` term, which we collect to one side.
+2. Each collection of terms corresponding to a single resultant geometric type forms a single equation. Each such equation contains (at most [^TE]) one `dt` term, which we collect to one side.
 3. We observe that we may partition these equations into two independent sets, those updating space-like variables using differences of time-like variables, and those updating time-like variables using differences of space-like variables, respectively.
 4. Profit
 
-[^4]: 
+[^TE]: 
     for instance, doing this in an algebra `x+y+z+t-`, for a domain `xyt` (derivatives in `z` implied zero), over a field of a subset of bivector components `xt, yt, xy`, to simulate 2d transverse-electric fields, we obtain one equation `idx(xt) + idy(yt) = 0`; this has no time derivative, but can be viewed as a compatibility initial equation on the field; and can simply be ignored for the purpose of constructing the timestepping scheme.
 
 Assuming the availability of a software library for managing the bookkeeping of signs involved in geometric algebra, the above steps can be readily implemented in a handful of lines of code, to produce a code-generator, for algebras of any dimension and signature; see [this](./../field.py) code example.

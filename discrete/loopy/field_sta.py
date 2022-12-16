@@ -18,15 +18,19 @@ class STAOperator(Operator):
 		limits = ' and '.join(f'0 <= {d} < N{d}' for d in domain)
 		sign = {-1: '-', +1: '+'}
 
+		# FIXME: integrate metric properly
+		metric_t = 0.33
+
 		loopy_term = self.loopy_term(domain)
 		# FIXME: allow dynamic extension by fusing other stuff onto statements
-
-		line = '{lhs} = {lhs} {s} ({rhs})'
+		line = '{lhs} = {lhs} {s} ({rhs}) * {metric_t}'
 		statements = [
 			line.format(
 				lhs=f'R[{tt.f_idx}, {axes}]',
 				s=sign[tt.sign],
-				rhs='  '.join(loopy_term(t) for t in ts))
+				rhs='  '.join(loopy_term(t) for t in ts),
+				metric_t=metric_t,
+			)
 			for eq_idx, (tt, ts) in halfstep
 		]
 		print("{[" + axes + "]:" + limits + "}")
@@ -68,8 +72,7 @@ class SpaceTimeField(Field, AbstractSpaceTimeField):
 	def __init__(self, context, subspace, domain, arr):
 		super(AbstractSpaceTimeField, self).__init__(subspace, domain)
 		self.context = context
-		self.arr = arr
-		self.shape = arr.shape[1:]
+		self.arr = self.context.coerce_array(arr)
 		assert len(arr) == len(subspace)
 		assert len(self.shape) == len(context.spatial_domain)
 

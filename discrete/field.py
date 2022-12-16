@@ -1,5 +1,9 @@
 import numpy as np
 
+import imageio.v3 as iio
+import os
+
+
 def split(seq, f):
 	"""split iterable into two lists based on predicate f"""
 	seqs = [], []
@@ -79,7 +83,12 @@ class AbstractField:
 		is_id = lambda di, fi: 1 if np.bitwise_and(self.domain.blades[di], self.subspace.blades[fi]) else 0
 		return tuple([
 			(eqi, tuple([
-				Term(contraction=is_id(di, fi), d_idx=int(di), f_idx=int(fi), sign=int(op.kernel[di, fi, eqi]))
+				Term(
+					contraction=is_id(di, fi),
+					d_idx=int(di),
+					f_idx=int(fi),
+					sign=int(op.kernel[di, fi, eqi])
+				)
 				for di, fi in zip(*np.nonzero(op.kernel[..., eqi]))
 			]))
 			for eqi in range(len(op.subspace))
@@ -194,8 +203,9 @@ class AbstractSpaceTimeField(AbstractField):
 	def generate_geometric(self) -> str:
 		return self.generate(self.algebra.operator.geometric_product(self.domain, self.subspace))
 
-
-
-import imageio.v3 as iio
-import os
+	def write_gif_2d(self, basepath, components, pre='', post='', norm=None, gamma=True):
+		basename = '_'.join([pre, str(self.shape), self.algebra.description.description_str, self.subspace.pretty_str, components, post])
+		os.makedirs(basepath, exist_ok=True)
+		frames = self.tonemap(components, norm, gamma)
+		iio.imwrite(os.path.join(basepath, basename+'_xy.gif'), frames)
 

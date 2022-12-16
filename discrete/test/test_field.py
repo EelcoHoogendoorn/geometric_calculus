@@ -57,3 +57,22 @@ def test_generate_TM():
 	print()
 	print(field.generate_geometric())
 
+
+
+def test_generate_bivector():
+	"""is there a clean discrete version of the bivector commutator?"""
+	algebra = Algebra.from_str('w+x+y+z+t-')
+	algebra = Algebra.from_str('x+y+z+t-')
+	vec = algebra.subspace.vector()
+	bi = algebra.subspace.bivector()
+	full = algebra.subspace.full()
+	even = algebra.subspace.even_grade()
+	op = algebra.operator.product(vec, even)
+	print()
+	print(op)
+	op = algebra.operator.product(bi, even)
+	print()
+	print(op)
+	# op = algebra.operator.commutator(bi, even)
+	# print()
+	# print(op)

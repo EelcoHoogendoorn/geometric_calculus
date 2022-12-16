@@ -77,7 +77,7 @@ class Field(AbstractField):
 	def __init__(self, context, subspace, domain, arr):
 		super(Field, self).__init__(subspace, domain)
 		self.context = context
-		self.arr = arr
+		self.arr = self.context.coerce_array(arr)
 		self.shape = arr.shape[1:]  # first axis are components
 		assert len(arr) == len(subspace)
 		assert len(self.shape) == len(self.domain)
@@ -115,6 +115,7 @@ class Field(AbstractField):
 
 	def copy(self, arr=None, subspace=None):
 		return type(self)(
+			context=self.context,
 			subspace=self.subspace if subspace is None else subspace,
 			domain=self.domain,
 			arr=arr.copy() if arr is None else arr
