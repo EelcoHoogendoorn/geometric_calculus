@@ -169,8 +169,14 @@ class SpaceTimeField(Field, AbstractSpaceTimeField):
 		output = Field.from_subspace(self.subspace, self.shape + (steps,))
 		arr = np.asfortranarray(output.arr) # more contiguous if t is last
 		# FIXME: compile the whole thing?
+		step(self)  # warmup
+		import time
+		tt = time.time()
+
 		for t in range(steps):
 			self = step(self)   # Eww self reassign; not cool?
 			arr[..., t] = self.arr
+		print('time: ', time.time() - tt)
+
 		output.arr = jnp.array(arr)
 		return output

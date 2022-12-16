@@ -14,7 +14,7 @@ We provide self contained runnable code examples of the presented method, and pe
 ## Introduction
 The Yee scheme for timestepping the Maxwell equations has been very successful. First published in 1966, it remains a workhorse of computational photonics today. Not only has it been very valuable as a practical engineering tool, but also as a didactic tool in providing insight in the structure of the Maxwell equations. 
 
-When the Yee scheme is viewed through the lens of discrete geometric calculus, as a set of relationships between bivector fluxes residing on the faces of a space-time grid [^1], we may observe that the Yee scheme corresponds directly to a discrete expression of the fundamental theorem of geometric calculus, which is key to its favorable conservation properties.
+When the Yee scheme is viewed through the lens of discrete geometric calculus, as a set of relationships between bivector fluxes residing on the faces of a space-time grid [^GCE], we may observe that the Yee scheme corresponds directly to a discrete expression of the fundamental theorem of geometric calculus, which is key to its favorable conservation properties.
 
 
 However, to the best of the authors knowledge, no conceptually or practically similar techniques have hitherto been described for more general multi-vectorial wave equations. 
@@ -23,7 +23,7 @@ The Dirac equation describes the massive counterpart to the Maxwell force carrie
 
 Arguably, the complex-valued matrix-representation as originally formulated by Dirac is not the easiest to intuit. Hestenes set out to reframe the Dirac equation in terms of geometric algebra, seeking a real valued representation. In such a geometric formulation, the algebraic elements squaring to -1 are the result of the anti-commutativity of the exterior product, and hence directly map onto a geometric entity such as a plane, which one may interpret as the plane of rotation.
 
-In geometric calculus notation, we may state the Dirac operator as: 
+In geometric calculus notation [^geometric_derivative], we may state the Dirac operator as: 
 
 ```
 geometric_derivative(phi) = 0
@@ -37,7 +37,7 @@ By suggestive comparison, in terms of geometric calculus, the homogenous Maxwell
 ```
 with `F` a bivector field over the spacetime algebra. 
 
-The maxwell equation thus viewed has a residual of mixed grade 1 and 3. In the Maxwell case the more usual framing is to write this as a pair of equations `interior_derivative(F) = 0` and `exterior_derivative(F) = 0` [^2]; though we argue that viewing this as a single equation with a residual in the space of odd-grade multivectors provides a more unified view; a view that is important to the line of reasoning we develop here [^3].
+The maxwell equation thus viewed has a residual of mixed grade 1 and 3. In the Maxwell case the more usual framing is to write this as a pair of equations `interior_derivative(F) = 0` and `exterior_derivative(F) = 0` [^EC]; though we argue that viewing this as a single equation with a residual in the space of odd-grade multivectors provides a more unified view; a view that is important to the line of reasoning we develop here [^geometric_equation].
 
 Framed in this way, we see that the homogenous Maxwell equation and the Dirac operator in 3+1 spacetime differ in only one respect; the Maxwell equation is formulated as a field over grade-2 bivectors, where the Dirac operator is formulated over a field of even-grade multivectors; that is, grades 0+2+4. Under the action of the geometric derivative, both have a residual in the space of odd-grade multivectors, of grades 1+3.
 
@@ -48,17 +48,19 @@ This leaves open the question, if a suitable discrete operator can be constructe
 We will approach these questions by generalizing the logic implicit in the Yee scheme, to fields of arbitrary grade.
 
 
-[^1]: 
+[^GCE]: 
     To our knowledge, the space-time view of the Yee scheme was first explicitly articulated in [Geometric Computational Electrodynamics](https://arxiv.org/pdf/0707.4470.pdf)
 
-[^2]: 
-    In exterior calculus, the geometric derivative can be written as `d + *d*`. Both encompass the same idea, in a somewhat different mathematical dialect; in both cases it is a combination of a grade-lowering inner term and a grade-raising outer term. 
+[^EC]: 
+    In exterior calculus, the geometric-vector-derivative can be written as `d + *d*`. Both encompass the same idea, in a somewhat different mathematical dialect; in both cases it is a combination of a grade-lowering inner term and a grade-raising outer term. 
     Our viewpoint on the discrete domain is very well articulated in [Discrete Exterior Calculus](https://thesis.library.caltech.edu/1885/3/thesis_hirani.pdf). In line with the research direction articulated there, our outlook is to explore the internal logic of a discrete representation of core geometric ideas, and follow that logic where it may lead.
     Yet we feel the term Discrete Geometric Calculus is more appropriate; both to be congruent with the line of thinking that led us to this work, but also because the key aspects of this work concerns itself equally with the interior and exterior part of the geometric product. Moreover, this work is orthogonal to concerns specific to the strict seperation of topology and metric, which tend to take a central role in expositions of exterior calculus. We feel that framing it in these terms would unnecessarily complicate ideas, which are of a rather striking conceptual simplicity by themselves. In this we second the opinions of [Hestenes](https://geocalc.clas.asu.edu/pdf-preAdobe8/MathViruses.pdf)
 
-[^3]: 
-    We prefer to refer to the equation `geometric_derivative(phi) = 0`, or `d(phi) = 0` for shorthand in appropriate context, as ‘the (first order homogenous) geometric equation’. If it is important that we restrict our attention to particular subspaces, we prefer to speak of ‘the geometric equation over the bivectors’ rather than 'the Maxwell equation'. Such a language is not merely a label based on superficial similarities; in all cases, we are speaking of the same operator; a geometric product of the field, with a 1-vector of the (differential) elements in our domain. 
+[^geometric_derivative]: 
+    What we refer here to as the 'geometric derivative', is in many contexts refered to as the 'vector derivative'. In both cases we can state this operation verosely as 'the geometric product of a 1-vector of differential elements with the operand'. A natural way to shorten that phrase without losing any information would be 'vector-geometric-derivative'. Depending on context, it may be appropriate to leave one, or both of those adjectives implicit. Since in this document we are not concerned with more general multi-vectorial derivatives, but only concern ourselves with 1-vector derivatives, we do elect to leave the vector part implicit. In some contexts in this document, where we care to distinguish the exterior and interior portions, linguistic consistency would demand we refer to their sum as the geometric derivative. In some other contexts, such as in the latter parts of this document, both adjectives may be suffiently constrained by context, and the bare symbol `d` leaves no room for ambiguity.
 
+[^geometric_equation]: 
+    We prefer to refer to the equation `geometric_derivative(phi) = 0`, or `d(phi) = 0` for shorthand in appropriate context, as ‘the (first order homogenous) geometric equation’. If it is important that we restrict our attention to particular subspaces, we prefer to speak of ‘the geometric equation over the bivectors’ rather than 'the Maxwell equation'. Such a language is not merely a label based on superficial similarities; in all cases, we are speaking of the same operator; a geometric product of the field, with a 1-vector of the (differential) elements in our domain. 
 
 
 ### Space-time grids
@@ -373,7 +375,9 @@ More curious still, is the effect of this power iteration on what we would forme
 
 It is interesting to reflect on the fact that we are still considering a homogenous first order linear equation here, `d(phi) = 0` in 3 spatial dimensions. The only 'exotic' thing we have done is to consider high frequency waves in one of the spatial dimensions; its 'compactness' or lack thereof being a mere matter of convenience.
 
-Experimentally observing a levitating particle formed by some balance of internally recirculating neutrino-current excitatitions, balancing the effect of gravity, would be quite something; but if such compact dimensions exist in nature, is an open question, and even if they do and are stable, it would seem like quite the feat of experimental physics.
+Experimentally observing a levitating particle formed by some balance of internally recirculating neutrino-current excitatitions, balancing the effect of gravity, would be quite something; but if such compact dimensions exist in nature, is an open question, and even if they do and are stable, it would seem like quite the feat of experimental physics. [^superconductors]
+
+[^superconductors]: Perhaps a feat of experimental physics that has already been performed? Thinking about it some more, 'levitation' and 'disregard for gravity fields' are known experimental phenomena, as observed with supercooled magnets, or superfluids. Suggestively, these also occur as the spatial momentum of particles is annealed close to zero, as our power iteration does; however, we have not noticed any mechanisms for a sudden phase transition in this sense.
 
 However, we can observe all the same phenomena equally, both to fields over the even subalgebra, as well as the bivectors. They are a consequence of the compact dimension interacting with a potential, not of the mixing of multivector grades.
 
@@ -490,3 +494,10 @@ We find that it readily lends itself to efficient and stable simulations of rela
 
 Its dimension and grade agnostic formulation, deriving from its geometric algebraic roots, combined with code generation in any dimension and signature, lends itself readily to experimental investigation of the dynamics implied by a variety of types of equations.
 
+
+
+We note that our reflections on the one-up compact models, can be seen as a partial geometric algebraic perspective on the Kaluza-Klein model. It is our impression that a lot of exploration is yet to be done, at the intersection of geometric calculus, extra dimensions, and mathematical tools for prying solutions from such equations. We note that the Kaluza-Klein model predates both geometric calculus and modern experimental constraints on known particles, and an exploration of the synthesis of these ideas still seems forthcoming.
+
+It is claimed that the first bug-free derivation of the equations implied by the Kaluza-Klein one-up model was published in 2015; some 100 years after the initial core ideas were formulated. One can only speculate how many more centuries we would have to wait, before we can convince ourselves we have a full appreciation of the solutions implied by those continuum equations. By contrast, it took us 2 days, to go from initial idea, to a bugfree code generator for the discrete geometric derivative, for arbitrary grades, dimensions and signatures. Coming to a basic understanding of compact dimensions and their properties happened the day after
+
+This certainly is not intended as a claim about our abstract reasoning skills; which I have no doubt are dwarfed by anyone with the mental capacity to make progress working on continuum theories in higher dimensions. It is a claim about the comparative properties of tools. In this we feel that the mathematical philosophy of Millicent-Roberts still stands as comprehensive, except that from a 21th century perspective one might add 'haha discrete operator goes brrrrr'

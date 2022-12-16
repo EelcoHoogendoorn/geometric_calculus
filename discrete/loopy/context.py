@@ -20,7 +20,7 @@ class Context:
 		if isinstance(arr, cla.Array):
 			return arr
 		if isinstance(arr, np.ndarray):
-			return cla.to_device(self.queue, arr)
+			return cla.to_device(self.queue, arr.astype(self.dtype))
 	def allocate_array(self, shape):
 		return cla.zeros(self.queue, shape, self.dtype)
 

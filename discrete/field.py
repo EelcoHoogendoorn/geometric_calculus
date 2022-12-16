@@ -143,11 +143,12 @@ class AbstractField:
 		frames = self.tonemap(components, norm, gamma)
 		iio.imwrite(os.path.join(basepath, basename+'_xt.gif'), frames[::-1])
 
-	def write_gif_2d(self, basepath, components, pre='', post='', norm=None, gamma=True):
+	def write_gif_2d(self, basepath, components, pre='', post='', norm=None, gamma=True, anim=True):
 		basename = '_'.join([pre, str(self.shape), self.algebra.description.description_str, self.subspace.pretty_str, components, post])
 		os.makedirs(basepath, exist_ok=True)
 		frames = self.tonemap(components, norm, gamma)
-		iio.imwrite(os.path.join(basepath, basename+'_anim.gif'), frames)
+		if anim:
+			iio.imwrite(os.path.join(basepath, basename+'_anim.gif'), frames)
 		iio.imwrite(os.path.join(basepath, basename+'_xt.gif'), frames[::-1, self.shape[0]//2])
 
 	def write_gif_2d_compact(self, basepath, components, pre='', post='', norm=None, gamma=True):

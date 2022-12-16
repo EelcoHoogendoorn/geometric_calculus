@@ -21,20 +21,14 @@ def test_sta_2d():
 def test_2d():
 	print()
 	algebra = Algebra.from_str('x+y+t-')
-	shape = (128, 128)
-	steps = 256
+	shape = (512, 512)
+	steps = 128
 	context = SpaceTimeContext(algebra)
 	field = context.make_field(algebra.subspace.full(), shape)
 
 	field = field.random_gaussian(0.1)
 	# mass = 0.4 + field.quadratic() / 2# + 0.1
 
-	# metric = {'t': (1-field.gauss(0.3)*0.5)}
-	op = field.geometric_derivative()
-	# full_field = field.rollout(steps, metric={})
-	for t in range(1000):
-		op.apply()
-	import numpy as np
-	field.arr = field.arr.map_to_host(queue=context.queue)
-
-	field.write_gif_2d('../../output', 'xt_yt_xy', pre='opencl', norm=99)
+	full_field = field.unroll(steps)
+	full_field.arr = full_field.arr.map_to_host(queue=context.queue)
+	full_field.write_gif_2d('../../output', 'xt_yt_xy', pre='opencl', norm=99, anim=False)

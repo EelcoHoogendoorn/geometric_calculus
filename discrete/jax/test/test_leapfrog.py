@@ -94,6 +94,19 @@ def test_2d():
 	full_field.write_gif_2d('../../output', 'xt_yt_xy', post='mass', norm=99)
 
 
+def test_2d_perf():
+	print()
+	algebra = Algebra.from_str('x+y+t-')
+	shape = (512, 512)
+	steps = 128
+	field = SpaceTimeField.from_subspace(algebra.subspace.multivector(), shape)
+	field = field.random_gaussian(0.1)
+
+	full_field = field.rollout(steps)
+
+	full_field.write_gif_2d('../../output', 'xt_yt_xy', pre='jax_perf', norm=99, anim=False)
+
+
 def test_2d_1vec():
 	"""note: like all equations over a non-closed subspace, this thing has non-propagating residual,
 	because we are too lazy to implement a compatible initalization yet"""

@@ -78,7 +78,6 @@ class Field(AbstractField):
 		super(Field, self).__init__(subspace, domain)
 		self.context = context
 		self.arr = self.context.coerce_array(arr)
-		self.shape = arr.shape[1:]  # first axis are components
 		assert len(arr) == len(subspace)
 		assert len(self.shape) == len(self.domain)
 
