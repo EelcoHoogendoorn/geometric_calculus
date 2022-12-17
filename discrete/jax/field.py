@@ -71,6 +71,16 @@ class Field(AbstractField):
 		if output:
 			op = op.select_subspace(output)
 		return self.make_derivative(op, metric)
+	def interior_derivative(self, output=None, metric={}):
+		op = self.algebra.operator.inner_product(self.domain, self.subspace)
+		if output:
+			op = op.select_subspace(output)
+		return self.make_derivative(op, metric)
+	def exterior_derivative(self, output=None, metric={}):
+		op = self.algebra.operator.outer_product(self.domain, self.subspace)
+		if output:
+			op = op.select_subspace(output)
+		return self.make_derivative(op, metric)
 
 	def make_derivative(self, op, metric):
 		"""plain direct derivative, no leapfrog"""

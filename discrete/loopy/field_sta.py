@@ -46,7 +46,7 @@ class STAOperator(Operator):
 		#  whoa; no clue what this is all about
 		# on-device a single block of 16 seems near optimal. rollout gives mem restriction tho
 		for i, d in zip(range(1), domain[::-1]):
-			knl = lp.split_iname(knl, d, 16, outer_tag=f"g.{i}", inner_tag=f"l.{i}")
+			knl = lp.split_iname(knl, d, 2, outer_tag=f"g.{i}", inner_tag=f"l.{i}")
 		# assume grid size and thread block size match
 		# for d in domain:
 		# 	knl = lp.assume(knl, f'N{d} mod 16 = 0')
@@ -83,7 +83,7 @@ class SpaceTimeField(Field, AbstractSpaceTimeField):
 		op = self.algebra.operator.geometric_product(self.domain, self.subspace)
 		return STAOperator(self.context, self, op)
 
-	def unroll(self, steps):
+	def rollout(self, steps):
 		arr = self.context.allocate_array((steps,) + self.arr.shape)
 		print('GBs: ', arr.size / (2**30))
 		import time
@@ -91,7 +91,7 @@ class SpaceTimeField(Field, AbstractSpaceTimeField):
 		tt = time.time()
 		for t in range(steps):
 			# FIXME: kernel that does not update in place but writes direct to next step
-			#  would be more efficient
+			#  would be more efficient? that said we do typically unroll into substeps anyway, so whatever?
 			arr.setitem(t, self.arr, self.context.queue)
 			for substep in range(3):
 				op.apply()

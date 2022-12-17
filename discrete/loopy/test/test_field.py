@@ -1,7 +1,8 @@
 from discrete.loopy.context import Context
 
 
-def test_scalar_wave_2d():
+def test_vector_wave_2d():
+	"""second order vector wave equation"""
 	# path = r'../../output/loopy_wave_scalar_2d'
 	# import imageio.v3 as iio
 

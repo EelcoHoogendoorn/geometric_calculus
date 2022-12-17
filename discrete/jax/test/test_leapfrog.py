@@ -6,7 +6,7 @@ import jax.numpy as jnp
 import numpy as np
 
 from numga.algebra.algebra import Algebra
-from discrete.jax.field import SpaceTimeField
+from discrete.jax.field import SpaceTimeField, Field
 
 
 def test_1d():
@@ -95,6 +95,7 @@ def test_2d():
 
 
 def test_2d_perf():
+	"""performance profiling test, to compare vs numpy and opencl"""
 	print()
 	algebra = Algebra.from_str('x+y+t-')
 	shape = (512, 512)
@@ -161,20 +162,23 @@ def test_2d_compact_sig():
 def test_3d():
 	print()
 	algebra = Algebra.from_str('x+y+z+t-')
-	steps = 64
+	steps = 128
 	shape = (64, 64, 64)
-	field = SpaceTimeField.from_subspace(algebra.subspace.multivector(), shape)
+	field = SpaceTimeField.from_subspace(algebra.subspace.even_grade(), shape)
 
-	field = field.random_gaussian(0.1, 0.1)
+	field = field.random_gaussian(0.1, 0.0)
 	mass = 0.2 + field.quadratic() / 4
-	metric = {}
+	mass = None
+	# dimple = (1-field.gauss(0.3)*0.5)
+	# metric = {'t': dimple}
+	# metric = {'t': dimple / 2}
 
 	full_field = field.rollout(steps, metric=metric, mass=mass)
 	full_field.write_gif_3d('../../output', 'xy_xt_yt', post='', norm=99)
 
 
 def filter_stationary(field, n=1, mean_axis=None, **kwargs):
-	# filter field to a state without non-propagating components
+	"""Subtract a timestepped field from itself, to bring out higher-frequency components"""
 	for i in range(n):
 		correction = field.rollout(1, **kwargs).slice(-1).arr
 		if not mean_axis is None:
@@ -183,6 +187,7 @@ def filter_stationary(field, n=1, mean_axis=None, **kwargs):
 		# field = field.geometric_derivative_leapfrog(metric=metric)
 		# field.arr = field.arr - field.arr.mean(axis=1, keepdims=True)
 	return field
+
 
 
 def test_3d_bivector():
@@ -210,27 +215,64 @@ def test_3d_bivector_compact():
 	# metric = {'t': dimple}
 	metric = {'w': dimple / 2}
 
-	for n in range(3):
+	for n in range(2):
 		field = filter_stationary(field, n=n, metric=metric)
 		full_field = field.rollout(steps, metric=metric, unroll=8**n)
 		full_field.write_gif_3d('../../output', 'xt_yt_wt', pre=f'filtered{n}', norm=99, anim=False)
 
 
-def test_3d_even_compact():
+def test_3d_bivector_potential():
+	"""test potential based construction of compatible maxwell field
+	another splendid display of my ignorance...
+	why does this not work? is the lorentz gauge a lie?
+	or are non-propagating field components an underrated aspect of the maxwell equation?
+	"""
 	print()
 	algebra = Algebra.from_str('x+y+z+t-')
+	shape = (64, 64, 64, 3)
+	steps = 128
+	# A_ = Field.from_subspace(algebra.subspace.vector(), shape)
+	A2 = Field.from_subspace(algebra.subspace.bivector(), shape)
+	A2 = A2.random_gaussian([0.1, 0.1, 0.1, 0.1])
+	# higher order constructions of the same form seem to make no difference
+	# A2 = A2.interior_derivative().exterior_derivative()
+	# A2 = A2.geometric_derivative().geometric_derivative(output=A2.subspace)
+	print(np.linalg.norm(A2.arr))
+	# 1-vector EM potential A
+	A1 = A2.interior_derivative()
+	print(np.linalg.norm(A1.arr))
+	# check that we indeed satisfy the lorentz gauge; all good
+	print(np.linalg.norm(A1.interior_derivative().arr))
+	# now this should be a valid EM field, amirite?
+	F2 = A1.exterior_derivative()
+	print(np.linalg.norm(F2.arr))
+	# lets take one temporal slice and roll it out
+	F2 = F2.slice(1).rollout(steps)
+	print(np.linalg.norm(F2.arr))
+	F2.write_gif_3d('../../output', 'xt_yt_zt', pre=f'potential', norm=99, anim=True)
+
+
+
+def test_3d_even_compact():
+	print()
+	algebra = Algebra.from_str('w+x+y+t-')
 	shape = (2, 128, 128)
 	steps = 128
 	field = SpaceTimeField.from_subspace(algebra.subspace.bivector(), shape)
 
 	field = field.random_gaussian(0.1)
-	mass = 0.2 +0* field.quadratic() / 4# + 0.1
-	mass_I = -0.2
+	grid = field.meshgrid()
+	field.arr = field.arr * grid[1]
+	field.arr = field.arr * grid[2]
+	# mass = 0.2 +0* field.quadratic() / 4# + 0.1
+	# mass_I = -0.2
+	dimple = (1-field.gauss(jnp.array([1e16, 0.3, 0.3]))*0.9)
+	# metric = {'t': dimple}
+	metric = {'w': dimple / 2}
 
-	metric = {'x': mass}
 
-	full_field = field.rollout(steps, metric=metric, mass_I=mass_I)
-	full_field.write_gif_3d('../../output', 'xt_yt_zt', post='mass_I', norm=99)
+	full_field = field.rollout(steps, metric=metric)
+	full_field.write_gif_3d('../../output', 'wt_xt_yt', pre='xymul', norm=99)
 
 
 def test_3d_compact_generations():
@@ -287,4 +329,26 @@ def test_3d_compact_filtered():
 
 		full_field = field.rollout(steps, metric=metric,unroll=8**n)
 		full_field.write_gif_3d('../../output', 'xw_yw_xy', pre=f'filtered{n}_t', norm=99)
+
+
+
+def test_4d_even_compact():
+	print()
+	algebra = Algebra.from_str('w+x+y+z+t-')
+	shape = (2, 64, 64, 64)
+	steps = 128
+	field = SpaceTimeField.from_subspace(algebra.subspace.even_grade(), shape)
+
+	field = field.random_gaussian(0.1)
+	grid = field.meshgrid()
+	# field.arr = field.arr * grid[1]
+	# field.arr = field.arr * grid[2]
+	# mass = 0.2 +0* field.quadratic() / 4# + 0.1
+	# mass_I = -0.2
+	dimple = (1-field.gauss(jnp.array([1e16, 0.3, 0.3, 0.3]))*0.9)
+	# metric = {'t': dimple}
+	metric = {'w': dimple / 2}
+
+	full_field = field.rollout(steps, metric=metric)
+	full_field.write_gif_4d_compact('../../output', 'xt_yt_zt', pre='', norm=99)
 

@@ -1,23 +1,22 @@
 This code is made available under a hard-copy-left academic license
 
-A license is granted free of charge, conditional on the proactive publication of any derived works,
-including all materials required for independent reproduction.
+A license is granted free of charge, conditional on the proactive publication of any derived works, including all materials required for independent reproduction.
 
 Note that the obligations incurred under this license imply a proactive duty to publish, for the authors of derived works to which this license is granted.
  * Restrictions on access based on 'reasonable use', affiliations, titles, or any other reason, are explicitly forbidden under the terms of this license.
  * Promises of future publication of code or data, are explicitly forbidden under the terms of this license.
- * Any monetary fees associated with uploading, hosting, or other costs of the process of making public, are to be the responsibility of the authors to which this license is granted.
+ * Any monetary fees associated with uploading, hosting, storage, or other costs of the process of making public, are to be the responsibility of the authors to which this license is granted.
  * This stands in contrast to applicable market rates for the downloading of data, as they may apply to large volumes thereof, which are excluded as a liability of those granted this license.
-We emphasize 'applicable market rates'; any and all barriers erected to discriminate against downloading from the public links provided, are forbidden. This includes both positive and negative discrimination, however defined.
+ * We emphasize that this is indeed intended to exclude all the usual pay-for-access 'publication' mechanisms, whether through subscriptions service, pay-per-view, or otherwise, unless such institutions can reasonably claim that the monetary cost charged for downloading the published material, are equal to or below applicable market rates for the transfer of generic data.
+We emphasize 'applicable market rates for the transfer of generic data'; any and all barriers erected to discriminate against downloading from the public links provided, are forbidden. This includes both positive and negative discrimination, however defined. In case the licensee self-hosts their publication, monetary charges are not permitted, such as to not incentivize implicit obstruction through sub-standard infrastructure.
 
-If the licensee is found in violation of the license, the licensees agrees to officially and publicly retract all publications that are considered derived works. The obligation to proactively retract extends to third party publishers or journals, working on collaboration with the licensee.
+If the licensee is found in violation of the license, the licensees agrees to officially and publicly retract all publications that are considered derived works. The obligation to proactively retract extends to third party publishers or journals, working in collaboration with the licensee.
 
 
 Clarification of terms
 ----------------------
 Any 'publications' on the basis of the work contained here, trigger the obligations of this license.
 Publication here is meant in the usual sense; a journal submission, conference presentation, project webpage; or any act intended to establish the derived work in the permanent public record.
-
 
 By 'publishing code', a proactive duty is implied, to provide a self-contained whole, from raw data (where applicable), to numbers and figures or any other type of output supporting the claims in the derived work.
 Code snippets, or code outside of context, that can not be run without additional external context, should not be viewed as a publication satisfying the requirement of this license.
@@ -32,8 +31,7 @@ Human-language instructions on how to setup, install, compile, or otherwise crea
 Shortcomings of such dependency management, present and future, shall remain the responsibility of the licensee.
 While it is not the responsibility of the licensee to make the code work on all hardware and software platforms,
 if the author is unable to demonstrate reproducible steps to make the code run on at least one hardware and software platform, the license shall be considered revoked from that point onward, and any publications based on it shall be retracted.
-Any verbal claims of the form 'it works on my machine', shall not be considered a demonstration, in the sense meant above.
-
+Any verbal claims of the legal structure 'it works on my machine', shall not be considered a demonstration, in the sense meant above. Final adjudication of such matters will rest with the licensor.
 
 Obviously all of this is super enforcable. Either way thanks for reading to the end.
 Hopefully you didn't need this sermon, but if you did, its never too late to strive for redemption of your scientific soul.

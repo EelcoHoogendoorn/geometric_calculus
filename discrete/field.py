@@ -124,7 +124,6 @@ class AbstractField:
 
 	def tonemap(self, components, norm, gamma):
 		frames = getattr(self, components)
-		# print(frames.shape)
 		frames = np.abs(frames) * 1.5
 		if isinstance(norm, int):
 			frames = frames / np.percentile(frames.flatten(), norm)
@@ -148,7 +147,7 @@ class AbstractField:
 		os.makedirs(basepath, exist_ok=True)
 		frames = self.tonemap(components, norm, gamma)
 		if anim:
-			iio.imwrite(os.path.join(basepath, basename+'_anim.gif'), frames)
+			iio.imwrite(os.path.join(basepath, basename+'_anim.gif'), frames, loop=0)
 		iio.imwrite(os.path.join(basepath, basename+'_xt.gif'), frames[::-1, self.shape[0]//2])
 
 	def write_gif_2d_compact(self, basepath, components, pre='', post='', norm=None, gamma=True):
@@ -162,8 +161,17 @@ class AbstractField:
 		os.makedirs(basepath, exist_ok=True)
 		frames = self.tonemap(components, norm, gamma)
 		if anim:
-			iio.imwrite(os.path.join(basepath, basename+'_anim.gif'), frames[:, self.shape[0]//2])
+			iio.imwrite(os.path.join(basepath, basename+'_anim.gif'), frames[:, self.shape[0]//2], loop=0)
 		iio.imwrite(os.path.join(basepath, basename+'_xt.gif'), frames[::-1, self.shape[0]//2, self.shape[1]//2])
+
+	def write_gif_4d_compact(self, basepath, components, pre='', post='', norm=None, gamma=True, anim=True):
+		basename = '_'.join([pre, str(self.shape), self.algebra.description.description_str, self.subspace.pretty_str, components, post])
+		os.makedirs(basepath, exist_ok=True)
+		frames = self.tonemap(components, norm, gamma)
+		frames = frames.mean(axis=1).astype(np.uint8)    # assume first axis is the compact one
+		if anim:
+			iio.imwrite(os.path.join(basepath, basename+'_anim.gif'), frames[:, self.shape[1]//2], loop=0)
+		iio.imwrite(os.path.join(basepath, basename+'_xt.gif'), frames[::-1, self.shape[1]//2, self.shape[2]//2])
 
 
 class AbstractSpaceTimeField(AbstractField):
