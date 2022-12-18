@@ -322,11 +322,14 @@ It certainly seems likely that one may formally prove these models isomorphic, a
 
 ### Stability
 
-We note that addition of the direct zero-order term, does not seem to have a negative impact on the conservation properties of the scheme in `x+t-`; and within some bounds on the magnitude of `m` (and not its sign!), this does not affect the stability of the scheme. There probably are good theoretical arguments for that; not the least of which would be isomorphism to the one-up scenario. This allows us to invoke the exact discrete form of the fundamental theorem of geometric calculus; amplitudes are being exchanged between elements, not created or destroyed.
+We note that addition of the direct zero-order term, does not seem to have an immediate negative impact on the conservation properties of the scheme; and within some bounds on the magnitude of `m` (and not its sign!), this does not affect the stability of the scheme. There probably are good theoretical arguments for that; not the least of which would be isomorphism to the one-up scenario. Insofar as this holds, it allows us to invoke the exact discrete form of the fundamental theorem of geometric calculus; amplitudes are being exchanged between elements, not created or destroyed.
 
 More interestingly still, the opposite is true in a `x-t+` metric. While the pure geometric equation shows qualitatively similar behavior regardless of a spacelike or timelike metric, the direct zero order term seems to be unconditionally unstable.
 
+Graphing a trace of the sum of amplitudes over the spatial dimensions, for an evolving field having a zero order term, we may see that conservation of amplitudes no longer holds in a direct sense; infact the total amplitude may even reverse sign; but its long term evolution still seems constrained by a form of conservation principle; and the sum-of-squares evolution of the field, is qualitativeiy similar, with or without direct zero order term.
+
 We note that there appears to be no obstacle to adding both extra dimensions and a zero-order term. Nor to the addition of  multitude of extra dimensions.
+
 
 
 We note that adding an extra dimension, doubles the number of distinct elements in the algebra. Likewise, adding a zero order term, through coupling the even and odd grades, allows us to construct a wave-equation with double the number of coupled components, compared to the situation without a zero-order term. Again, this hints at an isomorphism; and rather than thinking in terms of a zero-order terms on the full algebra, we may elect to think in terms of specific excitations of an even-grade subalgebra in a one-up space. We note that extra dimensions may not merely expand the number of algebraic elements, but also may expand the number of degrees of freedom.
@@ -453,9 +456,18 @@ It is characterized by light-like modes that oscillate between different field c
 
 <img src="31_compact_even_sps_mass_xy.gif" width="256" height="256"/>
 
+A zero order term `m * phi * t`, implemented naively, appeats unconditionally unstable. Taking the average of present and future values in this equation, and solving this pointwise implicit equation for the future value, does not appear to resolve the instability. We have only tried to make it work in the even subalgebra of `x+y+t-`; but since the same update rule should be contained in higher dimensional spaces in identical form, the instability in this space does spell trouble for higher dimensions as well.
+
+Pure dual terms, and the implicit dependence on the future time stencil they imply, are not something we have tried yet.
+
+
 ### Discussion
 
+All put together, the discrete setting certainly does seem to bring out the direct zero order term as the most natural choice. While the SPS dual brings its own unique dynamic to the table, the requirement for interpolation of field values does give one pause; it is a break from considering only field values themselves, and their immediate adjecent values on the grid; and it does raise the question, as to where one draws the line, in terms of action-at-a-distance. If the unique impulse response behavior of the SPS dual, hints at a dynamic that is sufficient or necessary for physical modeling, is not clear to us at present. And it is only on the even-dimensional spaces with an odd-grade SPS, that it results in a leapfrog-compatible update scheme.
 
+However, this conclusion does appear to be at odds, with the usual formulation of the Dirac electron in geometric algebra.
+
+We note that of the zero order terms, the direct zero order term is the most mathematically elegant, and works equally in all dimensions. We note that at least numerically, there exists a meaningfull difference between the one-up model, and the subset of its dynamics that we may describe with a direct zero order term; the one-up model can indeed be observed to conserve amplitudes to machine precision; whereas addition of a zero order term complicates this nice and simple picture; in pragmatic terms conservation properties are still looking excellent, but we are not certain what this means for the long term evolution of the solution.
 
 ## Systems of equations
 
@@ -523,6 +535,9 @@ We note that bivector fields that satisfy the geometric equation, can have the i
 
 We note that the geometric equation over the bivectors, in the absence of 'compatibility initial conditions', may contain non-propagating modes; nonzero configurations of bivector fluxes, that do not contribute to any time derivative; whereas we do not observe such a thing in the even subalgebra. To understand that, we may compare the update rule in (wlog) `x+y+z+t-` for the even subalgebra and the bivectors. In doing so, we may observe that those spatial gradients of the bivectors that may vanish for the temporal derivatives of the bivectors, form the complimentary (interior/exterior) part of a geometric product, with the spatial gradients of the bivectors that form the temporal derivatives of grades 0 and 4. By invertability of the geometric derivative, those nonzero bivector field components that result in zero update to the bivectors, must result in nonzero updates to grades 0 and 4, and vice versa [^HHD]. This explains the empirical observation that no matter how careless one is in initializing an even grade field, one never observes non-propagating components in free-space. The even grade field is the simpler and more complete object to work with than the bivectors, in that sense.
 
-[^HDD] modulo global-harmonic components of the field, as per the Helmholtz-Hodge decomposition, such as for instance global constants, which have vanishing gradients everywhere and in all directions.
+[^HDD]: modulo global-harmonic components of the field, as per the Helmholtz-Hodge decomposition, such as for instance global constants, which have vanishing gradients everywhere and in all directions.
 
-We note that pure 1-vector fields, also contain non-propagating components; and appyling the same logic to the odd-grade algebra, we see that we should also expect the absence of nontrivial nonpropagating modes there, which is consistent with experience. It is not the algebra of the subspace itself being closed that is the deciding factor, but rather the closure of the space under geometric multiplication with a 1-vector, which is the deciding factor in this qualitative difference; which makes sense.
+We note that pure 1-vector fields, also contain non-propagating components; and appyling the same logic to the odd-grade algebra, we see that we should also expect the absence of nontrivial nonpropagating modes there, which is consistent with experience. It is not the algebra of the subspace itself being closed that is the deciding factor, but rather the closure of the space under geometric multiplication with a 1-vector, which is the deciding factor in this qualitative difference; which makes sense given the definition of the vector-geometric-derivative.
+
+
+We have performed some quick experiments with compact dimensions of alternative signatures; that is rather than matching the spacelike signature, matching the timelike, or a degenerate signature. Neither seemed viable on first impression, though a deeper and more detailed investigation might reveal something interesting.
