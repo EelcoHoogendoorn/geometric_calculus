@@ -53,11 +53,17 @@ We will approach these questions by generalizing the logic implicit in the Yee s
 
 [^EC]: 
     In exterior calculus, the geometric-vector-derivative can be written as `d + *d*`. Both encompass the same idea, in a somewhat different mathematical dialect; in both cases it is a combination of a grade-lowering inner term and a grade-raising outer term. 
+
     Our viewpoint on the discrete domain is very well articulated in [Discrete Exterior Calculus](https://thesis.library.caltech.edu/1885/3/thesis_hirani.pdf). In line with the research direction articulated there, our outlook is to explore the internal logic of a discrete representation of core geometric ideas, and follow that logic where it may lead.
-    Yet we feel the term Discrete Geometric Calculus is more appropriate; both to be congruent with the line of thinking that led us to this work, but also because the key aspects of this work concerns itself equally with the interior and exterior part of the geometric product. Moreover, this work is orthogonal to concerns specific to the strict seperation of topology and metric, which tend to take a central role in expositions of exterior calculus. We feel that framing it in these terms would unnecessarily complicate ideas, which are of a rather striking conceptual simplicity by themselves. In this we second the opinions of [Hestenes](https://geocalc.clas.asu.edu/pdf-preAdobe8/MathViruses.pdf)
+    
+    Yet we feel the term 'Discrete Geometric Calculus' is more appropriate; both to be congruent with the line of thinking that led us to this work, but also because the key aspects of this work concerns itself equally with the interior and exterior part of the geometric product. Moreover, this work is orthogonal to concerns specific to the strict seperation of topology and metric, which tend to take a central role in expositions of exterior calculus. We feel that framing it in these terms would unnecessarily complicate ideas, which are of a rather striking conceptual simplicity by themselves. In this we second the opinions of [Hestenes](https://geocalc.clas.asu.edu/pdf-preAdobe8/MathViruses.pdf)
 
 [^geometric_derivative]: 
-    What we refer here to as the 'geometric derivative', is in many contexts refered to as the 'vector derivative'. In both cases we can state this operation verbosely as 'the geometric product of a 1-vector of differential elements with the operand'. A natural way to shorten that phrase without losing any information would be 'vector-geometric-derivative'. Depending on context, it may be appropriate to leave one, or both of those adjectives implicit. Since in this document we are not concerned with more general multi-vectorial derivatives, but only concern ourselves with 1-vector derivatives, we do elect to leave the vector part implicit. In some contexts in this document, where we care to distinguish the exterior and interior portions, linguistic consistency would demand we refer to their sum as the geometric derivative. In some other contexts, such as in the latter parts of this document, both adjectives may be suffiently constrained by context, and the bare symbol `d` leaves no room for ambiguity.
+    What we refer here to as the 'geometric-derivative', is in many contexts refered to as the 'vector-derivative'. In both cases we can state this operation verbosely as 'the geometric product of a 1-vector of differential elements with the operand'. A natural way to shorten that phrase without losing any information would be 'vector-geometric-derivative'. Depending on context, it may be appropriate to leave one, or both of those adjectives implicit. 
+    
+    Since in this document we are not concerned with more general multi-vectorial derivatives, but only concern ourselves with 1-vector derivatives, we do elect to leave the 'vector' part implicit. In some contexts in this document, where we care to distinguish the 'exterior' and 'interior' portions, linguistic consistency would demand we refer to their sum as the 'geometric derivative'. In some other contexts, such as in the latter parts of this document, both adjectives may be suffiently constrained by context, and the bare symbol `d` leaves no room for ambiguity. 
+    
+    Seeing as how frequently used operations like gradient, curl or divergence can all be stated as either 'vector-interior-derivatives' or 'vector-exterior-derivatives', the term 'vector-derivative' as shorthand for 'vector-geometric-derivative', or overloading meaning of the nambla symbol as 'vector-geometric-derivative' when it already has widespread use in vector calculus as the 'vector-exterior-derivative', seems liable to understate the crucial distinction between geometric and vector calculus, to those only familiar with the latter. And it is the latter which we expect to make up the majority of the readers of this article.
 
 [^geometric_equation]: 
     We prefer to refer to the equation `geometric_derivative(phi) = 0`, or `d(phi) = 0` for shorthand in appropriate context, as ‘the (first order homogenous) geometric equation’. If it is important that we restrict our attention to particular subspaces, we prefer to speak of ‘the geometric equation over the bivectors’ rather than 'the Maxwell equation'. Such a language is not merely a label based on superficial similarities; in all cases, we are speaking of the same operator; a geometric product of the field, with a 1-vector of the (differential) elements in our domain. 
@@ -149,11 +155,11 @@ Where terms `idt` and `edt` reflect interior and exterior temporal differences r
 Generalizing the logic behind the above steps, we may construct a general algorithm for timestepping the geometric equation, `d(phi) = 0`, over algebras of arbitrary dimension and signature:
 
 1. We construct all terms of the geometric product of `phi`, with a 1-vector of all (differential) elements in the domain of the field (this could be a subset of the basis elements of the algebra)
-2. Each collection of terms corresponding to a single resultant geometric type forms a single equation. Each such equation contains (at most [^TE]) one `dt` term, which we collect to one side.
+2. Each collection of terms corresponding to a single resultant geometric type forms a single equation. Each such equation contains (at most [^transverse_electric]) one `dt` term, which we collect to one side.
 3. We observe that we may partition these equations into two independent sets, those updating space-like variables using differences of time-like variables, and those updating time-like variables using differences of space-like variables, respectively.
 4. Profit
 
-[^TE]: 
+[^transverse_electric]: 
     for instance, doing this in an algebra `x+y+z+t-`, for a domain `x, y, t` (derivatives in `z` implied zero), over a field of a subset of bivector components `xt, yt, xy`, to simulate 2d transverse-electric fields, we obtain one equation `idx(xt) + idy(yt) = 0`; this has no time derivative, but can be viewed as a compatibility initial equation on the field; and can simply be ignored for the purpose of constructing the timestepping scheme.
 
 Assuming the availability of a software library for managing the bookkeeping of signs involved in geometric algebra, the above steps can be readily implemented in a handful of lines of code, to produce a code-generator, for algebras of any dimension and signature; see [this](./../field.py) code example.
@@ -207,44 +213,45 @@ All the figures below pertain to the impulse-response of a pure geometric equati
     <th><img src="11_mv_xt.gif" width="256" height="256"/></th>
     <th><img src="21_mv_compact_xt.gif" width="256" height="256"/></th>
 </table>
- 
 
-Geometric equation over x+t-, xt plot, and geometric equation over x+y+t-, xt plot. 
+<i>Left: Geometric equation over x+t-, xt plot; Right: and geometric equation over w+x+t-, xt plot.
 
 In the left plot, an initial disturbance generates only light-like waves propagating outward.
 
-In the right plot, the y dimension is a compact dimension, of a length of 2 elements; the minimum required to sustain nonvanishing gradients in that dimension, and to facilitate a notion of a wave travelling 'around' the compact dimension. We may observe the emergence of excitations capable of traveling within the light cone, as viewed from the non-compact dimension x.
-
+In the right plot, the `w` dimension is a compact dimension, of a length of 2 elements; the minimum required to sustain nonvanishing gradients in that dimension, and to facilitate a notion of a wave travelling 'around' the compact dimension. We may observe the emergence of excitations capable of traveling within the light cone, as viewed from the non-compact dimension `x`.
+</i>
 
 <table>
     <th><img src="21_mv_xt.gif" width="256" height="256"/></th>
     <th><img src="21_mv_xy.gif" width="256" height="256"/></th>
 </table>
 
-Geometric equation over x+y+t-, xt/xy plot. 
+<i>Geometric equation over `x+y+t-`, `xt` and `xy` plot.
 
-The sole difference with the above result, is that this view represents a slice from a non-compact dimension; and indeed we observe only propagation along the light cone.
-
+The sole difference with the above rightmost result, is that this view represents a slice from a non-compact dimension; and indeed we observe only propagation along the light cone.
+</i>
 
 <table>
     <th><img src="31_even_compact_xy.gif" width="256" height="256"/></th>
     <th><img src="31_even_compact_xt.gif" width="256" height="256"/></th>
 </table>
 
-Geometric equation over the even subalgebra of x+y+z+t-, xy/xt plot. Compact z dimension.
+<i>Geometric equation over the even subalgebra of `w+x+y+t-`, `xy` and `xt` plot. Compact w dimension.
 
-The even grade homogenous equation can be viewed as a model of the massless neutrino, exhibiting lightlike waves propagating outward. Here too, the initial condition excites a stationary mode in the compact setting, which is absent in the non-compact setting.
+The even grade homogenous equation can be viewed as a model of the massless neutrino, exhibiting lightlike waves propagating outward. Here too, the initial condition excites a stationary mode in the compact setting, which is absent in the non-compact setting.</i>
 
 
-In the preceeding examples, we assumed the most simple form of metric, where all n-cubes have a size of 1. Allowing for a metric that is variable in space, though static in time `dt = 1 - guassian(x) / 2`, we can gain further insight into the character of the different modes in excitations in space `x+y+t-` where the dimension `y` is compact. This is a Newton-Cartan model of linearized gravity. Note that such a modification to the metric is isomorphic to allowing for a spatial variation in the 'speed of light'. [^5]
+In the preceeding examples, we assumed the most simple form of metric, where all the 1-vectors forming the vector-geometric derivative have a length of 1. Allowing for a metric that is variable in space, though static in time, for instance `dt = 1 - guassian(x) / 2`, we can gain further insight into the character of the different modes in excitations in space `w+x+t-` where the dimension `w` is compact. This is a Newton-Cartan model of linearized gravity. Note that such a modification to the metric is isomorphic to allowing for a spatial variation in the 'speed of light'. [^bell_ftw]
 
-[^5]: Note that in such a setting, a two-way measurement of the speed of light, would find a constant value, independent of its location inside or outside a gravity well. The matter of which the apparatus consists would find its equilibrium configuration through two-way exchange of forces, via the same medium that we are testing the two-way speed of. The ratio of two identical things is a constant, and like any tautology worth its salt, this does not depend on a reference frame, amongst other things.
+[^bell_ftw]: Note that in such a setting, a two-way measurement of the speed of light, would find a constant value, independent of its location inside or outside a gravity well. The matter of which the apparatus consists would find its equilibrium configuration through two-way exchange of forces, via the same medium that we are testing the two-way speed of. The ratio of two identical things is a constant, and like any tautology worth its salt, this does not depend on a reference frame, amongst other things.
 
 <img src="21_mv_compact_dilation_xt.gif" width="256" height="1024"/>
 
+<i>
 We note that the lightlike modes change their spatial wavelengths as they enter and exit the well. (Note that the color by which they are visualized here is unrelated to spatial wavelength).
 
 Moreover, the 'massive' mode, starting out without momentum inside the well, accelerates towards the center, but stays trapped inside the well.
+</i>
 
 
 ### Discussion
@@ -304,16 +311,13 @@ The natural zero order term couples variables being updated, to the element they
     <th><img src="2d_compact_g.gif" width="256" height="1024"/></th>
 </table>
 
-
-
-
-On the left, an `x+t-` simulation, with mass=2
+<i>On the left, an `x+t-` simulation, with mass=2
 On the right, `x+y+t-` simulation, without zero order term, and a y-dimension of size 2.
-Both are subjected to the same initial conditions in `x`, and subject to the same time-dilation profile in `x`, to form a gravity well.
+Both are subjected to the same initial conditions in `x`, and subject to the same time-dilation profile in `x`, to form a gravity well.</i>
 
 Clearly, the one-up model is a richer model, admitting both lightlike and massive excitations, in a single field equation. Here we find at least a superficial justification in calling both types of excitations 'massive' excitations, in the sense that they show qualitatively similar behavior, in terms of their response to a gravity well, and in terms of building up a notion of momentum in terms of a spatial winding frequency of their field, capable of carrying it through the bottom of the potential, and up its opposing side.
 
-It certainly seems likely that on may formally prove these models isomorphic, at least as far as the massive excitations are concerned. Infact an attempted outline of such a proof seems straightforward; all it requires is that there exist excitations for which additional gradients along the compact dimension, are proportional to the field values themselves.
+It certainly seems likely that one may formally prove these models isomorphic, at least as far as the massive excitations are concerned. Infact an attempted outline of such a proof seems straightforward; all it requires is that there exist excitations for which additional gradients along the compact dimension, are proportional to the field values themselves. To those who subscribe to 'proof by believing your own eyes', the answer seems evident.
 
 
 ### Stability
@@ -327,7 +331,7 @@ We note that there appears to be no obstacle to adding both extra dimensions and
 
 We note that adding an extra dimension, doubles the number of distinct elements in the algebra. Likewise, adding a zero order term, through coupling the even and odd grades, allows us to construct a wave-equation with double the number of coupled components, compared to the situation without a zero-order term. Again, this hints at an isomorphism; and rather than thinking in terms of a zero-order terms on the full algebra, we may elect to think in terms of specific excitations of an even-grade subalgebra in a one-up space. We note that extra dimensions may not merely expand the number of algebraic elements, but also may expand the number of degrees of freedom.
 
-To continue this line of questioning; insofar as the effects of a zero order term are isomorphic to a gradient along a compact dimension; spatial variations of that zero order term, or 'potentials', should be isomorphic to spatial variations of the compact metric. One famous example of an application of such a potential V, is as modelling the coulomb interaction when solving for the Dirac electron energy levels. Insofar as this isomorphism holds, replacing that spatially variable coulomb potential with a spatially variable compact metric, should 'just work'. We consider this an interesting geometric perspective on the electromagnetic force, which to our knowledge is not usually thought of in terms of variable metrics.
+To continue this line of questioning; insofar as the effects of a zero order term are isomorphic to a gradient along a compact dimension; spatial variations of that zero order term, or 'potentials', should be isomorphic to spatial variations of the compact metric. One famous example of an application of such a potential V, is as modelling the coulomb interaction when solving for the Dirac electron energy levels. Insofar as this isomorphism holds, replacing that spatially variable coulomb potential with a spatially variable compact metric, should 'just work'. We consider this an interesting geometric perspective on the electromagnetic force, which to our knowledge is not usually thought of in terms of variable metrics. [NOTE: this isnt true it would seem; the Kaluza–Klein models does exactly that]
 
 Massive excitations, travelling primarily along the compact dimension, feel the effects of a spatial variation in the length of temporal edges, qualitatively different, than those excitations traveling orthogonal to the compact dimension. One might say that by 'loitering in place on the gradient', the massive excitations get more of chance to experience that gradient, than the lightlike excitations, not wasting any time going in circles, skipping over them along the shortest geodesic.
 
@@ -347,6 +351,8 @@ Indeed by modulation of the length of the compact dimension, we attain a trappin
 Insofar as we can view electromagnetic forces as a metric effect in a one-up space, this can be said to be a unifying perspective with gravity, where we are used explaining in metric terms. However, even if it does predict the hydrogen spectrum, the coulomb potential in the Dirac equation is considered somewhat of a hack rather than a full model of electrodynamics. Similarly, it is also not difficult to point out limitations of this model of electrostatics. 
 
 For instance, it is not obvious how to model both attraction and repulsion. Seeing as how all excitations of the geometric equation are either orthogonal to, or will diffract into such a potential well, this simple model by itself provides no more repulsion, than metric variations in the non-compact dimensions provide anti-gravity. Of course one might consider variations of the metric going the other way; but to retain the geometric picture, that it is the curvature of the compact dimension that generates the apparent force on waves travelling along geodesics, this would seemingly require us to think of positive and negative charged excitations as travelling around distinct compact dimensions, experiencing complimentary effects on their compact metrics. Which raises at least as many questions as it attempts to answer.
+
+[NOTE: it is not clear to me how Kaluza–Klein gets around this; does it claim to be able to model both positive and negative charge purely as a metric effect, and if it does, what is wrong with the argument above?]
 
 Again, our intent is to set the scope of this article to a self-contained presentation of the discrete geometric derivative, with some illustration of its properties amd utility. This limited scope should not be construed, as an exhaustive exploration of all such possibilities appearing to be in sight.
 

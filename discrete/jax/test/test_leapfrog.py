@@ -257,22 +257,24 @@ def test_3d_even_compact():
 	print()
 	algebra = Algebra.from_str('w+x+y+t-')
 	shape = (2, 128, 128)
-	steps = 128
-	field = SpaceTimeField.from_subspace(algebra.subspace.bivector(), shape)
+	steps = 256
+	field = SpaceTimeField.from_subspace(algebra.subspace.even_grade(), shape)
 
-	field = field.random_gaussian(0.1)
+	field = field.random_gaussian(0.2, [0, 0, 0.2])
 	grid = field.meshgrid()
-	field.arr = field.arr * grid[1]
-	field.arr = field.arr * grid[2]
+	# field.arr = field.arr * grid[1]
+	# field.arr = field.arr * grid[2]
 	# mass = 0.2 +0* field.quadratic() / 4# + 0.1
 	# mass_I = -0.2
-	dimple = (1-field.gauss(jnp.array([1e16, 0.3, 0.3]))*0.9)
+	dimple = (1-field.gauss(np.array([1e16, 0.3, 0.3]))*0.1)
+	# dimple = field.quadratic(np.array([1e16, 1, 1]))
 	# metric = {'t': dimple}
 	metric = {'w': dimple / 2}
 
-
+	field = filter_stationary(field, 1)
+	field = filter_stationary(field, 10, metric=metric)
 	full_field = field.rollout(steps, metric=metric)
-	full_field.write_gif_3d('../../output', 'wt_xt_yt', pre='xymul', norm=99)
+	full_field.write_gif_3d('../../output', 'xy_xt_yt', pre='xymul', norm=99)
 
 
 def test_3d_compact_generations():

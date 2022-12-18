@@ -218,3 +218,5 @@ class AbstractSpaceTimeField(AbstractField):
 		frames = self.tonemap(components, norm, gamma)
 		iio.imwrite(os.path.join(basepath, basename+'_xy.gif'), frames)
 
+	def rollout(self) -> AbstractField:
+		raise NotImplemented
