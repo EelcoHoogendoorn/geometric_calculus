@@ -471,6 +471,12 @@ We note that in the discrete geometric calculus setting, one operation that is a
 
 Aside from nonlinearities of this kind, it is of course interesting to consider those nonlinearities that may arise, by coupling the metric variations encoded in the basis blades from which we construct our derivative operators, to the field variables themselves. For any field that does admit a grade-1 component, or for which one can be derived through application of the geometric derivative, the simplest form of such nonlinearity is straightforward indeed. However, should we seek some polynomial expression of such 1-vectors, we should again be mindful of the fact that raising a vector to some power naively, does not result in an expression of a 1-vector type.
 
+The mechanisms for making 'space guide matter', seems quite constrained. At least within the context of the vector-geometric-equation; modulations of the length of the 1-vectors that form our geometric derivative seem like the only option.
+
+Which are viable mechanisms for making 'matter guide space' seems like a more open question; and what the most 'minimal coupling' is, capable of generating interesting behavior, or constructing models of the physical world, seems like it has a lot of room for exploration.
+
+Especially the question of which one of such couplings may find an elegant expression in the discrete setting, seems like very interesting future work.
+
 
 
 
@@ -510,3 +516,13 @@ We find that it readily lends itself to efficient and stable simulations of rela
 
 Its dimension and grade agnostic formulation, deriving from its geometric algebraic roots, combined with code generation in any dimension and signature, lends itself readily to experimental investigation of the dynamics implied by a variety of types of equations.
 
+
+### More random observations
+
+We note that bivector fields that satisfy the geometric equation, can have the implicit-zero elements of the even grade subalgebra made explicit, and they will still satisfy the geometric equation. That is, from the geometric-algebraic perspective, it is natural to view electromagnetic waves in free space, as a particular type of excitation of a unified neutrino-photon field. 
+
+We note that the geometric equation over the bivectors, in the absence of 'compatibility initial conditions', may contain non-propagating modes; nonzero configurations of bivector fluxes, that do not contribute to any time derivative; whereas we do not observe such a thing in the even subalgebra. To understand that, we may compare the update rule in (wlog) `x+y+z+t-` for the even subalgebra and the bivectors. In doing so, we may observe that those spatial gradients of the bivectors that may vanish for the temporal derivatives of the bivectors, form the complimentary (interior/exterior) part of a geometric product, with the spatial gradients of the bivectors that form the temporal derivatives of grades 0 and 4. By invertability of the geometric derivative, those nonzero bivector field components that result in zero update to the bivectors, must result in nonzero updates to grades 0 and 4, and vice versa [^HHD]. This explains the empirical observation that no matter how careless one is in initializing an even grade field, one never observes non-propagating components in free-space. The even grade field is the simpler and more complete object to work with than the bivectors, in that sense.
+
+[^HDD] modulo global-harmonic components of the field, as per the Helmholtz-Hodge decomposition, such as for instance global constants, which have vanishing gradients everywhere and in all directions.
+
+We note that pure 1-vector fields, also contain non-propagating components; and appyling the same logic to the odd-grade algebra, we see that we should also expect the absence of nontrivial nonpropagating modes there, which is consistent with experience. It is not the algebra of the subspace itself being closed that is the deciding factor, but rather the closure of the space under geometric multiplication with a 1-vector, which is the deciding factor in this qualitative difference; which makes sense.

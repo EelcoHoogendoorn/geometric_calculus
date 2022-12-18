@@ -58,6 +58,14 @@ def test_generate_TM():
 	print(field.generate_geometric())
 
 
+def test_generate_odd():
+	algebra = Algebra.from_str('x+y+z+t-')
+	field = AbstractSpaceTimeField(
+		algebra.subspace.odd_grade())
+	print()
+	print(field.generate_geometric())
+
+
 
 def test_generate_bivector():
 	"""is there a clean discrete version of the bivector commutator?"""

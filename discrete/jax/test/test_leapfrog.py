@@ -277,6 +277,33 @@ def test_3d_even_compact():
 	full_field.write_gif_3d('../../output', 'xy_xt_yt', pre='xymul', norm=99)
 
 
+def test_3d_odd():
+	"""does not seem like odd has non-propagating parts"""
+	print()
+	algebra = Algebra.from_str('x+y+z+t-')
+	shape = (64, 64, 64)
+	steps = 128
+	field = SpaceTimeField.from_subspace(algebra.subspace.vector(), shape)
+
+	field = field.random_gaussian(0.1, [0, 0, 0.0])
+	grid = field.meshgrid()
+	# field.arr = field.arr * grid[1]
+	# field.arr = field.arr * grid[2]
+	# mass = 0.2 +0* field.quadratic() / 4# + 0.1
+	# mass_I = -0.2
+	dimple = (1-field.gauss(np.array([1e16, 0.3, 0.3]))*0.1)
+	# dimple = field.quadratic(np.array([1e16, 1, 1]))
+	# metric = {'t': dimple}
+	metric = {'w': dimple / 2}
+	metric = {}
+
+	for n in range(2):
+		field = field.random_gaussian(0.1)
+		field = filter_stationary(field, n, metric=metric)
+		full_field = field.rollout(steps, metric=metric)
+		full_field.write_gif_3d('../../output', 'x_y_z', pre=f'power_{n}', norm=99)
+
+
 def test_3d_compact_generations():
 	"""wow; we can make subluminal excitations,
 	unaffected by compact metric dimple
