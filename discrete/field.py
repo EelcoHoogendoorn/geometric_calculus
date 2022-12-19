@@ -1,7 +1,8 @@
 import numpy as np
 
-import imageio.v3 as iio
 import os
+import imageio.v3 as iio
+import imageio
 
 
 def split(seq, f):
@@ -122,56 +123,66 @@ class AbstractField:
 		return self.generate(self.algebra.operator.inner_product(self.domain, self.subspace))
 
 
-	def tonemap(self, components, norm, gamma):
-		frames = getattr(self, components)
-		frames = np.abs(frames) * 1.5
-		if isinstance(norm, int):
-			frames = frames / np.percentile(frames.flatten(), norm)
-		if isinstance(norm, float):
-			frames = frames / norm
-		if gamma:
-			frames = np.sqrt(frames)
-		frames = np.clip(frames * 255, 0, 255).astype(np.uint8)
-		frames = np.moveaxis(frames, 0, -1) # color components last
-		frames = np.moveaxis(frames, -2, 0) # t first
-		return frames
 
-	def write_gif_1d(self, basepath, components, pre='', post='', norm=None, gamma=True):
+	def write_animation_base(self, image, basepath, components, pre='', post='', gamma=True, anim=True):
 		basename = '_'.join([pre, str(self.shape), self.algebra.description.description_str, self.subspace.pretty_str, components, post])
 		os.makedirs(basepath, exist_ok=True)
-		frames = self.tonemap(components, norm, gamma)
-		iio.imwrite(os.path.join(basepath, basename+'_xt.gif'), frames[::-1])
 
-	def write_gif_2d(self, basepath, components, pre='', post='', norm=None, gamma=True, anim=True):
-		basename = '_'.join([pre, str(self.shape), self.algebra.description.description_str, self.subspace.pretty_str, components, post])
-		os.makedirs(basepath, exist_ok=True)
-		frames = self.tonemap(components, norm, gamma)
-		if anim:
-			iio.imwrite(os.path.join(basepath, basename+'_anim.gif'), frames, loop=0)
-		iio.imwrite(os.path.join(basepath, basename+'_xt.gif'), frames[::-1, self.shape[0]//2])
+		def tonemap(image):
+			# image = np.abs(image)
+			if gamma:
+				image = np.sqrt(image)
+			scale = np.percentile(image.flatten(), 99)
+			image = np.clip(image / scale * 255, 0, 255).astype(np.uint8)
+			return image
+		image = tonemap(image)
 
-	def write_gif_2d_compact(self, basepath, components, pre='', post='', norm=None, gamma=True):
-		basename = '_'.join([pre, str(self.shape), self.algebra.description.description_str, self.subspace.pretty_str, components, post])
-		os.makedirs(basepath, exist_ok=True)
-		frames = self.tonemap(components, norm, gamma)
-		iio.imwrite(os.path.join(basepath, basename+'_xt.gif'), frames[::-1].mean(axis=1).astype(np.uint8))
+		if image.ndim == 4:
+			if anim:
+				iio.imwrite(os.path.join(basepath, basename + '_anim.gif'), image)
+			iio.imwrite(os.path.join(basepath, basename + '_xt.gif'), image[::-1, image.shape[1] // 2])
+		elif image.ndim == 3:
+			iio.imwrite(os.path.join(basepath, basename + '_xt.gif'), image[::-1])
+		else:
+			raise
 
-	def write_gif_3d(self, basepath, components, pre='', post='', norm=None, gamma=True, anim=True):
-		basename = '_'.join([pre, str(self.shape), self.algebra.description.description_str, self.subspace.pretty_str, components, post])
-		os.makedirs(basepath, exist_ok=True)
-		frames = self.tonemap(components, norm, gamma)
-		if anim:
-			iio.imwrite(os.path.join(basepath, basename+'_anim.gif'), frames[:, self.shape[0]//2], loop=0)
-		iio.imwrite(os.path.join(basepath, basename+'_xt.gif'), frames[::-1, self.shape[0]//2, self.shape[1]//2])
+	def write_animation(self, selector, basepath, components, **kwargs):
+		def get_components(f, components):
+			"""sample field components as a numpy array, with field components last, for rendering"""
+			return np.moveaxis(getattr(f, components), 0, -1)
+		def to_animation(components):
+			image = selector(get_components(self, components))
+			return np.moveaxis(image, -2, 0)  # t first
+		image = to_animation(components)
+		self.write_animation_base(image, basepath, components, **kwargs)
 
-	def write_gif_4d_compact(self, basepath, components, pre='', post='', norm=None, gamma=True, anim=True):
-		basename = '_'.join([pre, str(self.shape), self.algebra.description.description_str, self.subspace.pretty_str, components, post])
-		os.makedirs(basepath, exist_ok=True)
-		frames = self.tonemap(components, norm, gamma)
-		frames = frames.mean(axis=1).astype(np.uint8)    # assume first axis is the compact one
-		if anim:
-			iio.imwrite(os.path.join(basepath, basename+'_anim.gif'), frames[:, self.shape[1]//2], loop=0)
-		iio.imwrite(os.path.join(basepath, basename+'_xt.gif'), frames[::-1, self.shape[1]//2, self.shape[2]//2])
+	def write_gif_1d(self, **kwargs):
+		def selector(arr):
+			return np.abs(arr)
+		self.write_animation(selector, **kwargs)
+	def write_gif_2d(self, **kwargs):
+		def selector(arr):
+			return np.abs(arr)
+		self.write_animation(selector, **kwargs)
+	def write_gif_2d_compact(self, **kwargs):
+		def selector(arr):
+			return np.abs(arr).mean(0)
+		self.write_animation(selector, **kwargs)
+	def write_gif_3d(self, **kwargs):
+		def selector(arr):
+			mid = lambda a: a[a.shape[0] // 2]
+			return mid(np.abs(arr))
+		self.write_animation(selector, **kwargs)
+	def write_gif_3d_compact(self, **kwargs):
+		def selector(arr):
+			return np.abs(arr).mean(0)
+		self.write_animation(selector, **kwargs)
+	def write_gif_4d_compact(self, **kwargs):
+		def selector(arr):
+			mean = lambda a: a.mean(0)
+			mid = lambda a: a[a.shape[0] // 2]
+			return mid(mean(np.abs(arr)))
+		self.write_animation(selector, **kwargs)
 
 
 class AbstractSpaceTimeField(AbstractField):
@@ -212,11 +223,43 @@ class AbstractSpaceTimeField(AbstractField):
 	def generate_geometric(self) -> str:
 		return self.generate(self.algebra.operator.geometric_product(self.domain, self.subspace))
 
-	def write_gif_2d(self, basepath, components, pre='', post='', norm=None, gamma=True):
-		basename = '_'.join([pre, str(self.shape), self.algebra.description.description_str, self.subspace.pretty_str, components, post])
-		os.makedirs(basepath, exist_ok=True)
-		frames = self.tonemap(components, norm, gamma)
-		iio.imwrite(os.path.join(basepath, basename+'_xy.gif'), frames)
 
 	def rollout(self) -> AbstractField:
 		raise NotImplemented
+
+	def rollout_generator(self):
+		raise NotImplemented
+
+
+	def write_animation(self, selector, generator, basepath, components, **kwargs):
+		def get_components(f, components):
+			"""sample field components as a numpy array, with field components last, for rendering"""
+			return np.moveaxis(getattr(f, components), 0, -1)
+		def to_animation(generator, components):
+			return np.array([selector(get_components(f, components)) for f in generator])
+		image = to_animation(generator, components)
+		self.write_animation_base(image, basepath, components, **kwargs)
+
+	def write_gif_2d_generator(self, *args, **kwargs):
+		def selector(arr):
+			return np.abs(arr)
+		self.write_animation(selector, *args, **kwargs)
+
+	def write_gif_3d_generator(self, *args, **kwargs):
+		def selector(arr):
+			mid = lambda a: a[a.shape[0] // 2]
+			return mid(np.abs(arr))
+		self.write_animation(selector, *args, **kwargs)
+
+	def write_gif_3d_generator_compact(self, *args, **kwargs):
+		def selector(arr):
+			mean = lambda a: a.mean(0)
+			return mean(np.abs(arr))
+		self.write_animation(selector, *args, **kwargs)
+
+	def write_gif_4d_generator_compact(self, *args, **kwargs):
+		def selector(arr):
+			mean = lambda a: a.mean(0)
+			mid = lambda a: a[a.shape[0] // 2]
+			return mid(mean(np.abs(arr)))
+		self.write_animation(selector, *args, **kwargs)

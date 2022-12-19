@@ -21,7 +21,7 @@ def test_1d():
 
 	full_field = field.rollout(steps, mass=mass)
 
-	full_field.write_gif_1d('../../output', 'x_t_xt', post='mass')
+	full_field.write_gif_1d(basepath='../../output', components='x_t_xt', post='mass')
 
 
 def test_1d_mass():
@@ -39,7 +39,7 @@ def test_1d_mass():
 
 	full_field = field.rollout(steps, mass=mass, metric=metric)
 
-	full_field.write_gif_1d('../../output', 'x_t_xt', post='mass_metric')
+	full_field.write_gif_1d(basepath='../../output', components='x_t_xt', post='mass_metric')
 
 
 def test_1d_massI():
@@ -54,7 +54,7 @@ def test_1d_massI():
 
 	full_field = field.rollout(steps, mass_I=mass_I, metric=metric)
 
-	full_field.write_gif_1d('../../output', 'x_t_xt', post='mass_I')
+	full_field.write_gif_1d(basepath='../../output', components='x_t_xt', post='mass_I')
 
 
 def test_1d_mass_sig():
@@ -74,7 +74,7 @@ def test_1d_mass_sig():
 
 	full_field = field.rollout(steps, mass=mass, metric=metric)
 
-	full_field.write_gif_1d('../../output', 'x_t_xt', post='sig_mass')
+	full_field.write_gif_1d(basepath='../../output', components='x_t_xt', post='sig_mass')
 
 
 
@@ -89,9 +89,12 @@ def test_2d():
 
 	# metric = {'t': (1-field.gauss(0.3)*0.5)}
 
-	full_field = field.rollout(steps, mass=mass, metric={})
-
-	full_field.write_gif_2d('../../output', 'xt_yt_xy', post='mass', norm=99)
+	# full_field = field.rollout(steps, mass=mass, metric={})
+	# full_field.write_gif_2d('../../output', 'xt_yt_xy', post='mass', norm=99)
+	field.write_gif_2d_generator(
+		field.rollout_generator(steps, mass=mass),
+		basepath='../../output', components='xt_yt_xy', post='mass',
+	)
 
 
 def test_2d_perf():
@@ -105,7 +108,7 @@ def test_2d_perf():
 
 	full_field = field.rollout(steps)
 
-	full_field.write_gif_2d('../../output', 'xt_yt_xy', pre='jax_perf', norm=99, anim=False)
+	full_field.write_gif_2d(basepath='../../output', components='xt_yt_xy', pre='jax_perf', anim=False)
 
 
 def test_2d_1vec():
@@ -121,7 +124,7 @@ def test_2d_1vec():
 
 	full_field = field.rollout(steps, metric={})
 
-	full_field.write_gif_2d('../../output', 'x_y_t', post='mass')
+	full_field.write_gif_2d(basepath='../../output', components='x_y_t', post='mass')
 
 
 def test_2d_compact():
@@ -136,7 +139,7 @@ def test_2d_compact():
 	metric = {'w': dimple * 0.3}
 
 	full_field = field.rollout(steps, metric=metric, mass=0.2)
-	full_field.write_gif_2d_compact('../../output', 'wy_wt_yt', pre='', norm=99)
+	full_field.write_gif_2d_compact(basepath='../../output', components='wy_wt_yt', pre='')
 
 
 
@@ -155,7 +158,7 @@ def test_2d_compact_sig():
 
 	full_field = field.rollout(steps, metric=metric, mass=mass)
 
-	full_field.write_gif_2d_compact('../../output', 'xy_xt_yt', post='compact_sig')
+	full_field.write_gif_2d_compact(basepath='../../output', components='xy_xt_yt', post='compact_sig')
 
 
 
@@ -169,18 +172,18 @@ def test_3d():
 	field = field.random_gaussian(0.1, 0.0)
 	mass = 0.2 + field.quadratic() / 4
 	mass = None
-	# dimple = (1-field.gauss(0.3)*0.5)
-	# metric = {'t': dimple}
+	dimple = (1-field.gauss(0.3)*0.5)
+	metric = {'t': dimple}
 	# metric = {'t': dimple / 2}
 
 	full_field = field.rollout(steps, metric=metric, mass=mass)
-	full_field.write_gif_3d('../../output', 'xy_xt_yt', post='', norm=99)
+	full_field.write_gif_3d(basepath='../../output', components='xy_xt_yt', post='')
 
 
 def filter_stationary(field, n=1, mean_axis=None, **kwargs):
 	"""Subtract a timestepped field from itself, to bring out higher-frequency components"""
 	for i in range(n):
-		correction = field.rollout(1, **kwargs).slice(-1).arr
+		correction = field.rollout(2, **kwargs).slice(-1).arr
 		if not mean_axis is None:
 			correction = correction.mean(mean_axis, keepdims=True)
 		field.arr = field.arr - correction
@@ -193,7 +196,7 @@ def filter_stationary(field, n=1, mean_axis=None, **kwargs):
 def test_3d_bivector():
 	print()
 	algebra = Algebra.from_str('x+y+z+t-')
-	shape = (128, 128, 128)
+	shape = (64, 64, 64)
 	steps = 128
 	field = SpaceTimeField.from_subspace(algebra.subspace.bivector(), shape)
 	field = field.random_gaussian(0.1)
@@ -201,7 +204,7 @@ def test_3d_bivector():
 	for n in range(3):
 		field = filter_stationary(field, n=n)
 		full_field = field.rollout(steps)
-		full_field.write_gif_3d('../../output', 'xt_yt_zt', pre=f'filtered{n}', norm=99, anim=False)
+		full_field.write_gif_3d(basepath='../../output', components='xt_yt_zt', pre=f'filtered{n}')
 
 
 def test_3d_bivector_compact():
@@ -218,7 +221,7 @@ def test_3d_bivector_compact():
 	for n in range(2):
 		field = filter_stationary(field, n=n, metric=metric)
 		full_field = field.rollout(steps, metric=metric, unroll=8**n)
-		full_field.write_gif_3d('../../output', 'xt_yt_wt', pre=f'filtered{n}', norm=99, anim=False)
+		full_field.write_gif_3d(basepath='../../output', components='xt_yt_wt', pre=f'filtered{n}', anim=False)
 
 
 def test_3d_bivector_potential():
@@ -249,7 +252,7 @@ def test_3d_bivector_potential():
 	# lets take one temporal slice and roll it out
 	F2 = F2.slice(1).rollout(steps)
 	print(np.linalg.norm(F2.arr))
-	F2.write_gif_3d('../../output', 'xt_yt_zt', pre=f'potential', norm=99, anim=True)
+	F2.write_gif_3d(basepath='../../output', componnts='xt_yt_zt', pre=f'potential', anim=True)
 
 
 
@@ -274,16 +277,16 @@ def test_3d_even_compact():
 	field = filter_stationary(field, 1)
 	field = filter_stationary(field, 10, metric=metric)
 	full_field = field.rollout(steps, metric=metric)
-	full_field.write_gif_3d('../../output', 'xy_xt_yt', pre='xymul', norm=99)
+	full_field.write_gif_3d(basepath='../../output', components='xy_xt_yt', pre='xymul')
 
 
 def test_3d_odd():
 	"""does not seem like odd has non-propagating parts"""
 	print()
 	algebra = Algebra.from_str('x+y+z+t-')
-	shape = (64, 64, 64)
-	steps = 128
-	field = SpaceTimeField.from_subspace(algebra.subspace.vector(), shape)
+	shape = (2, 128, 128)
+	steps = 256
+	field = SpaceTimeField.from_subspace(algebra.subspace.odd_grade(), shape)
 
 	field = field.random_gaussian(0.1, [0, 0, 0.0])
 	grid = field.meshgrid()
@@ -295,18 +298,17 @@ def test_3d_odd():
 	# dimple = field.quadratic(np.array([1e16, 1, 1]))
 	# metric = {'t': dimple}
 	metric = {'w': dimple / 2}
-	metric = {}
+	# metric = {}
 
 	for n in range(2):
 		field = field.random_gaussian(0.1)
 		field = filter_stationary(field, n, metric=metric)
 		full_field = field.rollout(steps, metric=metric)
-		full_field.write_gif_3d('../../output', 'x_y_z', pre=f'power_{n}', norm=99)
+		full_field.write_gif_3d(basepath='../../output', components='x_y_z', pre=f'power_{n}')
 
 
 def test_3d_compact_generations():
-	"""wow; we can make subluminal excitations,
-	unaffected by compact metric dimple
+	"""
 	"""
 	print()
 	algebra = Algebra.from_str('w+x+y+t-')
@@ -318,27 +320,22 @@ def test_3d_compact_generations():
 
 	for gen in range(4):
 		field = field.random_gaussian(0.1, 0.1)
+		field = filter_stationary(field, gen)
 		# suppress lightlike components from initial field conditions
-		for i in range(gen):
-			field = field.rollout(1, metric=metric).slice(-1)
-			# field = field.geometric_derivative_leapfrog(metric=metric)
-			field.arr = field.arr - field.arr.mean(axis=1, keepdims=True)
+		# for i in range(gen):
+		# 	field = field.rollout(2, metric=metric).slice(-1)
+		# 	field = field.geometric_derivative_leapfrog(metric=metric)
+			# field.arr = field.arr - field.arr#.mean(axis=1, keepdims=True)
 		# field = field.rollout(3, metric=metric).slice(-1)
 		# field.arr = field.arr - field.arr.mean(axis=1, keepdims=True)
 
 		# metric['t'] = gen
-		full_field = field.rollout(steps, metric=metric, unroll=8**gen)
-		full_field.write_gif_3d('../../output', 'xw_yw_xy', pre=f'gen{gen}', norm=99)
+		full_field = field.rollout(steps, metric=metric)
+		full_field.write_gif_3d(basepath='../../output', components='xw_yw_xy', pre=f'gen{gen}')
 
 
 def test_3d_compact_filtered():
-	"""wow; we can make subluminal excitations,
-	unaffected by compact metric dimple
-	can we view this as a model for Z-bosons?
-	succesive generations of excitations constructed in this manner travel more slowly;
-	both its radiating component unbound by the potential,
-	as well as its massive component
-
+	"""
 	note that a t-potential does not radiate
 	but a w potential does radiate
 	"""
@@ -356,8 +353,8 @@ def test_3d_compact_filtered():
 
 		field = filter_stationary(field, n, metric=metric)
 
-		full_field = field.rollout(steps, metric=metric,unroll=8**n)
-		full_field.write_gif_3d('../../output', 'xw_yw_xy', pre=f'filtered{n}_t', norm=99)
+		full_field = field.rollout(steps, metric=metric)
+		full_field.write_gif_3d(basepath='../../output', components='xw_yw_xy', pre=f'filtered{n}_t')
 
 
 
@@ -370,14 +367,16 @@ def test_4d_even_compact():
 
 	field = field.random_gaussian(0.1)
 	grid = field.meshgrid()
-	# field.arr = field.arr * grid[1]
-	# field.arr = field.arr * grid[2]
-	# mass = 0.2 +0* field.quadratic() / 4# + 0.1
-	# mass_I = -0.2
+	# for i in range(3):  # change to gauss * x
+	# 	field.arr = field.arr * grid[i+1]
 	dimple = (1-field.gauss(jnp.array([1e16, 0.3, 0.3, 0.3]))*0.9)
 	# metric = {'t': dimple}
 	metric = {'w': dimple / 2}
 
-	full_field = field.rollout(steps, metric=metric)
-	full_field.write_gif_4d_compact('../../output', 'xt_yt_zt', pre='', norm=99)
+	bivecs = ['xw_yw_zw', 'xt_yt_zt', 'xy_yz_zx']   # bunch to choose from
+	for bivec in bivecs:
+		field.write_gif_4d_generator_compact(
+			field.rollout_generator(steps, metric=metric),
+			basepath='../../output', components=bivec, pre='jax',
+		)
 

@@ -121,13 +121,9 @@ class SpaceTimeField(Field, AbstractSpaceTimeField):
 	def courant(self):
 		return float(self.dimensions) ** (-0.5)
 
-	def geometric_derivative_leapfrog(self, mass=None, mass_I=None, cubic=None, metric={}):
+	def geometric_derivative_leapfrog(self, mass=None, metric={}):
 		arr = self.arr.copy()
 		op = self.algebra.operator.geometric_product(self.domain, self.subspace)
-		# FIXME: comp just xyz based dual? prod from other side? not sure if working relative to eq is correct
-		dual = self.algebra.operator.geometric_product(self.algebra.subspace.pseudoscalar(), self.subspace)
-		kernel = dual.kernel[0]
-		dual_map = {k: (v, kernel[k, v]) for k, v in zip(*np.nonzero(kernel))}
 		domain = self.domain.named_str.split(',')
 
 		# FIXME: this only now works with t axis last
@@ -145,18 +141,9 @@ class SpaceTimeField(Field, AbstractSpaceTimeField):
 			if not mass is None:
 				# 'direct' mass term; porportional to element being stepped over, or eq
 				# FIXME: assure ourselves this element exists in self.subspace
-				#  if implicit zero just skip
+				#  if implicit zero just skip?
 				assert self.subspace == op.subspace
 				total += arr[eq_idx] * mass
-			# if not cubic is None:
-			# 	term += arr[eqi]**2 * cubic
-			if not mass_I is None:
-				# dual-t or xyz mass term; direct dual of varialbe fi_ being added to
-				#  note; depending on even or odd grade, this will toggle grades
-				#  need to check if this term can exists in the given space.
-				assert self.subspace == dual.subspace
-				fdi, v = dual_map[t_term.f_idx]
-				total += arr[fdi] * mass_I * v
 
 			arr = arr.at[t_term.f_idx].add(total * metric.get('t', 1) * t_term.sign)
 
@@ -165,28 +152,35 @@ class SpaceTimeField(Field, AbstractSpaceTimeField):
 	def rollout(self, steps, unroll=1, metric=None, **kwargs) -> Field:
 		"""perform a rollout of a leapfrog field into a whole field"""
 		# work safe CFL condition into metric scaling
+
+		output = Field.from_subspace(self.subspace, self.shape + (steps,))
+		arr = np.asfortranarray(output.arr) # more contiguous if t is last
+
+		for t, field in enumerate(self.rollout_generator(steps, unroll=unroll, metric=metric, **kwargs)):
+			# print(self.arr.sum())
+			arr[..., t] = field.arr
+
+		output.arr = jnp.array(arr)
+		return output
+
+	def rollout_generator(self, steps, unroll=1, metric={}, **kwargs):
+		"""perform a rollout of a leapfrog field"""
+		# work safe CFL condition into metric scaling
 		cfl_unroll = self.dimensions
-		if metric is None:
-			metric = {}
-		metric['t'] = metric.get('t', 1) / cfl_unroll
+		cfl_metric = {**metric, 't': metric.get('t', 1) / cfl_unroll}
 
 		@jax.jit
 		def step(state):
 			def inner(_, field):
-				return field.geometric_derivative_leapfrog(metric=metric, **kwargs)
+				return field.geometric_derivative_leapfrog(metric=cfl_metric, **kwargs)
 			return jax.lax.fori_loop(0, unroll*cfl_unroll, inner, state)
-
-		output = Field.from_subspace(self.subspace, self.shape + (steps,))
-		arr = np.asfortranarray(output.arr) # more contiguous if t is last
-		# FIXME: compile the whole thing?
 		step(self)  # warmup
 		import time
 		tt = time.time()
 
+		field = self
 		for t in range(steps):
-			self = step(self)   # Eww self reassign; not cool?
-			arr[..., t] = self.arr
-		print('time: ', time.time() - tt)
+			yield field
+			field = step(field)
 
-		output.arr = jnp.array(arr)
-		return output
+		print('time: ', time.time() - tt)

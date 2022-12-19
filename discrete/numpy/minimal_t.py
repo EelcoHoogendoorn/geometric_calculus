@@ -2,7 +2,10 @@
 for the equation geometric_derivative(phi) = m * phi * t,
 in the even subalgebra of x+y+t-
 We note that the discrete scheme appears unconditionally unstable,
-with or without attempted pointwise implicit solver
+with or without attempted pointwise implicit solver,
+in various formulations we have tried, fully implicit, semi implicit, or otherwise.
+We have not tried all spaces and signatures exhaustively,
+and we note that this is known to make a difference to some other zero order terms.
 """
 import numpy as np
 import matplotlib.pyplot as plt
@@ -32,8 +35,8 @@ def leapfrog(phi):
 	s, xy, xt, yt = phi
 	edt(s, +idx(xt) + idy(yt), m, +1)  # t
 	edt(xy, +edx(yt) - edy(xt), m, +1)  # xyt
-	idt(xt, +edx(s) - idy(xy), -m, -1)  # x
-	idt(yt, +idx(xy) + edy(s), -m, -1)  # y
+	idt(xt, +edx(s) - idy(xy), -m, +1)  # x
+	idt(yt, +idx(xy) + edy(s), -m, +1)  # y
 
 x2 = np.linspace(-1, 1, 64) ** 2
 phi = np.random.normal(size=(4, 1, 1)) * np.exp(-np.add.outer(x2, x2) * 16)

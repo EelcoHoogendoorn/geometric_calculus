@@ -12,7 +12,7 @@ class Operator:
 		self.field = field
 		self.op = op
 
-	def loopy_term(self, domain):
+	def loopy_term(self, domain, metric={}):
 		"""return callable to transform abstract term into loopy term"""
 		sign = {-1: '-', +1: '+'}
 		axes = ','.join(domain)
@@ -30,19 +30,24 @@ class Operator:
 		d = [ed, id]
 
 		def make_term(t) -> str:
-			return d[t.contraction](sign[t.sign], t.f_idx, t.d_idx)
+			vanilla = d[t.contraction](sign[t.sign], t.f_idx, t.d_idx)
+			ds = domain[t.d_idx]
+			if ds in metric:
+				# tack on a metric scaling
+				vanilla = f'({vanilla}) * M{ds}[{axes}]'
+			return vanilla
 		return make_term
 
 
 	@cached_property
-	def build_kernel(self):
+	def build_kernel(self, metric={}):
 		"""build loopy kernel from string syntax. prob cleaner to use the API, but too lazy to figure it out"""
 		domain = self.field.domain.named_str.split(',')
 
 		axes = ','.join(domain)
 		limits = ' and '.join(f'0 <= {d} < N{d}' for d in domain)
 
-		loopy_term = self.loopy_term(domain)
+		loopy_term = self.loopy_term(domain, metric=metric)
 		# FIXME: allow dynamic extension by fusing other stuff onto statements
 		statements = [
 			f'W[{eq_idx}, {axes}] = ' + '  '.join(loopy_term(t) for t in eq)
@@ -84,33 +89,26 @@ class Field(AbstractField):
 	def __hash__(self):
 		return self.subspace, self.domain, self.shape
 
-	# @classmethod
-	# def from_subspace(cls, subspace, shape, domain=None):
-	# 	return cls(
-	# 		subspace=subspace,
-	# 		domain=subspace.algebra.subspace.vector() if domain is None else domain,
-	# 		arr=cla.zeros((len(subspace),)+shape)
-	# 	)
 
 	def __getattr__(self, item):
 		subspace = getattr(self.algebra.subspace, item)
 		idx = self.subspace.to_relative_indices(subspace.blades)
 		return self.arr[idx]
-	def set(self, key, value):
-		subspace = self.algebra.subspace.from_str(key)
-		idx = self.subspace.relative_indices(subspace)
-		self.arr = self.arr[idx].set(value)
+	# def set(self, key, value):
+	# 	subspace = self.algebra.subspace.from_str(key)
+	# 	idx = self.subspace.relative_indices(subspace)
+	# 	self.arr = self.arr[idx].set(value)
 
-	def dual(self):
-		# FIXME: create unary op for this?
-		op = self.algebra.operator.dual(self.subspace)
-		arr = np.einsum('oc,c...->o...', op.kernel, self.arr, out=self.arr)
-		return self.copy(subspace=op.subspace, arr=arr)
-	def reverse(self):
-		# FIXME: create unary op for this?
-		op = self.algebra.operator.reverse(self.subspace)
-		arr = np.einsum('oc,c...->o...', op.kernel, self.arr, out=self.arr)
-		return self.copy(subspace=op.subspace, arr=arr)
+	# def dual(self):
+	# 	# FIXME: create unary op for this?
+	# 	op = self.algebra.operator.dual(self.subspace)
+	# 	arr = np.einsum('oc,c...->o...', op.kernel, self.arr, out=self.arr)
+	# 	return self.copy(subspace=op.subspace, arr=arr)
+	# def reverse(self):
+	# 	# FIXME: create unary op for this?
+	# 	op = self.algebra.operator.reverse(self.subspace)
+	# 	arr = np.einsum('oc,c...->o...', op.kernel, self.arr, out=self.arr)
+	# 	return self.copy(subspace=op.subspace, arr=arr)
 
 	def copy(self, arr=None, subspace=None):
 		return type(self)(
@@ -119,20 +117,20 @@ class Field(AbstractField):
 			domain=self.domain,
 			arr=arr.copy() if arr is None else arr
 		)
-	def __add__(self, other):
-		if isinstance(other, type(self)):
-			assert self.subspace == other.subspace
-			return self.copy(self.arr + other.arr)
-		return self.copy(self.arr + other)
-	def __mul__(self, other):
-		if isinstance(other, type(self)):
-			assert self.subspace == other.subspace
-			return self.copy(self.arr * other.arr)
-		return self.copy(self.arr * other)
+	# def __add__(self, other):
+	# 	if isinstance(other, type(self)):
+	# 		assert self.subspace == other.subspace
+	# 		return self.copy(self.arr + other.arr)
+	# 	return self.copy(self.arr + other)
+	# def __mul__(self, other):
+	# 	if isinstance(other, type(self)):
+	# 		assert self.subspace == other.subspace
+	# 		return self.copy(self.arr * other.arr)
+	# 	return self.copy(self.arr * other)
 
-	def restrict(self, subspace):
-		op = self.subspace.algebra.operator.restrict(self.subspace, subspace)
-		return self.copy(subspace=subspace, arr=np.einsum('io,i...->o...', op.kernel, self.arr))
+	# def restrict(self, subspace):
+	# 	op = self.subspace.algebra.operator.restrict(self.subspace, subspace)
+	# 	return self.copy(subspace=subspace, arr=np.einsum('io,i...->o...', op.kernel, self.arr))
 
 	def geometric_derivative(self, output=None):
 		op = self.algebra.operator.geometric_product(self.domain, self.subspace)

@@ -44,9 +44,9 @@ class STAOperator(Operator):
 		# FIXME: make this stuff configurable. 16 beats no split on cpu.
 		#  16-33s, None->52s, 128->55s, 4->27s, 8->29, 2->11.5s; 1->11s.
 		#  whoa; no clue what this is all about
-		# on-device a single block of 16 seems near optimal. rollout gives mem restriction tho
+		#  on-device a single block of 16 seems near optimal. rollout gives mem restriction tho
 		for i, d in zip(range(1), domain[::-1]):
-			knl = lp.split_iname(knl, d, 2, outer_tag=f"g.{i}", inner_tag=f"l.{i}")
+			knl = lp.split_iname(knl, d, 16, outer_tag=f"g.{i}", inner_tag=f"l.{i}")
 		# assume grid size and thread block size match
 		# for d in domain:
 		# 	knl = lp.assume(knl, f'N{d} mod 16 = 0')
@@ -83,20 +83,56 @@ class SpaceTimeField(Field, AbstractSpaceTimeField):
 		op = self.algebra.operator.geometric_product(self.domain, self.subspace)
 		return STAOperator(self.context, self, op)
 
-	def rollout(self, steps):
+	# def rollout(self, steps):
+	# 	arr = self.context.allocate_array((steps,) + self.arr.shape)
+	# 	print('GBs: ', arr.size / (2**30))
+	# 	import time
+	# 	op = self.geometric_derivative()
+	# 	tt = time.time()
+	# 	for t in range(steps):
+	# 		# FIXME: kernel that does not update in place but writes direct to next step
+	# 		#  would be more efficient? that said we do typically unroll into substeps anyway, so whatever?
+	# 		arr.setitem(t, self.arr, self.context.queue)
+	# 		for substep in range(3):
+	# 			op.apply()
+	# 	print('time: ', time.time() - tt)
+	# 	n = arr.ndim
+	# 	axes = [(a + 1) % n for a in range(n)]
+	# 	arr = arr.transpose(axes)
+	# 	return Field(self.context, self.subspace, self.domain, arr)
+
+	def rollout(self, steps, **kwargs) -> Field:
+		"""perform a rollout of a leapfrog field into a whole field"""
+		# FIXME: better to allocate off-device, for mem availability? or leave that to generator?
 		arr = self.context.allocate_array((steps,) + self.arr.shape)
 		print('GBs: ', arr.size / (2**30))
-		import time
+		for t, slc in enumerate(self.rollout_generator(steps, **kwargs)):
+			arr.setitem(t, slc.arr, self.context.queue)
+		n = arr.ndim
+		arr = arr.transpose([(a + 1) % n for a in range(n)])    # move t axis last
+		return Field(self.context, self.subspace, self.domain, arr)
+
+	def rollout_generator(self, steps, unroll=1, metric={}, **kwargs):
+		"""perform a rollout of a leapfrog field"""
+		# work safe CFL condition into metric scaling
+		cfl_unroll = self.dimensions
+		cfl_metric = {**metric, 't': metric.get('t', 1) / cfl_unroll}
+
 		op = self.geometric_derivative()
+
+		import time
 		tt = time.time()
+
 		for t in range(steps):
-			# FIXME: kernel that does not update in place but writes direct to next step
-			#  would be more efficient? that said we do typically unroll into substeps anyway, so whatever?
-			arr.setitem(t, self.arr, self.context.queue)
-			for substep in range(3):
+			yield self.to_numpy()
+			for substep in range(cfl_unroll * unroll):
 				op.apply()
 		print('time: ', time.time() - tt)
-		n = arr.ndim
-		axes = [(a + 1) % n for a in range(n)]
-		arr = arr.transpose(axes)
-		return Field(self.context, self.subspace, self.domain, arr)
+
+	def to_numpy(self):
+		"""Map opencl field to numpy field
+		dont want to bother making our visualization code compatible with opencl nonsense
+		"""
+		from discrete.numpy.field import SpaceTimeField
+		arr = self.arr.map_to_host(queue=self.context.queue)
+		return SpaceTimeField(self.subspace, self.domain, arr)

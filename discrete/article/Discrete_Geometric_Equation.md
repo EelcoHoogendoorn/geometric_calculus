@@ -344,9 +344,9 @@ Running the numerical experiment indeed satisfies the above expectations:
 
 <img src="2d_compact_dilation_slow.gif" width="256" height="1024"/>
 
-Pure geometric equation, `d(phi) = 0` over `x+y+t-`, compact y dimension, `dy = 1-gauss(x) / 2`
+<i>Pure geometric equation, `d(phi) = 0` over `x+y+t-`, compact y dimension, `dy = 1-gauss(x) / 2`
 
-Indeed by modulation of the length of the compact dimension, we attain a trapping of the massive excitation, identical to a coulomb potential `V * phi` of the same spatial profile; and indeed this effect is orthogonal to the propagation of lightlike excitations, in contrast to the direct zero order term.
+Indeed by modulation of the length of the compact dimension, we attain a trapping of the massive excitation, identical to a coulomb potential `V * phi` of the same spatial profile; and indeed this effect is orthogonal to the propagation of lightlike excitations, in contrast to the direct zero order term.</i>
 
 
 ### Discussion
@@ -373,34 +373,7 @@ Non-propagating field components can be removed by simply taking a difference of
     <th><img src="./figures/filtered2_(128,%20128,%20128,%20128)_x+y+z+t-_is_bivector_xt_yt_zt__xt.gif" width="256" height="256"/></th>
 </table>
 
-*0, 1 and 2 power iterations on a gaussian excitation of a bivector field. After the first application, the non-Maxwellian non-propagating mode vanishes, and subsequent iterations continue to bring bring out higher frequencies contained in the original gaussian.*
-
-
-The same filtering operation can be applied to a scenario having a compact dimension, and there we may observe dynamics that hitherto were not apparent. Rather than selecting out the lightlike modes, we see the modes traveling along the light cone vanish, under application of this filtering. Upon reflection this makes sense, as the power iteration selects out the highest frequency components, which given the way our initialization is constructed in the compact scenario, are the frequencies pertaining to the compact dimension.
-
-<table>
-    <th><img src="./figures/filtered0_(2,%20128,%20128,%20128)_w+x+y+t-_is_bivector_xt_yt_wt__xt.gif" width="256" height="256"/></th>
-    <th><img src="./figures/filtered1_(2,%20128,%20128,%20128)_w+x+y+t-_is_bivector_xt_yt_wt__xt.gif" width="256" height="256"/></th>
-    <th><img src="./figures/filtered2_(2,%20128,%20128,%20128)_w+x+y+t-_is_bivector_xt_yt_wt__xt.gif" width="256" height="256"/></th>
-</table>
-
-*0, 1 and 2 power iterations on an off-center gaussian excitation of a bivector field, with one compact dimension `w`, and a variable `w` potential well. Time has been sped up by [1, 8, 64] times respectively; without such scaling the untrapped excitations move too slow to manifest themselves as a seperate component; and the last frame would not notiably evolve at all in the given timeframe. Convergence to a true stationary solution seems faster than any polynomial power we have tried. Note that the trapped massive state radiates as it is accelerated by the potential, but that these are only a true lightlike radiation in the first picture.*
-
-What we then see brought into focus is a wave component resembling the lightlike excitations; but traveling within the light cone. This wave component needs to have some motion around the compact dimension; by construction, and by its apparent subluminal motion from the non-compact dimension. However, it succeeds in doing so, without being influenced in its propagation by our imposed profile on the metric of `w`. 
-
-Moreover, these subluminal excitations are also 'lightlike' in their response to a metric variation in `t`. Despite traveling arbitrarily slow within the light cone, they may escape an arbitrarily deep well in `t`, incurring only a change in wavelength as they do so, and unlike 'proper' massive excitations not being inclined to reverse their direction of travel.
-
-Arguably these type of excitation defy our previous binary classification, in terms of lightlike and massive. In these qualities, one may be reminded of the massive bosons.
-
-More curious still, is the effect of this power iteration on what we would formerly refer to as the massive excitaton. It too has its motion refocussed into the compact dimension. This excitation too, becomes more 'massive', in the sense that it is slower to accelerate into the potential well formed by the metric variation in `w`. But our justification for that terminology weakens, seeing as how this excitation is also slower to accelerate into a metric variation in `t`, which is contrary to our expectation of physical mass. With repeated application of the power iteration in a scenario having such a potential well, we may produce excitations that are **arbitrarily insensitive** to the influence of such potential wells and their gradients; like a surfer riding a wave in equilibrium. If they have not previously been named, we would propose to call these excitations 'grommet-solitons'.
-
-It is interesting to reflect on the fact that we are still considering a homogenous first order linear equation here, `d(phi) = 0` in 3 spatial dimensions. The only 'exotic' thing we have done is to consider high frequency waves in one of the spatial dimensions; its 'compactness' or lack thereof being a mere matter of convenience.
-
-Experimentally observing a levitating particle formed by some balance of internally recirculating neutrino-current excitatitions, balancing the effect of gravity, would be quite something; but if such compact dimensions exist in nature, is an open question, and even if they do and are stable, it would seem like quite the feat of experimental physics. 
-
-However, we can observe all the same phenomena equally, both to fields over the even subalgebra, as well as the bivectors. They are a consequence of the compact dimension interacting with a potential, not of the mixing of multivector grades.
-
-As such, one might actually expect to be able to observe such grommet-solitons in physical electromagnetic waves. A coaxial cable or waveguide with a variable radius, excited with a wave travelling primarily around the waveguide, may actually serve as a physical realization. If so, one may expect these modes to already have a name in waveguide theory (do they?); however, they might be difficult to realize for substantial duration in a dissipative system, nor is it obvious how to efficiently excite them, either by accident or intentionally, seeing as how they are orthogonal to the more common modes. We emphasize that these solitons distinguish themselves from a usual trapped mode in a resonant waveguide cavity, by their stationary localization on one of the sides of the cavity, as opposed to a more common standing wave, which is distributed and can be viewed as a superposition of traveling waves reflecting off both sides of the cavity.
+<i>0, 1 and 2 power iterations on a gaussian excitation of a bivector field. After the first application, the non-Maxwellian non-propagating mode vanishes, and subsequent iterations continue to bring bring out higher frequencies contained in the original gaussian.</i>
 
 
 
@@ -428,7 +401,7 @@ SPS zero order term. Note that an unbiased implementation requires an interpolat
 -idt(t)  = +idx(x)  +m*x 
 +idt(xt) = +edx(s)  +m*s 
 ```
-Illustration of code with SPS `x` zero order term.
+<i>Illustration of code with SPS `x` zero order term.</i>
 
 Since these SPS terms do not toggle spacelike and timelike, they do not break the leapfrog structure. Zero order terms that do involve `t`, do break the leapfrog structure. 
 ```python
@@ -438,7 +411,7 @@ Since these SPS terms do not toggle spacelike and timelike, they do not break th
 -idt(t)  = +idx(x)  +m*t 
 +idt(xt) = +edx(s)  +m*xt 
 ```
-Illustration of code with `t` zero order term.
+<i>Illustration of code with `t` zero order term.</i>
 
 One may argue that this is merely a superficial breaking of the leapfrog scheme; after all, we may still seperate all timelike and spacelike variables to opposing sides of the equals sign. This raises another question however; if the first equation is an equation over the element `t`, and it draws influence from `s`, we should realize the past and future `s` are equidistant from the perspective of `t`, and we also would need to interpolate over the time dimension, to avoid bias in one direction. Still, we may solve this pointwise implicit equation, and this does not preclude us from forming an update rule of `s` in terms of just timelike variables.
 
