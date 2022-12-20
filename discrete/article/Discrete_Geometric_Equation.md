@@ -317,7 +317,7 @@ Both are subjected to the same initial conditions in `x`, and subject to the sam
 
 Clearly, the one-up model is a richer model, admitting both lightlike and massive excitations, in a single field equation. Here we find at least a superficial justification in calling both types of excitations 'massive' excitations, in the sense that they show qualitatively similar behavior, in terms of their response to a gravity well, and in terms of building up a notion of momentum in terms of a spatial winding frequency of their field, capable of carrying it through the bottom of the potential, and up its opposing side.
 
-It certainly seems likely that one may formally prove these models isomorphic, at least as far as the massive excitations are concerned. Infact an attempted outline of such a proof seems straightforward; all it requires is that there exist excitations for which additional gradients along the compact dimension, are proportional to the field values themselves. To those who subscribe to 'proof by believing your own eyes', the answer seems evident.
+It certainly seems likely that one may formally prove these models isomorphic, at least as far as the massive excitations are concerned. Infact an attempted outline of such a proof seems straightforward; all it requires is that there exist excitations for which the extra column of terms adding to the equation are proportional. That is additional gradients along the compact dimension, are proportional to the field values themselves. To those who subscribe to 'proof by believing your own eyes', the existence of such excitations seems evident.
 
 
 ### Stability
@@ -326,7 +326,7 @@ We note that addition of the direct zero-order term, does not seem to have an im
 
 More interestingly still, the opposite is true in a `x-t+` metric. While the pure geometric equation shows qualitatively similar behavior regardless of a spacelike or timelike metric, the direct zero order term seems to be unconditionally unstable.
 
-Graphing a trace of the sum of amplitudes over the spatial dimensions, for an evolving field having a zero order term, we may see that conservation of amplitudes no longer holds in a direct sense; infact the total amplitude may even reverse sign; but its long term evolution still seems constrained by a form of conservation principle; and the sum-of-squares evolution of the field, is qualitativeiy similar, with or without direct zero order term.
+Graphing a trace of the sum of amplitudes over the spatial dimensions, for an evolving field having a zero order term, we may see that an exact conservation of amplitudes no longer holds in a direct sense; infact the total amplitude may even reverse sign; but its long term evolution still seems constrained by a form of conservation principle; and the sum-of-squares evolution of the field, is qualitativeiy similar, with or without direct zero order term.
 
 We note that there appears to be no obstacle to adding both extra dimensions and a zero-order term. Nor to the addition of  multitude of extra dimensions.
 
@@ -359,7 +359,7 @@ For instance, it is not obvious how to model both attraction and repulsion. Seei
 
 Again, our intent is to set the scope of this article to a self-contained presentation of the discrete geometric derivative, with some illustration of its properties amd utility. This limited scope should not be construed, as an exhaustive exploration of all such possibilities appearing to be in sight.
 
-But for those purposes, in summary, we note that the dynamics of a direct zero order 'mass' term, can be viewed as a subset of the dynamics of a one-up-compact model. And that 'spatially varying mass'; or 'potential' terms are homologous to a spatial variation in the one-up-compact metric.
+But for those purposes, in summary, we note that the dynamics of a direct zero order 'mass' term, can be viewed as a subset of the dynamics of a one-up-compact model. And that 'spatially varying mass'; or 'potential' terms are homologous to a spatial variation in the metric of the one-up-compact dimension.
 
 ## Alternative field excitations
 
@@ -375,7 +375,7 @@ Non-propagating field components can be removed by simply taking a difference of
 
 <i>0, 1 and 2 power iterations on a gaussian excitation of a bivector field. After the first application, the non-Maxwellian non-propagating mode vanishes, and subsequent iterations continue to bring bring out higher frequencies contained in the original gaussian.</i>
 
-
+We observe that in a scenario involving a compact dimension, we may readily seperate the lightlike and massive modes; one may isolate the lightlike by taking the mean over the compact dimension, and erasing any gradients in that direction; and the massive subset of excitations can simply be constructed by subtracting the lightlike.
 
 
 
@@ -393,15 +393,16 @@ To that end, we may also consider multiplication by merely the element `t`, or a
 
 While all these constructions are algebraically valid, we note that all of these alternative zero order constructions present an issue in the discrete setting. While the direct zero order term is colocated on the discrete grid with the constraint being applied, all these alternatives are not. In case of the SPS term, at least the variable being sampled lives in the same temporal slice as the variable being stepped over, whereas in those constructions involving the element `t`, this is not the case
 
-SPS zero order term. Note that an unbiased implementation requires an interpolation step. Taking the first line; this is an equation over lines `t`; and rather than coupling to zero order with `t`, we couple to the average values of the elements `xt` adjacent to `t`, which are the product of `t` with the SPS; or the dual of the left hand side, variable that is being time-stepped.
-```python
-+edt(s)  = +idx(xt) +m*xt 
--edt(x)  = +edx(t)  +m*t
 
--idt(t)  = +idx(x)  +m*x 
-+idt(xt) = +edx(s)  +m*s 
+```python
++edt(s)  = +idx(xt) +m*interpolate(xt) 
+-edt(x)  = +edx(t)  +m*interpolate(t)
+
+-idt(t)  = +idx(x)  +m*interpolate(x) 
++idt(xt) = +edx(s)  +m*interpolate(s) 
 ```
-<i>Illustration of code with SPS `x` zero order term.</i>
+<i>Illustration of code with SPS `x` zero order term. Note that an unbiased implementation requires an interpolation step. Taking the first line; this is an equation over lines `t`; and rather than coupling to zero order with `t`, we couple to the average values of the elements `xt` adjacent to `t`, which are the product of `t` with the SPS; or the dual of the left hand side, variable that is being time-stepped.
+</i>
 
 Since these SPS terms do not toggle spacelike and timelike, they do not break the leapfrog structure. Zero order terms that do involve `t`, do break the leapfrog structure. 
 ```python
@@ -421,7 +422,7 @@ The same is not as easily claimed for a full dual zero order term, involving all
 
 ### Results
 
-We note that the SPS mass term, upon visual inspection, appears qualitatively quite different from the direct zero order term.
+We note that the behavior of the SPS mass term, upon visual inspection, appears qualitatively quite different from the direct zero order term.
 
 <img src="31_compact_even_sps_mass_xt.gif" width="256" height="256"/>
 
@@ -429,7 +430,7 @@ It is characterized by light-like modes that oscillate between different field c
 
 <img src="31_compact_even_sps_mass_xy.gif" width="256" height="256"/>
 
-A zero order term `m * phi * t`, implemented naively, appeats unconditionally unstable. Taking the average of present and future values in this equation, and solving this pointwise implicit equation for the future value, does not appear to resolve the instability. We have only tried to make it work in the even subalgebra of `x+y+t-`; but since the same update rule should be contained in higher dimensional spaces in identical form, the instability in this space does spell trouble for higher dimensions as well.
+A zero order term `m * phi * t`, implemented naively, appears unconditionally unstable. Taking the average of present and future values in this equation, and solving this pointwise implicit equation for the future value, does not appear to resolve the instability. We have only tried to make it work in the even subalgebra of `x+y+t-`; but since the same update rule should be contained as a subset of the update rule in higher dimensional spaces, the instability in this space does spell trouble for higher dimensions as well.
 
 Pure dual terms, and the implicit dependence on the future time stencil they imply, are not something we have tried yet.
 
@@ -454,13 +455,16 @@ We note that geometric calculus, and discrete geometric calculus in particular, 
 
 We note that in the discrete geometric calculus setting, one operation that is always permitted, is to reduce graded elements to scalars via an inner product with themselves; and any (polynomials of such) scalar expressions can again be multiplied with the original element, to obtain cubic terms.
 
-Aside from nonlinearities of this kind, it is of course interesting to consider those nonlinearities that may arise, by coupling the metric variations encoded in the basis blades from which we construct our derivative operators, to the field variables themselves. For any field that does admit a grade-1 component, or for which one can be derived through application of the geometric derivative, the simplest form of such nonlinearity is straightforward indeed. However, should we seek some polynomial expression of such 1-vectors, we should again be mindful of the fact that raising a vector to some power naively, does not result in an expression of a 1-vector type.
+Aside from nonlinearities of this kind, it is of course interesting to consider those nonlinearities that may arise, by coupling the metric variations encoded in the basis blades from which we construct our derivative operators, to the field variables themselves. For any field that does admit a grade-1 component, or for which one can be derived through application of the geometric derivative, the simplest form of such nonlinearity is straightforward indeed [^monopoles]. However, should we seek some polynomial expression of such 1-vectors, we should again be mindful of the fact that raising a vector to some power naively, does not result in an expression of a 1-vector type.
 
-The mechanisms for making 'space guide matter', seems quite constrained. At least within the context of the vector-geometric-equation; modulations of the length of the 1-vectors that form our geometric derivative seem like the only option.
+[^monopoles]:
+    We note that in our construction of a multivector wave equation `d(phi) = 0`, where we construct our derivative through multiplication with a 1-vector, there is an inherent assymmetry, if we construct our metric variations from only the 1-vectors, and not giving equal significant to any other grades. We note that there is a parallel here with another famous assymetry; of electric versus magnetic monopoles. In the equation `d(F) = J + 0`, 1-vectors are experimentally well established source terms of the EM field, but 3-vectors are not observed to appear as source terms in nature. Nor can we construct a nonzero 1-vector from a 3-vector, via applications of the geometric derivative. 
 
-Which are viable mechanisms for making 'matter guide space' seems like a more open question; and what the most 'minimal coupling' is, capable of generating interesting behavior, or constructing models of the physical world, seems like it has a lot of room for exploration.
+The mechanisms for making 'space guide matter', seems quite constrained. At least within the context of the vector-geometric-equation; modulations of the length of the 1-vectors that form our geometric derivative seem like the only natural option available within that framework.
 
-Especially the question of which one of such couplings may find an elegant expression in the discrete setting, seems like very interesting future work.
+Which are viable mechanisms for making 'matter guide space' seems like a more open question; and what the most 'minimal coupling' is, capable of generating interesting behavior, or constructing viable models of the physical world, seems like it has a lot of room for exploration.
+
+Especially the question of which of such couplings may find an elegant expression in the discrete setting, seems like very interesting future work.
 
 
 
@@ -488,6 +492,7 @@ At present we lack a full taxonomy of all possible combinations influential in d
  * A spacelike signature seems unconditionally compatible with a direct zero order term, and we have a tentative theoretical argument as to why.
  * Some spacelike signatures are compatible with a SPS zero order term.
  * Some timelike signatures are compatible with a SPS zero order term.
+ * We have been unable to find a stable discrete implementation of a `t` based zero order term. 
 
 NOTE: there are still some known and suspected shortcomings and bugs in the code relating to SPS terms; and conclusions regarding SPS are all quite tentative
 

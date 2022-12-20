@@ -9,6 +9,22 @@ from numga.algebra.algebra import Algebra
 from discrete.jax.field import SpaceTimeField, Field
 
 
+def filter_stationary(field, n=1, **kwargs):
+	"""Subtract a timestepped field from itself, to bring out higher-frequency components"""
+	for i in range(n):
+		correction = field.rollout(2, **kwargs).slice(-1).arr
+		field.arr = field.arr - correction
+		# field = field.geometric_derivative_leapfrog(metric=metric)
+		# field.arr = field.arr - field.arr.mean(axis=1, keepdims=True)
+	return field
+def filter_lightlike(field):
+	"""erase average of compact dimension, suppressing lightlike modes"""
+	return field.copy(field.arr - field.arr.mean(axis=1, keepdims=True))
+def filter_massive(field, axis=1):
+	"""erase motion in compact dimension, supressing massive modes"""
+	return field.copy(field.arr.at[...].set(field.arr.mean(axis=axis, keepdims=True)))
+
+
 def test_1d():
 	print()
 	algebra = Algebra.from_str('x+t-')
@@ -142,8 +158,6 @@ def test_2d_compact():
 	full_field.write_gif_2d_compact(basepath='../../output', components='wy_wt_yt', pre='')
 
 
-
-
 def test_2d_compact_sig():
 	"""in 2d, direct mass term with flipped sig also seems broken"""
 	print()
@@ -159,7 +173,6 @@ def test_2d_compact_sig():
 	full_field = field.rollout(steps, metric=metric, mass=mass)
 
 	full_field.write_gif_2d_compact(basepath='../../output', components='xy_xt_yt', post='compact_sig')
-
 
 
 def test_3d():
@@ -178,19 +191,6 @@ def test_3d():
 
 	full_field = field.rollout(steps, metric=metric, mass=mass)
 	full_field.write_gif_3d(basepath='../../output', components='xy_xt_yt', post='')
-
-
-def filter_stationary(field, n=1, mean_axis=None, **kwargs):
-	"""Subtract a timestepped field from itself, to bring out higher-frequency components"""
-	for i in range(n):
-		correction = field.rollout(2, **kwargs).slice(-1).arr
-		if not mean_axis is None:
-			correction = correction.mean(mean_axis, keepdims=True)
-		field.arr = field.arr - correction
-		# field = field.geometric_derivative_leapfrog(metric=metric)
-		# field.arr = field.arr - field.arr.mean(axis=1, keepdims=True)
-	return field
-
 
 
 def test_3d_bivector():
@@ -218,10 +218,9 @@ def test_3d_bivector_compact():
 	# metric = {'t': dimple}
 	metric = {'w': dimple / 2}
 
-	for n in range(2):
-		field = filter_stationary(field, n=n, metric=metric)
-		full_field = field.rollout(steps, metric=metric, unroll=8**n)
-		full_field.write_gif_3d(basepath='../../output', components='xt_yt_wt', pre=f'filtered{n}', anim=False)
+	for n in range(3):
+		full_field = filter_stationary(field, n=n, metric=metric).rollout(steps, metric=metric)
+		full_field.write_gif_3d(basepath='../../output', components='xt_yt_wt', pre=f'filtered{n}')
 
 
 def test_3d_bivector_potential():
@@ -255,56 +254,59 @@ def test_3d_bivector_potential():
 	F2.write_gif_3d(basepath='../../output', componnts='xt_yt_zt', pre=f'potential', anim=True)
 
 
-
 def test_3d_even_compact():
+	"""test some compact spaces with more DOFs
+	indeed it appears we can observe components with variable reactivity to w potential
+	"""
 	print()
 	algebra = Algebra.from_str('w+x+y+t-')
-	shape = (2, 128, 128)
-	steps = 256
+	shape = (2, 256, 256)
+	steps = 512
 	field = SpaceTimeField.from_subspace(algebra.subspace.even_grade(), shape)
 
-	field = field.random_gaussian(0.2, [0, 0, 0.2])
-	grid = field.meshgrid()
-	# field.arr = field.arr * grid[1]
+	field = field.random_gaussian([0.3], [0, 0, 0.1])
+	field = filter_lightlike(field)
+	# grid = field.meshgrid()
+	# for i in range(2):
+	# 	field.arr = field.arr * grid[1+i]
 	# field.arr = field.arr * grid[2]
-	# mass = 0.2 +0* field.quadratic() / 4# + 0.1
-	# mass_I = -0.2
-	dimple = (1-field.gauss(np.array([1e16, 0.3, 0.3]))*0.1)
-	# dimple = field.quadratic(np.array([1e16, 1, 1]))
+	dimple = (1-field.gauss(np.array([1e16, 0.6, 0.6]))*0.5)
 	# metric = {'t': dimple}
-	metric = {'w': dimple / 2}
+	metric = {'w': dimple / 4}
 
-	field = filter_stationary(field, 1)
-	field = filter_stationary(field, 10, metric=metric)
-	full_field = field.rollout(steps, metric=metric)
-	full_field.write_gif_3d(basepath='../../output', components='xy_xt_yt', pre='xymul')
+	# field = filter_lightlike(field)
+	bivecs = ['wt_xt_yt', 'wx_wy_wt']
+	for bv in bivecs:
+		field.write_gif_3d_generator(
+			field.rollout_generator(steps, metric=metric),
+			basepath='../../output', components=bv, pre='',
+		)
 
 
 def test_3d_odd():
 	"""does not seem like odd has non-propagating parts"""
 	print()
-	algebra = Algebra.from_str('x+y+z+t-')
+	algebra = Algebra.from_str('w+x+y+t-')
 	shape = (2, 128, 128)
 	steps = 256
 	field = SpaceTimeField.from_subspace(algebra.subspace.odd_grade(), shape)
 
-	field = field.random_gaussian(0.1, [0, 0, 0.0])
+	# field = field.random_gaussian([1e16, 0.1, 0.1], [0, 0, 0.0])
 	grid = field.meshgrid()
-	# field.arr = field.arr * grid[1]
+	# for i in range(1)
 	# field.arr = field.arr * grid[2]
-	# mass = 0.2 +0* field.quadratic() / 4# + 0.1
-	# mass_I = -0.2
-	dimple = (1-field.gauss(np.array([1e16, 0.3, 0.3]))*0.1)
-	# dimple = field.quadratic(np.array([1e16, 1, 1]))
+	dimple = (1-field.gauss(np.array([1e16, 0.3, 0.3]))*0.5)
 	# metric = {'t': dimple}
 	metric = {'w': dimple / 2}
 	# metric = {}
 
 	for n in range(2):
-		field = field.random_gaussian(0.1)
+		field = field.random_gaussian(0.1, seed=0)
+		field.arr = field.arr * grid[1] * grid[2]
 		field = filter_stationary(field, n, metric=metric)
+		# field = filter_lightlike(field)
 		full_field = field.rollout(steps, metric=metric)
-		full_field.write_gif_3d(basepath='../../output', components='x_y_z', pre=f'power_{n}')
+		full_field.write_gif_3d(basepath='../../output', components='x_y_w', pre=f'power_{n}')
 
 
 def test_3d_compact_generations():
@@ -320,7 +322,7 @@ def test_3d_compact_generations():
 
 	for gen in range(4):
 		field = field.random_gaussian(0.1, 0.1)
-		field = filter_stationary(field, gen)
+		field = filter_stationary(field, gen, metric=metric)
 		# suppress lightlike components from initial field conditions
 		# for i in range(gen):
 		# 	field = field.rollout(2, metric=metric).slice(-1)
@@ -365,11 +367,12 @@ def test_4d_even_compact():
 	steps = 128
 	field = SpaceTimeField.from_subspace(algebra.subspace.even_grade(), shape)
 
-	field = field.random_gaussian(0.1)
+	field = field.random_gaussian(0.3, [0, 0, 0, 0.1])
+	field = filter_lightlike(field)
 	grid = field.meshgrid()
 	# for i in range(3):  # change to gauss * x
 	# 	field.arr = field.arr * grid[i+1]
-	dimple = (1-field.gauss(jnp.array([1e16, 0.3, 0.3, 0.3]))*0.9)
+	dimple = (1-field.gauss(jnp.array([1e16, 0.5, 0.5, 0.5]))*0.5)
 	# metric = {'t': dimple}
 	metric = {'w': dimple / 2}
 
@@ -377,6 +380,6 @@ def test_4d_even_compact():
 	for bivec in bivecs:
 		field.write_gif_4d_generator_compact(
 			field.rollout_generator(steps, metric=metric),
-			basepath='../../output', components=bivec, pre='jax',
+			basepath='../../output', components=bivec, pre='masslike4',
 		)
 

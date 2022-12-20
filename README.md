@@ -14,22 +14,27 @@ Examples
 --------
 Since vector calculus is a subset of geometric calculus, a wide range of physical models can be expressed using the geometric derivative in a concise, coordinate independent, and dimension independent manner. And if this library lives up to its design goals, also in an efficient and convenient manner.
 
-For instance, we can simulate elastic solids by solving the biharmonic 4th order equation `d(d(d(d(phi)))) = 0`, for a grade 0+2, or even-grade compressible elasticity potential `phi` over the space `x+y+`, and plot its grade-1 geometric derivative displacement `u = d(phi)`, to make figures such as these, of a solid block pressed between two flat plates:
+For instance, we can simulate elastic solids by solving the biharmonic 4th order equation `d(d(d(d(phi)))) = 0`, for a grade 0+2, or even-grade compressible elasticity potential `phi` over the space `x+y+`, and plot its grade-1 geometric derivative displacement `u = d(phi)`, to [make figures such as these]((continuous/test/test_elasticity.py)), of a solid block pressed between two flat plates:
 
 <img src="elastic_solid.gif" width="256" height="256"/> 
 
-Any mechanical engineer should be able to appreciate as much.
+Breaking this down, `u = d(phi)`, gives a grade-1 displacement field, `d(u) = compression + rotation`, gives again an even-grade field, encoding the divergence and curl of the displacement field; taking the geometric derivative again, we obtain a gradient of compression plus a curl of the rotation, or pressure plus shear forces, represented as a grade-1 field describing internal forces. And taking the geometric derivative of that again, gives again an even-grade field. In equating this with zero, we are demanding linear and angular equilibrium of the field. 
 
-However, geometric calculus also permits the formulation of ' more complicated' types of equations, such as for instance `d(phi) = 0` over the even grade subalgebra of `x+y+z+t-`:
+Any mechanical engineer should be able to appreciate as much. 
+
+
+However, geometric calculus also permits the formulation of 'more advanced' types of equations, such as for instance `d(phi) = 0` over the even grade subalgebra of `x+y+z+t-`:
 
 <img src="discrete/article/31_compact_even_sps_mass_xy.gif" width="256" height="256"/>
 
-However, this is a topic that one can only hope to begin to understand with a few postdocs worth of group theory and algebraic topology. Ask anyone.
+However, this is a topic that one can only hope to approach with a few postdocs worth of group theory and algebraic topology. Or you could check out [these](discrete/numpy/minimal.py) two dozen self contained lines of code, if you are in a hurry.
 
 
 Discrete
 --------
 We implement the discrete geometric derivative over cubic grids in a variety of frameworks. Currently, there are numpy, JAX and openCL implementations, in varying stages of development.
+
+We provide both 'forward' geometric derivative operators, as well as 'leapfrog' operators, for stepping over fields defined in spacetime algebras.
 
 
 Continuous

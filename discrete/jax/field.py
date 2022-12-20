@@ -133,7 +133,7 @@ class SpaceTimeField(Field, AbstractSpaceTimeField):
 		}
 
 		T, S = self.process_op_leapfrog(op)
-		for eq_idx, (t_term, s_terms) in T+S:
+		for eq_idx, (t_term, s_terms) in T + S:
 			total = sum(
 				derivative[term.contraction](arr[term.f_idx], term.d_idx) * term.sign
 				for term in s_terms
@@ -149,14 +149,12 @@ class SpaceTimeField(Field, AbstractSpaceTimeField):
 
 		return self.copy(arr=arr)
 
-	def rollout(self, steps, unroll=1, metric=None, **kwargs) -> Field:
+	def rollout(self, steps, **kwargs) -> Field:
 		"""perform a rollout of a leapfrog field into a whole field"""
-		# work safe CFL condition into metric scaling
-
 		output = Field.from_subspace(self.subspace, self.shape + (steps,))
 		arr = np.asfortranarray(output.arr) # more contiguous if t is last
 
-		for t, field in enumerate(self.rollout_generator(steps, unroll=unroll, metric=metric, **kwargs)):
+		for t, field in enumerate(self.rollout_generator(steps, **kwargs)):
 			# print(self.arr.sum())
 			arr[..., t] = field.arr
 

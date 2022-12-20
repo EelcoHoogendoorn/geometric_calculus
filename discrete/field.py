@@ -2,7 +2,6 @@ import numpy as np
 
 import os
 import imageio.v3 as iio
-import imageio
 
 
 def split(seq, f):
@@ -135,14 +134,13 @@ class AbstractField:
 			scale = np.percentile(image.flatten(), 99)
 			image = np.clip(image / scale * 255, 0, 255).astype(np.uint8)
 			return image
-		image = tonemap(image)
 
 		if image.ndim == 4:
 			if anim:
-				iio.imwrite(os.path.join(basepath, basename + '_anim.gif'), image)
-			iio.imwrite(os.path.join(basepath, basename + '_xt.gif'), image[::-1, image.shape[1] // 2])
+				iio.imwrite(os.path.join(basepath, basename + '_anim.gif'), tonemap(image))
+			iio.imwrite(os.path.join(basepath, basename + '_xt.gif'), tonemap(image[::-1, image.shape[1] // 2]))
 		elif image.ndim == 3:
-			iio.imwrite(os.path.join(basepath, basename + '_xt.gif'), image[::-1])
+			iio.imwrite(os.path.join(basepath, basename + '_xt.gif'), tonemap(image[::-1]))
 		else:
 			raise
 
