@@ -2,7 +2,7 @@ from functools import cached_property
 
 import loopy as lp
 
-import numpy as np
+import discrete.util
 from discrete.field import AbstractField
 
 

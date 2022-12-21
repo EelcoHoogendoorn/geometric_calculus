@@ -1,5 +1,5 @@
 from numga.algebra.algebra import Algebra
-from discrete.loopy.context import SpaceTimeContext
+from discrete.loopy.context import Context
 import numpy as np
 
 
@@ -8,8 +8,8 @@ def test_2d():
 	algebra = Algebra.from_str('x+y+t-')
 	shape = (64, 64)
 	steps = 128
-	context = SpaceTimeContext(algebra)
-	field = context.make_field(algebra.subspace.even_grade(), shape)
+	context = Context(algebra)
+	field = context.make_field_slice(algebra.subspace.even_grade(), shape)
 
 	field = field.random_gaussian(0.1)
 	# mass = 0.4 + field.quadratic() / 2# + 0.1
@@ -25,8 +25,8 @@ def test_3d_compact():
 	algebra = Algebra.from_str('w+x+y+t-')
 	shape = (2, 128, 128)
 	steps = 256
-	context = SpaceTimeContext(algebra)
-	field = context.make_field(algebra.subspace.even_grade(), shape)
+	context = Context(algebra)
+	field = context.make_field_slice(algebra.subspace.even_grade(), shape)
 
 	field = field.random_gaussian(0.1)
 	# mass = 0.4 + field.quadratic() / 2# + 0.1
@@ -42,8 +42,8 @@ def test_4d_even_compact():
 	algebra = Algebra.from_str('w+x+y+z+t-')
 	shape = (2, 64, 64, 64)
 	steps = 128
-	context = SpaceTimeContext(algebra)
-	field = context.make_field(algebra.subspace.even_grade(), shape)
+	context = Context(algebra)
+	field = context.make_field_slice(algebra.subspace.even_grade(), shape)
 
 	field = field.random_gaussian(0.1)
 	dimple = (1-field.gauss(np.array([1e16, 0.3, 0.3, 0.3]))*0.9)

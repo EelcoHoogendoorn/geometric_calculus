@@ -11,3 +11,11 @@ def deltas(i, o):
 	bi = i.bit_blades().astype(np.int)
 	bo = o.bit_blades().astype(np.int)
 	return bi[:, None, :] - bo[:, :, None]   # distance vector of bitpatterns
+
+
+def split(seq, f):
+	"""split iterable into two lists based on predicate f"""
+	seqs = [], []
+	for item in seq:
+		seqs[f(item)].append(item)
+	return seqs

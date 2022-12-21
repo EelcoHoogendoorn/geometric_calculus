@@ -1,12 +1,12 @@
 """Jax based tests
 """
 
-import jax
 import jax.numpy as jnp
 import numpy as np
 
 from numga.algebra.algebra import Algebra
-from discrete.jax.field import SpaceTimeField, Field
+from discrete.jax.field import Field
+from discrete.jax.field_slice import FieldSlice
 
 
 def filter_stationary(field, n=1, **kwargs):
@@ -30,7 +30,7 @@ def test_1d():
 	algebra = Algebra.from_str('x+t-')
 	shape = (256,)
 	steps = 256
-	field = SpaceTimeField.from_subspace(algebra.subspace.multivector(), shape)
+	field = FieldSlice.from_subspace(algebra.subspace.multivector(), shape)
 	field = field.random_gaussian(0.1)
 
 	mass = (field.quadratic() *0 + 0.1) * 0
@@ -45,7 +45,7 @@ def test_1d_mass():
 	algebra = Algebra.from_str('x+t-')
 	shape = (256,)
 	steps = 256
-	field = SpaceTimeField.from_subspace(algebra.subspace.multivector(), shape)
+	field = FieldSlice.from_subspace(algebra.subspace.multivector(), shape)
 
 	field = field.random_gaussian(0.1)
 
@@ -62,7 +62,7 @@ def test_1d_massI():
 	algebra = Algebra.from_str('x-t+')
 	shape = (256,)
 	steps = 256*4
-	field = SpaceTimeField.from_subspace(algebra.subspace.multivector(), shape)
+	field = FieldSlice.from_subspace(algebra.subspace.multivector(), shape)
 	field = field.random_gaussian(0.1, 0.1)
 	mass = 0.0 #+ (1-field.gauss(0.3)) / 13
 	metric = {'t': (1-field.gauss(0.3)*0.5)}
@@ -82,7 +82,7 @@ def test_1d_mass_sig():
 	shape = (256,)
 	steps = 256
 
-	field = SpaceTimeField.from_subspace(algebra.subspace.multivector(), shape)
+	field = FieldSlice.from_subspace(algebra.subspace.multivector(), shape)
 	field = field.random_gaussian(0.1)
 	mass = -0.3 #+ (1 - jnp.exp(-x2 * 3)) / 13
 
@@ -99,7 +99,7 @@ def test_2d():
 	algebra = Algebra.from_str('x+y+t-')
 	shape = (128, 128)
 	steps = 256
-	field = SpaceTimeField.from_subspace(algebra.subspace.multivector(), shape)
+	field = FieldSlice.from_subspace(algebra.subspace.multivector(), shape)
 	field = field.random_gaussian(0.1)
 	mass = 0.4 + field.quadratic() / 2# + 0.1
 
@@ -119,7 +119,7 @@ def test_2d_perf():
 	algebra = Algebra.from_str('x+y+t-')
 	shape = (512, 512)
 	steps = 128
-	field = SpaceTimeField.from_subspace(algebra.subspace.multivector(), shape)
+	field = FieldSlice.from_subspace(algebra.subspace.multivector(), shape)
 	field = field.random_gaussian(0.1)
 
 	full_field = field.rollout(steps)
@@ -134,7 +134,7 @@ def test_2d_1vec():
 	algebra = Algebra.from_str('x+y+t-')
 	shape = (128, 128)
 	steps = 128
-	field = SpaceTimeField.from_subspace(algebra.subspace.vector(), shape)
+	field = FieldSlice.from_subspace(algebra.subspace.vector(), shape)
 
 	field = field.random_gaussian(0.1)
 
@@ -148,7 +148,7 @@ def test_2d_compact():
 	algebra = Algebra.from_str('w+y+t-')
 	shape = (2, 256)
 	steps = 256*2
-	field = SpaceTimeField.from_subspace(algebra.subspace.multivector(), shape)
+	field = FieldSlice.from_subspace(algebra.subspace.multivector(), shape)
 	field = field.random_gaussian(0.1, 0.1)
 	# field = field.smooth_noise([1, 8])
 	dimple = (1-field.gauss(jnp.array([1e16, 0.3]))*0.3)
@@ -164,7 +164,7 @@ def test_2d_compact_sig():
 	algebra = Algebra.from_str('x-y-t+')
 	shape = (2, 256)
 	steps = 256
-	field = SpaceTimeField.from_subspace(algebra.subspace.full(), shape)
+	field = FieldSlice.from_subspace(algebra.subspace.full(), shape)
 	field = field.random_gaussian(0.1, 0.1)
 	dimple = (1-field.gauss(jnp.array([1e16, 0.3]))*0.3)
 	metric = {'x': dimple * 0.2}
@@ -180,7 +180,7 @@ def test_3d():
 	algebra = Algebra.from_str('x+y+z+t-')
 	steps = 128
 	shape = (64, 64, 64)
-	field = SpaceTimeField.from_subspace(algebra.subspace.even_grade(), shape)
+	field = FieldSlice.from_subspace(algebra.subspace.even_grade(), shape)
 
 	field = field.random_gaussian(0.1, 0.0)
 	mass = 0.2 + field.quadratic() / 4
@@ -198,7 +198,7 @@ def test_3d_bivector():
 	algebra = Algebra.from_str('x+y+z+t-')
 	shape = (64, 64, 64)
 	steps = 128
-	field = SpaceTimeField.from_subspace(algebra.subspace.bivector(), shape)
+	field = FieldSlice.from_subspace(algebra.subspace.bivector(), shape)
 	field = field.random_gaussian(0.1)
 
 	for n in range(3):
@@ -212,7 +212,7 @@ def test_3d_bivector_compact():
 	algebra = Algebra.from_str('w+x+y+t-')
 	shape = (2, 128, 128)
 	steps = 128
-	field = SpaceTimeField.from_subspace(algebra.subspace.bivector(), shape)
+	field = FieldSlice.from_subspace(algebra.subspace.bivector(), shape)
 	field = field.random_gaussian(0.1, [0, 0, 0.1])
 	dimple = (1-field.gauss(jnp.array([1, 0.3, 0.3]))*0.9)
 	# metric = {'t': dimple}
@@ -262,7 +262,7 @@ def test_3d_even_compact():
 	algebra = Algebra.from_str('w+x+y+t-')
 	shape = (2, 256, 256)
 	steps = 512
-	field = SpaceTimeField.from_subspace(algebra.subspace.even_grade(), shape)
+	field = FieldSlice.from_subspace(algebra.subspace.even_grade(), shape)
 
 	field = field.random_gaussian([0.3], [0, 0, 0.1])
 	field = filter_lightlike(field)
@@ -289,7 +289,7 @@ def test_3d_odd():
 	algebra = Algebra.from_str('w+x+y+t-')
 	shape = (2, 128, 128)
 	steps = 256
-	field = SpaceTimeField.from_subspace(algebra.subspace.odd_grade(), shape)
+	field = FieldSlice.from_subspace(algebra.subspace.odd_grade(), shape)
 
 	# field = field.random_gaussian([1e16, 0.1, 0.1], [0, 0, 0.0])
 	grid = field.meshgrid()
@@ -316,7 +316,7 @@ def test_3d_compact_generations():
 	algebra = Algebra.from_str('w+x+y+t-')
 	shape = (2, 128, 128)
 	steps = 256
-	field = SpaceTimeField.from_subspace(algebra.subspace.even_grade(), shape)
+	field = FieldSlice.from_subspace(algebra.subspace.even_grade(), shape)
 	dimple = (1-field.gauss(jnp.array([1, 0.3, 0.3]))*0.7)
 	metric = {'w': dimple*0.5}
 
@@ -345,7 +345,7 @@ def test_3d_compact_filtered():
 	algebra = Algebra.from_str('w+x+y+t-')
 	shape = (2, 128, 128)
 	steps = 256
-	field = SpaceTimeField.from_subspace(algebra.subspace.even_grade(), shape)
+	field = FieldSlice.from_subspace(algebra.subspace.even_grade(), shape)
 	dimple = (1-field.gauss(jnp.array([1, 0.3, 0.3]))*0.9)
 	metric = {'t': dimple}
 	# metric = {'w': dimple / 2}
@@ -365,7 +365,7 @@ def test_4d_even_compact():
 	algebra = Algebra.from_str('w+x+y+z+t-')
 	shape = (2, 64, 64, 64)
 	steps = 128
-	field = SpaceTimeField.from_subspace(algebra.subspace.even_grade(), shape)
+	field = FieldSlice.from_subspace(algebra.subspace.even_grade(), shape)
 
 	field = field.random_gaussian(0.3, [0, 0, 0, 0.1])
 	field = filter_lightlike(field)

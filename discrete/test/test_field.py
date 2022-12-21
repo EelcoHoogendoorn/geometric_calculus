@@ -2,7 +2,8 @@
 of the generated geometric operators"""
 from numga.algebra.algebra import Algebra
 
-from discrete.field import AbstractField, AbstractSpaceTimeField
+from discrete.field import AbstractField
+from discrete.field_slice import AbstractFieldSlice
 
 
 def test_generate_11():
@@ -22,20 +23,20 @@ def test_generate_30():
 
 def test_generate_sta_11():
 	algebra = Algebra.from_str('x+t-')
-	field = AbstractSpaceTimeField(algebra.subspace.full())
+	field = AbstractFieldSlice(algebra.subspace.full())
 	print()
 	print(field.generate_geometric())
 
 
 def test_generate_sta_31():
 	algebra = Algebra.from_str('x+y+z+t-')
-	field = AbstractSpaceTimeField(algebra.subspace.even_grade())
+	field = AbstractFieldSlice(algebra.subspace.even_grade())
 	print()
 	print(field.generate_geometric())
 
 def test_generate_sta_21():
 	algebra = Algebra.from_str('w+x+t-')
-	field = AbstractSpaceTimeField(algebra.subspace.full())
+	field = AbstractFieldSlice(algebra.subspace.full())
 	print()
 	print(field.generate_geometric())
 	print(field.subspace)
@@ -60,7 +61,7 @@ def test_generate_TM():
 
 def test_generate_odd():
 	algebra = Algebra.from_str('x+y+z+t-')
-	field = AbstractSpaceTimeField(
+	field = AbstractFieldSlice(
 		algebra.subspace.odd_grade())
 	print()
 	print(field.generate_geometric())

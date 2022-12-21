@@ -1,7 +1,10 @@
 """numpy based discrete calculus implementation
 """
 import numpy as np
-from discrete.field import AbstractField, AbstractSpaceTimeField
+
+import discrete.util
+from discrete.field import AbstractField
+from discrete.field_slice import AbstractFieldSlice
 
 
 class Field(AbstractField):
@@ -97,10 +100,10 @@ class Field(AbstractField):
 		return SpaceTimeField(self.subspace, self.domain, self.arr[..., idx])
 
 
-class SpaceTimeField(Field, AbstractSpaceTimeField):
+class SpaceTimeField(Field, AbstractFieldSlice):
 	"""Field with one axis that is stepped over, rather than allocated"""
 	def __init__(self, subspace, domain, arr):
-		super(AbstractSpaceTimeField, self).__init__(subspace, domain)
+		super(AbstractFieldSlice, self).__init__(subspace, domain)
 		self.arr = arr
 		assert len(arr) == len(subspace)
 		assert len(self.shape) == len(domain) - 1

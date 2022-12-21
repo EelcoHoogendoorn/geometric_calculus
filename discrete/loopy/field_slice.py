@@ -1,12 +1,13 @@
 from functools import cached_property
+from typing import Iterable
 
-from discrete.field import AbstractSpaceTimeField
+from discrete.field_slice import AbstractFieldSlice
 from discrete.loopy.field import Field, Operator
 
 import loopy as lp
 
 
-class STAOperator(Operator):
+class OperatorSlice(Operator):
 
 	def build_kernel(self, halfstep):
 		"""build loopy kernel from string syntax. prob cleaner to use the API, but too lazy to figure it out"""
@@ -60,7 +61,7 @@ class STAOperator(Operator):
 		"""build a pair of leapfrog kernels"""
 		return [self.build_kernel(hs) for hs in self.field.process_op_leapfrog(self.op)]
 
-	def apply(self):
+	def apply(self, metric={}):
 		"""Note: we use a pair of kernels placed sequentially in queue now;
 		probably its superior to have a single kernel with a global sync in the middle,
 		but I suppose that only starts paying off when we prefetch into local memory anyway"""
@@ -69,11 +70,11 @@ class STAOperator(Operator):
 		return self
 
 
-class SpaceTimeField(Field, AbstractSpaceTimeField):
+class FieldSlice(Field, AbstractFieldSlice):
 
 	""""""
 	def __init__(self, context, subspace, domain, arr):
-		super(AbstractSpaceTimeField, self).__init__(subspace, domain)
+		super(AbstractFieldSlice, self).__init__(subspace, domain)
 		self.context = context
 		self.arr = self.context.coerce_array(arr)
 		assert len(arr) == len(subspace)
@@ -81,25 +82,7 @@ class SpaceTimeField(Field, AbstractSpaceTimeField):
 
 	def geometric_derivative(self, mass=None, metric=None):
 		op = self.algebra.operator.geometric_product(self.domain, self.subspace)
-		return STAOperator(self.context, self, op)
-
-	# def rollout(self, steps):
-	# 	arr = self.context.allocate_array((steps,) + self.arr.shape)
-	# 	print('GBs: ', arr.size / (2**30))
-	# 	import time
-	# 	op = self.geometric_derivative()
-	# 	tt = time.time()
-	# 	for t in range(steps):
-	# 		# FIXME: kernel that does not update in place but writes direct to next step
-	# 		#  would be more efficient? that said we do typically unroll into substeps anyway, so whatever?
-	# 		arr.setitem(t, self.arr, self.context.queue)
-	# 		for substep in range(3):
-	# 			op.apply()
-	# 	print('time: ', time.time() - tt)
-	# 	n = arr.ndim
-	# 	axes = [(a + 1) % n for a in range(n)]
-	# 	arr = arr.transpose(axes)
-	# 	return Field(self.context, self.subspace, self.domain, arr)
+		return OperatorSlice(self.context, self, op)
 
 	def rollout(self, steps, **kwargs) -> Field:
 		"""perform a rollout of a leapfrog field into a whole field"""
@@ -112,13 +95,13 @@ class SpaceTimeField(Field, AbstractSpaceTimeField):
 		arr = arr.transpose([(a + 1) % n for a in range(n)])    # move t axis last
 		return Field(self.context, self.subspace, self.domain, arr)
 
-	def rollout_generator(self, steps, unroll=1, metric={}, **kwargs):
-		"""perform a rollout of a leapfrog field"""
+	def rollout_generator(self, steps, unroll=1, metric={}, **kwargs) -> Iterable["FieldSlice"]:
+		"""perform a rollout of a field slice as a generator"""
 		# work safe CFL condition into metric scaling
 		cfl_unroll = self.dimensions
 		cfl_metric = {**metric, 't': metric.get('t', 1) / cfl_unroll}
 
-		op = self.geometric_derivative()
+		op = self.geometric_derivative(metric=cfl_metric)
 
 		import time
 		tt = time.time()
@@ -126,7 +109,7 @@ class SpaceTimeField(Field, AbstractSpaceTimeField):
 		for t in range(steps):
 			yield self.to_numpy()
 			for substep in range(cfl_unroll * unroll):
-				op.apply()
+				op.apply(metric=cfl_metric)
 		print('time: ', time.time() - tt)
 
 	def to_numpy(self):

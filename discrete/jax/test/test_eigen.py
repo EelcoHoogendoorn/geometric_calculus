@@ -188,7 +188,7 @@ def test_first_order_wave_21_direct():
 	metric = {'w': mass}
 	l = 1.
 	# field, l = solve_eigen(field, l)
-	for i in range(0):
+	for i in range(2):
 		metric = {'w': mass}
 		field, l = solve_eigen(field, l, iterations=3000, metric=metric)
 		mass = field.upscale_array(mass, [1, 2, 2, 2])
@@ -196,4 +196,8 @@ def test_first_order_wave_21_direct():
 		field = field.upscale([1, 2, 2, 2])
 		# field.arr = field.arr / 8**(0.5)
 
-	field.write_gif_3d('../../output', 'xy_xt_yt', pre='eigen_direct_5', norm=99, gamma=False)
+	field.write_gif_3d(
+		basepath='../../output',
+		components='xy_xt_yt',
+		pre='eigen_direct_5',
+		gamma=False)
