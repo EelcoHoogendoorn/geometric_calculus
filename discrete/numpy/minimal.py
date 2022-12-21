@@ -18,12 +18,12 @@ def leapfrog(phi):
 	s, xy, xw, yw, xt, yt, wt, xywt = phi
 	edt(s, +idx(xt) + idy(yt) + idw(wt))  # t
 	edt(xy, +edx(yt) - edy(xt) + idw(xywt))  # xyt
-	edt(xw, +edx(wt) - idy(xywt) - edw(xt))  # xzt
-	edt(yw, +idx(xywt) + edy(wt) - edw(yt))  # yzt
+	edt(xw, +edx(wt) - idy(xywt) - edw(xt))  # xwt
+	edt(yw, +idx(xywt) + edy(wt) - edw(yt))  # ywt
 	idt(xt, +edx(s) - idy(xy) - idw(xw))  # x
 	idt(yt, +idx(xy) + edy(s) - idw(yw))  # y
-	idt(wt, +idx(xw) + idy(yw) + edw(s))  # z
-	idt(xywt, +edx(yw) - edy(xw) + edw(xy))  # xyz
+	idt(wt, +idx(xw) + idy(yw) + edw(s))  # w
+	idt(xywt, +edx(yw) - edy(xw) + edw(xy))  # xyw
 
 phi = np.zeros((8, 64, 64, 2))
 x2 = np.linspace(-1, 1, 64) ** 2

@@ -172,6 +172,7 @@ edt(s)    = +idx(xt)   +idy(yt)   +idz(zt)
 edt(xy)   = +edx(yt)   -edy(xt)   +idz(xyzt)
 edt(xz)   = +edx(zt)   -idy(xyzt) -edz(xt)
 edt(yz)   = +idx(xyzt) +edy(zt)   -edz(yt)
+
 edt(x)    = +edx(t)    -idy(xyt)  -idz(xzt)
 edt(y)    = +idx(xyt)  +edy(t)    -idz(yzt)
 edt(z)    = +idx(xzt)  +idy(yzt)  +edz(t)
@@ -181,6 +182,7 @@ idt(t)    = +idx(x)    +idy(y)    +idz(z)
 idt(xyt)  = +edx(y)    -edy(x)    +idz(xyz)
 idt(xzt)  = +edx(z)    -idy(xyz)  -edz(x)
 idt(yzt)  = +idx(xyz)  +edy(z)    -edz(y)
+
 idt(xt)   = +edx(s)    -idy(xy)   -idz(xz)
 idt(yt)   = +idx(xy)   +edy(s)    -idz(yz)
 idt(zt)   = +idx(xz)   +idy(yz)   +edz(s)
@@ -193,7 +195,7 @@ Equations over subspaces of the full algebra, or lower dimensions, are contained
 
 Terms accrue a sign according to the usual rules of geometric algebra; through the parity of the number of swaps required to bring the basis blades in a single (arbitrarily chosen but consistent) order. Furthermore, interior derivatives will accrue a sign according to the chosen metric.
 
-While we have only implemented this scheme on cubical grids, extensions of this scheme to meshings that are (for instance) simplicial in the spatial dimensions, should be straightforward; as long as the total mesh can be viewed as a topological product of a 1-dimensional temporal grid with such a spatial discretization (without such a product structure, generalizations are still likely possible; not not as straightforward). More generally, it seems likely that many of the techniques developed in the context of the Yee scheme, such as asynchronous stepping or adaptive meshing, could be adapted to the setting of a geometric derivative over arbitrary multivector fields.
+While we have only implemented this scheme on cubical grids, extensions of this scheme to meshings that are (for instance) simplicial in the spatial dimensions, should be straightforward; as long as the total mesh can be viewed as a topological product of a 1-dimensional temporal grid with such a spatial discretization (without such a product structure, generalizations are still likely possible; not not as straightforward [^GCE]). More generally, it seems likely that many of the techniques developed in the context of the Yee scheme, such as asynchronous stepping or adaptive meshing, could be adapted to the setting of a geometric derivative over arbitrary multivector fields.
 
 
 ### Conservation and stability
@@ -241,7 +243,7 @@ The sole difference with the above rightmost result, is that this view represent
 The even grade homogenous equation can be viewed as a model of the massless neutrino, exhibiting lightlike waves propagating outward. Here too, the initial condition excites a stationary mode in the compact setting, which is absent in the non-compact setting.</i>
 
 
-In the preceeding examples, we assumed the most simple form of metric, where all the 1-vectors forming the vector-geometric derivative have a length of 1. Allowing for a metric that is variable in space, though static in time, for instance `dt = 1 - guassian(x) / 2`, we can gain further insight into the character of the different modes in excitations in space `w+x+t-` where the dimension `w` is compact. This is a Newton-Cartan model of linearized gravity. Note that such a modification to the metric is isomorphic to allowing for a spatial variation in the 'speed of light'. [^bell_ftw]
+In the preceeding examples, we assumed the most simple form of metric, where all the 1-vectors forming the vector-geometric derivative have a length of 1. Allowing for a metric that is variable in space, though static in time, for instance some 'potential-well' shaped profile `dt = 1 - guassian(x) / 2`, we can gain further insight into the character of the different modes in excitations. This can be viewed as a Newton-Cartan model of linearized gravity. Note that such a modification to the metric is isomorphic to allowing for a spatial variation in the 'speed of light'. [^bell_ftw]
 
 [^bell_ftw]: Note that in such a setting, a two-way measurement of the speed of light, would find a constant value, independent of its location inside or outside a gravity well. The matter of which the apparatus consists would find its equilibrium configuration through two-way exchange of forces, via the same medium that we are testing the two-way speed of. The ratio of two identical things is a constant, and like any tautology worth its salt, this does not depend on a reference frame, amongst other things.
 
@@ -266,7 +268,7 @@ We may view the compact dimension as a waveguide, with the modes that are lightl
 
 We note that such mechanisms have been proposed in mathematical physics before. We limit ourselves here to presenting a mathematical tools, and we consider a thorough exploration of the applicability of such tools to physical models beyond the scope of this work. 
 
-However, we do want to emphasize the didactic potential of being able to demonstrate and explore the applications and limitations of such mechanisms, which are traditionally considered highly advanced topics, in a handful of lines of rather simple code.
+However, we do want to emphasize the didactic potential of being able to demonstrate and explore the applications and limitations of such mechanisms, which are traditionally considered highly advanced topics, in a handful of lines of rather simple code. Geometric algebras generalize seamlessly to higher dimensions, and this is also the case for the simple code generation scheme that we provide here.
 
 
 ## Zero order terms
@@ -299,9 +301,7 @@ We suggestively use the name `m`, noting that such a zero-order addition to the 
 
 Should we make the mass term a function of the domain variables, we may realize a ‘potential’ term, where increasing overlap between the potential and the wave function is associated with higher energies, which the evolution of the wave function will seek to minimize. Unlike a potential well formed by a variable time dilation, such a potential term may trap both massive and massless excitations alike. 
 
-We note that the term under consideration here is something quite different from masslike terms in a typical geometric algebra formulation of the Dirac electron.
-
-The natural zero order term couples variables being updated, to the element they are being updated over; a difference of grade 1. A model formulated over the even subalgebra, where all odd grade components are 0 a priori, will see such a mass term vanish. In an equation over the even subalgebra, the edges only participate as the locations of the equations, or constraints; not as carriers of field values themselves. We will return to this in the section on alternative zero order terms.
+We note that the term under consideration here is something different from masslike terms in a typical geometric algebra formulation of the Dirac electron. The direct zero order term couples variables being updated, to the element they are being updated over; a difference of grade 1. A model formulated over the even subalgebra, where all odd grade components are 0 a priori, will see such a mass term vanish. Put differently, in an equation over the even subalgebra, the edges only participate as the locations of the equations, or constraints; not as carriers of field values themselves. We will return to this in the section on alternative zero order terms.
 
 
 ### Results
@@ -317,7 +317,7 @@ Both are subjected to the same initial conditions in `x`, and subject to the sam
 
 Clearly, the one-up model is a richer model, admitting both lightlike and massive excitations, in a single field equation. Here we find at least a superficial justification in calling both types of excitations 'massive' excitations, in the sense that they show qualitatively similar behavior, in terms of their response to a gravity well, and in terms of building up a notion of momentum in terms of a spatial winding frequency of their field, capable of carrying it through the bottom of the potential, and up its opposing side.
 
-It certainly seems likely that one may formally prove these models isomorphic, at least as far as the massive excitations are concerned. Infact an attempted outline of such a proof seems straightforward; all it requires is that there exist excitations for which the extra column of terms adding to the equation are proportional. That is additional gradients along the compact dimension, are proportional to the field values themselves. To those who subscribe to 'proof by believing your own eyes', the existence of such excitations seems evident.
+It certainly seems likely that one may formally prove these models isomorphic, at least as far as the massive excitations are concerned. Infact an attempted outline of such a proof seems straightforward; all it requires is that there exist excitations for which the extra column of terms adding to the equation are proportional. That is, additional gradients along the compact dimension, are proportional to the field values themselves. To those who subscribe to 'proof by believing your own eyes', the existence of such excitations seems evident.
 
 
 ### Stability
@@ -328,11 +328,11 @@ More interestingly still, the opposite is true in a `x-t+` metric. While the pur
 
 Graphing a trace of the sum of amplitudes over the spatial dimensions, for an evolving field having a zero order term, we may see that an exact conservation of amplitudes no longer holds in a direct sense; infact the total amplitude may even reverse sign; but its long term evolution still seems constrained by a form of conservation principle; and the sum-of-squares evolution of the field, is qualitativeiy similar, with or without direct zero order term.
 
-We note that there appears to be no obstacle to adding both extra dimensions and a zero-order term. Nor to the addition of  multitude of extra dimensions.
+We note that there is no obstacle to adding an extra dimension and a zero-order term. Nor to the addition of  multitude of extra dimensions.
 
 
 
-We note that adding an extra dimension, doubles the number of distinct elements in the algebra. Likewise, adding a zero order term, through coupling the even and odd grades, allows us to construct a wave-equation with double the number of coupled components, compared to the situation without a zero-order term. Again, this hints at an isomorphism; and rather than thinking in terms of a zero-order terms on the full algebra, we may elect to think in terms of specific excitations of an even-grade subalgebra in a one-up space. We note that extra dimensions may not merely expand the number of algebraic elements, but also may expand the number of degrees of freedom.
+We note that adding an extra dimension, doubles the number of distinct elements in the algebra. Likewise, adding a zero order term, through coupling the even and odd grades, allows us to construct a wave-equation with double the number of coupled components, compared to the situation without a zero-order term. Again, this hints at an isomorphism; and rather than thinking in terms of a zero-order terms on the full algebra, we may elect to think in terms of specific excitations of an even-grade subalgebra in a one-up space. We note that extra dimensions do not merely expand the number of algebraic elements, but also may expand the number of degrees of freedom.
 
 To continue this line of questioning; insofar as the effects of a zero order term are isomorphic to a gradient along a compact dimension; spatial variations of that zero order term, or 'potentials', should be isomorphic to spatial variations of the compact metric. One famous example of an application of such a potential V, is as modelling the coulomb interaction when solving for the Dirac electron energy levels. Insofar as this isomorphism holds, replacing that spatially variable coulomb potential with a spatially variable compact metric, should 'just work'. We consider this an interesting geometric perspective on the electromagnetic force, which to our knowledge is not usually thought of in terms of variable metrics. [NOTE: this isnt true it would seem; the Kaluza–Klein models does exactly that]
 
@@ -519,3 +519,5 @@ We note that pure 1-vector fields, also contain non-propagating components; and 
 
 
 We have performed some quick experiments with compact dimensions of alternative signatures; that is rather than matching the spacelike signature, matching the timelike, or a degenerate signature. Neither seemed viable on first impression, though a deeper and more detailed investigation might reveal something interesting.
+
+

@@ -66,6 +66,33 @@ class Field(AbstractField):
 		op = self.subspace.algebra.operator.restrict(self.subspace, subspace)
 		return self.copy(subspace=subspace, arr=jnp.einsum('io,i...->o...', op.kernel, self.arr))
 
+	def make_partial_derivatives(self, metric):
+		"""Construct upwind and downwind (non-contracting and contracting)
+		derivative operators along each dimension
+
+		NOTE: these are derivatives, not including +- signs obtained from the product,
+		which enter elsewhere
+
+		NOTE: this construction assumes the t axis is last
+		"""
+		domain = self.domain.named_str.split(',')
+		return [
+			lambda x, a: (jnp.roll(x, shift=-1, axis=a) - x) * metric.get(domain[a], 1),
+			lambda x, a: (x - jnp.roll(x, shift=+1, axis=a)) * metric.get(domain[a], 1),
+		]
+
+	def make_derivative(self, op, metric):
+		"""plain direct derivative of an arbitrary GC-derivative operation, no leapfrog"""
+		partial = self.make_partial_derivatives(metric)
+		arr = jnp.zeros(shape=(len(op.subspace),) + self.shape)
+		for eq_idx, eq in self.process_op(op):
+			total = sum(
+				partial[term.contraction](self.arr[term.f_idx], term.d_idx) * term.sign
+				for term in eq
+			)
+			arr = arr.at[eq_idx, ...].set(total)
+		return self.copy(arr=arr, subspace=op.subspace)
+
 	def geometric_derivative(self, output=None, metric={}):
 		op = self.algebra.operator.geometric_product(self.domain, self.subspace)
 		if output:
@@ -82,23 +109,6 @@ class Field(AbstractField):
 			op = op.select_subspace(output)
 		return self.make_derivative(op, metric)
 
-	def make_derivative(self, op, metric):
-		"""plain direct derivative, no leapfrog"""
-		arr = jnp.zeros(shape=(len(op.subspace),) + self.shape)
-
-		domain = self.domain.named_str.split(',')
-		d = {   # NOTE: these are derivatives, not including metric signs; those enter below
-			1: lambda x, a: (x - jnp.roll(x, shift=+1, axis=a)) * metric.get(domain[a], 1),
-			0: lambda x, a: (jnp.roll(x, shift=-1, axis=a) - x) * metric.get(domain[a], 1),
-		}
-		for eq_idx, eq in self.process_op(op):
-			total = sum(
-				d[term.contraction](self.arr[term.f_idx], term.d_idx) * term.sign
-				for term in eq
-			)
-			arr = arr.at[eq_idx, ...].set(total)
-		return self.copy(arr=arr, subspace=op.subspace)
-
 	def slice(self, idx):
 		return SpaceTimeField(self.subspace, self.domain, self.arr[..., idx])
 
@@ -111,7 +121,8 @@ class SpaceTimeField(Field, AbstractSpaceTimeField):
 		self.arr = arr
 		assert len(arr) == len(subspace)
 		assert len(self.shape) == len(domain) - 1
-		assert 't' in str(self.algebra)
+		# FIXME: currently only works over last axis named t
+		assert self.algebra.description.basis_names[-1] == 't'
 
 	@property
 	def dimensions(self):
@@ -124,22 +135,17 @@ class SpaceTimeField(Field, AbstractSpaceTimeField):
 	def geometric_derivative_leapfrog(self, mass=None, metric={}):
 		arr = self.arr.copy()
 		op = self.algebra.operator.geometric_product(self.domain, self.subspace)
-		domain = self.domain.named_str.split(',')
 
-		# FIXME: this only now works with t axis last
-		derivative = {   # NOTE: these are plain derivatives, not including metric signs
-			1: lambda x, a: (x - jnp.roll(x, shift=+1, axis=a)) * metric.get(domain[a], 1),
-			0: lambda x, a: (jnp.roll(x, shift=-1, axis=a) - x) * metric.get(domain[a], 1)
-		}
+		partial = self.make_partial_derivatives(metric)
 
 		T, S = self.process_op_leapfrog(op)
 		for eq_idx, (t_term, s_terms) in T + S:
 			total = sum(
-				derivative[term.contraction](arr[term.f_idx], term.d_idx) * term.sign
+				partial[term.contraction](arr[term.f_idx], term.d_idx) * term.sign
 				for term in s_terms
 			)
 			if not mass is None:
-				# 'direct' mass term; porportional to element being stepped over, or eq
+				# 'direct' mass term; proportional to element being stepped over, or eq
 				# FIXME: assure ourselves this element exists in self.subspace
 				#  if implicit zero just skip?
 				assert self.subspace == op.subspace
@@ -150,19 +156,18 @@ class SpaceTimeField(Field, AbstractSpaceTimeField):
 		return self.copy(arr=arr)
 
 	def rollout(self, steps, **kwargs) -> Field:
-		"""perform a rollout of a leapfrog field into a whole field"""
+		"""perform a rollout of a field slice into a whole field"""
 		output = Field.from_subspace(self.subspace, self.shape + (steps,))
 		arr = np.asfortranarray(output.arr) # more contiguous if t is last
 
 		for t, field in enumerate(self.rollout_generator(steps, **kwargs)):
-			# print(self.arr.sum())
 			arr[..., t] = field.arr
 
 		output.arr = jnp.array(arr)
 		return output
 
 	def rollout_generator(self, steps, unroll=1, metric={}, **kwargs):
-		"""perform a rollout of a leapfrog field"""
+		"""perform a rollout of a field slice as a generator"""
 		# work safe CFL condition into metric scaling
 		cfl_unroll = self.dimensions
 		cfl_metric = {**metric, 't': metric.get('t', 1) / cfl_unroll}
@@ -172,7 +177,8 @@ class SpaceTimeField(Field, AbstractSpaceTimeField):
 			def inner(_, field):
 				return field.geometric_derivative_leapfrog(metric=cfl_metric, **kwargs)
 			return jax.lax.fori_loop(0, unroll*cfl_unroll, inner, state)
-		step(self)  # warmup
+
+		step(self)  # timing warmup
 		import time
 		tt = time.time()
 
