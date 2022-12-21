@@ -81,29 +81,34 @@ class Field(AbstractField):
 			lambda x, a: (x - jnp.roll(x, shift=+1, axis=a)) * metric.get(domain[a], 1),
 		]
 
-	def make_derivative(self, op, metric):
-		"""plain direct derivative of an arbitrary GC-derivative operation, no leapfrog"""
+	def partial_term(self, metric):
+		"""Construct partial derivative for a term in a geometric-algebraic product"""
 		partial = self.make_partial_derivatives(metric)
+		return lambda f, t: partial[t.contraction](f[t.f_idx], t.d_idx) * t.sign
+
+	def make_derivative(self, op, metric):
+		"""an arbitrary vector-derivative operation, no leapfrog"""
+		partial = self.partial_term(metric)
 		arr = jnp.zeros(shape=(len(op.subspace),) + self.shape)
 		for eq_idx, eq in self.process_op(op):
-			total = sum(
-				partial[term.contraction](self.arr[term.f_idx], term.d_idx) * term.sign
-				for term in eq
-			)
-			arr = arr.at[eq_idx, ...].set(total)
+			total = sum(partial(self.arr, term) for term in eq)
+			arr = arr.at[eq_idx].set(total)
 		return self.copy(arr=arr, subspace=op.subspace)
 
 	def geometric_derivative(self, output=None, metric={}):
+		"""vector-geometric derivative"""
 		op = self.algebra.operator.geometric_product(self.domain, self.subspace)
 		if output:
 			op = op.select_subspace(output)
 		return self.make_derivative(op, metric)
 	def interior_derivative(self, output=None, metric={}):
+		"""vector-interior derivative"""
 		op = self.algebra.operator.inner_product(self.domain, self.subspace)
 		if output:
 			op = op.select_subspace(output)
 		return self.make_derivative(op, metric)
 	def exterior_derivative(self, output=None, metric={}):
+		"""vector-exterior derivative"""
 		op = self.algebra.operator.outer_product(self.domain, self.subspace)
 		if output:
 			op = op.select_subspace(output)
@@ -133,17 +138,14 @@ class SpaceTimeField(Field, AbstractSpaceTimeField):
 		return float(self.dimensions) ** (-0.5)
 
 	def geometric_derivative_leapfrog(self, mass=None, metric={}):
-		arr = self.arr.copy()
 		op = self.algebra.operator.geometric_product(self.domain, self.subspace)
-
-		partial = self.make_partial_derivatives(metric)
-
+		partial = self.partial_term(metric)
 		T, S = self.process_op_leapfrog(op)
+		arr = self.arr.copy()
+
 		for eq_idx, (t_term, s_terms) in T + S:
-			total = sum(
-				partial[term.contraction](arr[term.f_idx], term.d_idx) * term.sign
-				for term in s_terms
-			)
+			total = sum(partial(arr, term) for term in s_terms)
+
 			if not mass is None:
 				# 'direct' mass term; proportional to element being stepped over, or eq
 				# FIXME: assure ourselves this element exists in self.subspace

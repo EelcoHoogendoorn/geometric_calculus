@@ -6,6 +6,11 @@ class Field:
 	"""Differentiable multi-vector field
 
 	f is a mapping from points in the domain to a multivector of the given subspace
+
+	NOTE: all geometric derivatives implemented thus far are vector-geometric derivatives
+	The addition of more general multi-vectorial derivatives should be trivial,
+	but until we actually find a use case for those,
+	this class will restrict itself to vector-geometric derivatives only.
 	"""
 	f: "Callable"
 	subspace: "Subspace"
@@ -51,6 +56,7 @@ class Field:
 			jac = jax.jacrev(self.f)(x)
 			return jnp.einsum('...ic,cio->...o', jac, op.kernel)
 		return self.copy(f=inner, subspace=op.output)
+
 	def exterior_derivative(self) -> "Field":
 		op = self.operator.outer_product(self.domain, self.subspace)
 		return self.make_derivative(op)

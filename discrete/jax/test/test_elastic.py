@@ -174,7 +174,6 @@ def test_elastic_wave():
 		displacement, velocity = step(displacement, velocity, unroll=13)
 		# frames.append((displacement.arr * window).T)
 		q = warp(image, displacement.arr * window * 20)
-		print(q.shape)
 		frames.append(q[..., None])
 
 	path = r'../../output/wave_elastic_2d'
