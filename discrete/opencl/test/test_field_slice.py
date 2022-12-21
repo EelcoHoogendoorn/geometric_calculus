@@ -1,5 +1,5 @@
 from numga.algebra.algebra import Algebra
-from discrete.loopy.context import Context
+from discrete.opencl.context import Context
 import numpy as np
 
 

@@ -1,4 +1,4 @@
-from discrete.loopy.context import Context
+from discrete.opencl.context import Context
 
 
 def test_vector_wave_2d():

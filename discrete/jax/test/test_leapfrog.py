@@ -5,7 +5,6 @@ import jax.numpy as jnp
 import numpy as np
 
 from numga.algebra.algebra import Algebra
-from discrete.jax.field import Field
 from discrete.jax.field_slice import FieldSlice
 
 
@@ -233,6 +232,7 @@ def test_3d_bivector_potential():
 	algebra = Algebra.from_str('x+y+z+t-')
 	shape = (64, 64, 64, 3)
 	steps = 128
+	from discrete.jax.field import Field
 	# A_ = Field.from_subspace(algebra.subspace.vector(), shape)
 	A2 = Field.from_subspace(algebra.subspace.bivector(), shape)
 	A2 = A2.random_gaussian([0.1, 0.1, 0.1, 0.1])

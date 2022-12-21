@@ -1,4 +1,4 @@
-So far, the performance of jax.roll based implementation being slower than the numpy implementation on CPU, is a little disappointing.
+So far, the performance of jax.roll based implementation is a little disappointing.
 
 Covolution based solutions are also not looking very satisfying, presenting limits in dimensionality, and a bunch of hackery.
 

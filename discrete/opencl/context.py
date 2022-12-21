@@ -3,8 +3,8 @@ import numpy as np
 import pyopencl as cl
 from pyopencl import array as cla
 
-from discrete.loopy.field import Field
-from discrete.loopy.field_slice import FieldSlice
+from discrete.opencl.field import Field
+from discrete.opencl.field_slice import FieldSlice
 
 
 class Context:

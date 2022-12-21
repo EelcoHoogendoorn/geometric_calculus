@@ -2,7 +2,7 @@ from functools import cached_property
 from typing import Iterable
 
 from discrete.field_slice import AbstractFieldSlice
-from discrete.loopy.field import Field, Operator
+from discrete.opencl.field import Field, Operator
 
 import loopy as lp
 
@@ -116,6 +116,6 @@ class FieldSlice(Field, AbstractFieldSlice):
 		"""Map opencl field to numpy field
 		dont want to bother making our visualization code compatible with opencl nonsense
 		"""
-		from discrete.numpy.field import SpaceTimeField
+		from discrete.numpy.field_slice import FieldSlice
 		arr = self.arr.map_to_host(queue=self.context.queue)
-		return SpaceTimeField(self.subspace, self.domain, arr)
+		return FieldSlice(self.subspace, self.domain, arr)
