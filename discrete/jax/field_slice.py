@@ -61,15 +61,13 @@ class FieldSlice(Field, AbstractFieldSlice):
 
 	def rollout_generator(self, steps, unroll=1, metric={}, **kwargs) -> Iterator["FieldSlice"]:
 		"""perform a rollout of a field slice as a generator"""
-		# work safe CFL condition into metric scaling
-		cfl_unroll = self.dimensions
-		cfl_metric = {**metric, 't': metric.get('t', 1) / cfl_unroll}
+		unroll, metric = self.cfl(unroll, metric, kwargs)
 
 		@jax.jit
 		def step(state):
 			def inner(_, field):
-				return field.geometric_derivative_leapfrog(metric=cfl_metric, **kwargs)
-			return jax.lax.fori_loop(0, unroll*cfl_unroll, inner, state)
+				return field.geometric_derivative_leapfrog(metric=metric, **kwargs)
+			return jax.lax.fori_loop(0, unroll, inner, state)
 
 		step(self)  # timing warmup
 		import time

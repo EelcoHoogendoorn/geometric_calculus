@@ -81,10 +81,17 @@ class Field(AbstractField):
 		NOTE: this construction assumes the t axis is last
 		"""
 		domain = self.domain.named_str.split(',')
-		return [
-			lambda x, a: (np.roll(x, shift=-1, axis=a) - x) * metric.get(domain[a], 1),
-			lambda x, a: (x - np.roll(x, shift=+1, axis=a)) * metric.get(domain[a], 1),
-		]
+		def ed(x, a):
+			f = x * metric.get(domain[a], 1)
+			return np.roll(f, shift=-1, axis=a) - f
+		def id(x, a):
+			f = x * metric.get(domain[a], 1)
+			return f - np.roll(f, shift=+1, axis=a)
+		return [ed, id]
+		# return [
+		# 	lambda x, a: (np.roll(x, shift=-1, axis=a) - x) * metric.get(domain[a], 1),
+		# 	lambda x, a: (x - np.roll(x, shift=+1, axis=a)) * metric.get(domain[a], 1),
+		# ]
 
 	def partial_term(self, metric):
 		"""Construct partial derivative for a term in a geometric-algebraic product"""
@@ -119,7 +126,7 @@ class Field(AbstractField):
 			op = op.select_subspace(output)
 		return self.make_derivative(op, metric)
 
-	def slice(self, idx) -> "FieldSlice":
+	def slice(self, idx: int) -> "FieldSlice":
 		"""Take a field slice over the last axis"""
 		from discrete.numpy.field_slice import FieldSlice # defer import to break cirularity
 		return FieldSlice(self.subspace, self.domain, self.arr[..., idx])

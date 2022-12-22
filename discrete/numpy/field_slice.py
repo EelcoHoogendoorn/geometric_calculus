@@ -56,9 +56,7 @@ class FieldSlice(Field, AbstractFieldSlice):
 
 	def rollout_generator(self, steps, unroll=1, metric={}, **kwargs) -> Iterator["FieldSlice"]:
 		"""perform a rollout of a field slice as a generator"""
-		# work safe CFL condition into metric scaling
-		cfl_unroll = self.dimensions
-		cfl_metric = {**metric, 't': metric.get('t', 1) / cfl_unroll}
+		unroll, metric = self.cfl(unroll, metric, kwargs)
 
 		import time
 		tt = time.time()
@@ -66,7 +64,7 @@ class FieldSlice(Field, AbstractFieldSlice):
 		field = self.copy()    # lets not mutate self
 		for t in range(steps):
 			yield field
-			for i in range(unroll*cfl_unroll):
-				field.geometric_derivative_leapfrog_inplace(metric=cfl_metric, **kwargs)
+			for i in range(unroll):
+				field.geometric_derivative_leapfrog_inplace(**kwargs, metric=metric)
 
 		print('time: ', time.time() - tt)

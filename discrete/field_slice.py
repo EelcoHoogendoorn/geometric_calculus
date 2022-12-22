@@ -10,6 +10,18 @@ class AbstractFieldSlice(AbstractField):
 	"""Field with special axis t, where we assume a full field over t is never allocated,
 	but rather traversed by timestepping"""
 
+	def cfl(self, unroll, metric, kwargs):
+		"""work safe CFL condition into metric scaling and unroll parameter
+
+		Note that if a direct zero order mass term is present,
+		not only is its qualitative behavior similar to addition of a compact dimension,
+		we also ought to count it as an additional dimension from a CFL perspective
+		"""
+		cfl = (self.dimensions + ('mass' in kwargs)) ** (0.5)
+		cfl = int(np.ceil(cfl))
+		cfl_metric = {**metric, 't': metric.get('t', 1) / cfl}
+		return cfl*unroll, cfl_metric
+
 	def process_op_leapfrog(self, op):
 		"""Preprocess the terms in the derivative operator,
 		to be consumed by a leapfrog timestepping scheme"""

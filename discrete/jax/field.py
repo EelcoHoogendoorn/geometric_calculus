@@ -2,7 +2,6 @@
 """
 
 import jax.numpy as jnp
-import numpy as np
 from numga.backend.jax.pytree import register
 
 from discrete.field import AbstractField
@@ -38,12 +37,12 @@ class Field(AbstractField):
 	def dual(self):
 		# FIXME: create unary op for this?
 		op = self.algebra.operator.dual(self.subspace)
-		arr = np.einsum('oc,c...->o...', op.kernel, self.arr, out=self.arr)
+		arr = jnp.einsum('oc,c...->o...', op.kernel, self.arr, out=self.arr)
 		return self.copy(subspace=op.subspace, arr=arr)
 	def reverse(self):
 		# FIXME: create unary op for this?
 		op = self.algebra.operator.reverse(self.subspace)
-		arr = np.einsum('oc,c...->o...', op.kernel, self.arr, out=self.arr)
+		arr = jnp.einsum('oc,c...->o...', op.kernel, self.arr, out=self.arr)
 		return self.copy(subspace=op.subspace, arr=arr)
 
 	def copy(self, arr=None, subspace=None):
@@ -77,10 +76,17 @@ class Field(AbstractField):
 		NOTE: this construction assumes the t axis is last
 		"""
 		domain = self.domain.named_str.split(',')
-		return [
-			lambda x, a: (jnp.roll(x, shift=-1, axis=a) - x) * metric.get(domain[a], 1),
-			lambda x, a: (x - jnp.roll(x, shift=+1, axis=a)) * metric.get(domain[a], 1),
-		]
+		def ed(x, a):
+			f = x * metric.get(domain[a], 1)
+			return jnp.roll(f, shift=-1, axis=a) - f
+		def id(x, a):
+			f = x * metric.get(domain[a], 1)
+			return f - jnp.roll(f, shift=+1, axis=a)
+		return [ed, id]
+		# return [
+		# 	lambda x, a: (jnp.roll(x, shift=-1, axis=a) - x) * metric.get(domain[a], 1),
+		# 	lambda x, a: (x - jnp.roll(x, shift=+1, axis=a)) * metric.get(domain[a], 1),
+		# ]
 
 	def partial_term(self, metric):
 		"""Construct partial derivative for a term in a geometric-algebraic product"""
