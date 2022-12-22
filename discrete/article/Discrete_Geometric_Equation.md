@@ -150,7 +150,7 @@ We may summarize the above in the following notation, in terms of component-wise
 -idt(t)  = +idx(x) 
 +idt(xt) = +edx(s)
 ```
-Where terms `idt` and `edt` reflect interior and exterior temporal differences respectively, (which could be implemented as an in-place update of the field component with the right hand side, scaled by an appropriate Courant number). Using the indexing scheme denoted above, the terms `edx` and `idx` reduce to simple upwind and downwind first order differences. [Here](./../numpy/minimal.py) one may find a self contained example illustrating these principles.
+Where terms `idt` and `edt` reflect interior and exterior temporal differences respectively, (which could be implemented as an in-place update of the field component with the right hand side, scaled by an appropriate Courant number). Using the indexing scheme denoted above, the terms `edx` and `idx` reduce to simple upwind and downwind first order differences. [Here](../numpy/minimal/minimal_xyt_full_mass.py) one may find a self contained example illustrating these principles.
 
 Generalizing the logic behind the above steps, we may construct a general algorithm for timestepping the geometric equation, `d(phi) = 0`, over algebras of arbitrary dimension and signature:
 
@@ -433,9 +433,11 @@ It is characterized by light-like modes that oscillate between different field c
 
 <img src="31_compact_even_sps_mass_xy.gif" width="256" height="256"/>
 
-A zero order term `m * phi * t`, implemented naively, appears unconditionally [unstable](./../numpy/minimal_t.py). Taking the average of present and future values in this equation, and solving this pointwise implicit equation for the future value, does not appear to resolve the instability. We have only tried to make it work in the even subalgebra of `x+y+t-`; but since the same update rule should be contained as a subset of the update rule in higher dimensional spaces, the instability in this space does spell trouble for higher dimensions as well. If we clamp the norm of the field to a fixed value at each timestep, the picture that emerges is qualitatively similar to the direct zero order mass term, and does not exhibit the unique dynamics of the SPS dual term.
+A zero order term `m * phi * t`, implemented naively, appears unconditionally [unstable](../numpy/minimal/minimal_t.py). Taking the average of present and future values in this equation, and solving this pointwise implicit equation for the future value, does not appear to resolve the instability. We have only tried to make it work in the even subalgebra of `x+y+t-`; but since the same update rule should be contained as a subset of the update rule in higher dimensional spaces, the instability in this space does spell trouble for higher dimensions as well. If we clamp the norm of the field to a fixed value at each timestep, the picture that emerges is qualitatively similar to the direct zero order mass term, and does not exhibit the unique dynamics of the SPS dual term.
 
 Pure dual terms, and the implicit dependence on the future time stencil they imply, are not something we have tried to implement yet.
+
+`d(phi) = m * reversion(phi)` and `d(phi) = m * involution(phi)`, also appears to be unstable in `x+t-`.
 
 
 ### Discussion
@@ -445,6 +447,8 @@ All put together, the discrete setting certainly does seem to bring out the dire
 However, this conclusion does appear to be at odds, with the usual formulation of the Dirac electron in geometric algebra.
 
 We note that of the zero order terms, the direct zero order term is the most mathematically elegant, and works equally in all dimensions. We note that at least numerically, there exists a meaningfull difference between the one-up model, and the subset of its dynamics that we may describe with a direct zero order term; the one-up model can indeed be observed to conserve amplitudes to machine precision; whereas addition of a zero order term complicates this nice and simple picture; in pragmatic terms conservation properties are still looking excellent, but we are not certain what this means for the long term evolution of the solution.
+
+In any case, the dynamics even of the more attractive zero order term, appears to be at best a computational simplification, of a subset of the dynamics of a one-up model.
 
 ## Systems of equations
 

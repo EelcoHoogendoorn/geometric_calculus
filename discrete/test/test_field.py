@@ -52,7 +52,7 @@ def test_generate_sta_11():
 
 def test_generate_TE():
 	algebra = Algebra.from_str('x+y+z+t-')
-	field = AbstractField(
+	field = AbstractFieldSlice(
 		algebra.subspace.xt_yt_xy,
 		domain=algebra.subspace.x_y_t)
 	print()
@@ -60,7 +60,7 @@ def test_generate_TE():
 
 def test_generate_TM():
 	algebra = Algebra.from_str('x+y+z+t-')
-	field = AbstractField(
+	field = AbstractFieldSlice(
 		algebra.subspace.xz_yz_zt,
 		domain=algebra.subspace.x_y_t)
 	print()

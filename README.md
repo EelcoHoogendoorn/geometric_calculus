@@ -27,7 +27,7 @@ However, geometric calculus also permits the formulation of 'more advanced' type
 
 <img src="discrete/article/31_compact_even_sps_mass_xy.gif" width="256" height="256"/>
 
-However, this is a topic that one can only hope to approach with a few postdocs worth of group theory and algebraic topology. Or you could check out [these](discrete/numpy/minimal.py) two dozen self contained lines of code, if you are in a hurry.
+However, this is a topic that one can only hope to approach with a few postdocs worth of group theory and algebraic topology. Or you could check out [these](discrete/numpy/minimal/minimal_xyt_full_mass.py) two dozen self contained lines of code, if you are in a hurry.
 
 
 Discrete

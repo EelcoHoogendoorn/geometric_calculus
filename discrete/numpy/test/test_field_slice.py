@@ -6,14 +6,16 @@ from discrete.numpy.field_slice import FieldSlice
 def test_xt_full_mass():
 	print()
 	algebra = Algebra.from_str('x+t-')
-	shape, steps = (256,), 256
+	shape, steps = (256,), 512
 	field = FieldSlice.from_subspace(algebra.subspace.multivector(), shape)
 
-	field = field.random_gaussian([0.1])
-	mass = field.quadratic() / 4# + 0.1
+	field = field.random_gaussian([0.2])
+	# mass = field.quadratic() / 4# + 0.1
 	# mass = 0.1
+	field.arr[1:3] = 0
 
-	# dimple = -(1-field.gauss([0.6])*0.5) / 4
+	dimple = (1-field.gauss([0.6])*0.5) / 4
+	mass = dimple
 	# metric = {'t': dimple / 4}
 	# metric = {'t': 0.33}
 
@@ -30,11 +32,11 @@ def test_wxt_even_mw():
 	field = FieldSlice.from_subspace(algebra.subspace.even_grade(), shape)
 	print(field.subspace)
 
-	field = field.random_gaussian([0.3])
+	field = field.random_gaussian([0.2])
 	# mass = 0.4 + field.quadratic() / 2# + 0.1
 
-	dimple = (1-field.gauss([0.6])*0.5)
-	metric = {'w': dimple / 4}
+	dimple = (1-field.gauss([1e16, 0.6])*0.5)
+	metric = {'w': dimple / 8}
 
 	field.write_gif_2d_generator_compact(
 		field.rollout_generator(steps, metric=metric),
@@ -43,6 +45,7 @@ def test_wxt_even_mw():
 
 
 def test_wxt_full_mass():
+	"""both compact and mass looks kinda weird"""
 	print()
 	algebra = Algebra.from_str('w+x+t-')
 	shape, steps = (2, 256,), 512
@@ -51,12 +54,12 @@ def test_wxt_full_mass():
 	print(field.geometric_to_str())
 	# return
 
-	field = field.random_gaussian([0.3])
+	field = field.random_gaussian([0.2])
 	# mass = 0.4 + field.quadratic() / 2# + 0.1
 
-	# dimple = (1-field.gauss([0.6])*0.5)
+	dimple = (1-field.gauss([1e16, 0.6])*0.5)
 	# metric = {'w': dimple / 4}
-	mass = 0.2
+	mass = dimple / 4
 
 	field.write_gif_2d_generator_compact(
 		field.rollout_generator(steps, mass=mass),
@@ -70,6 +73,8 @@ def test_xyt_full_mass():
 	shape = (128, 128)
 	steps = 256
 	field = FieldSlice.from_subspace(algebra.subspace.multivector(), shape)
+	print(field.geometric_to_str())
+	return
 	field = field.random_gaussian(0.1)
 	mass = 0.4 + field.quadratic() / 2# + 0.1
 

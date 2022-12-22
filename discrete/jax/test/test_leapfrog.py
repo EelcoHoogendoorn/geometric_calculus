@@ -44,6 +44,28 @@ def test_wxyt_even_conservation():
 	print (res.arr.max())
 
 
+def test_xt_full_mass():
+	print()
+	algebra = Algebra.from_str('x+t-')
+	shape, steps = (256,), 512
+	field = FieldSlice.from_subspace(algebra.subspace.multivector(), shape)
+
+	field = field.random_gaussian([0.2])
+	# mass = 0.1
+	field.arr = field.arr.at[1:3].set(0)
+
+	dimple = (1-field.gauss([0.6])*0.5) / 4
+	mass = dimple
+	# metric = {'t': dimple / 4}
+	# metric = {'t': 0.33}
+
+	field.write_gif_1d_generator(
+		field.rollout_generator(steps, mass=mass),
+		basepath='../../output', components='x_t_xt', pre='jax',
+	)
+
+
+
 def test_1d():
 	print()
 	algebra = Algebra.from_str('x+t-')

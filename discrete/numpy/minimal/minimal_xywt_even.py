@@ -4,6 +4,7 @@ in the even subalgebra of x+y+w+t-, where w is a compact dimension
 """
 import numpy as np
 import matplotlib.pyplot as plt
+import matplotlib.animation as animation
 
 def edt(lhs, rhs, courant=0.33):
 	lhs -= rhs * courant
@@ -28,8 +29,12 @@ def leapfrog(phi):
 phi = np.zeros((8, 64, 64, 2))
 x2 = np.linspace(-1, 1, 64) ** 2
 phi[..., 0] = np.random.normal(size=(8, 1, 1)) * np.exp(-np.add.outer(x2, x2) * 16)
-for i in range(4):
-	plt.imshow(np.abs(phi[1:4]).mean(axis=-1).T * 8)
-	plt.show()
-	for t in range(64):
-		leapfrog(phi)
+
+color = lambda phi: np.clip(np.abs(phi[1:4]).mean(-1).T * 4, 0, 1)
+im = plt.imshow(color(phi), animated=True)
+def updatefig(*args):
+	leapfrog(phi)
+	im.set_array(color(phi))
+	return im,
+ani = animation.FuncAnimation(plt.gcf(), updatefig, interval=10, blit=True)
+plt.show()
