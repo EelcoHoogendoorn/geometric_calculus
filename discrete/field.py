@@ -3,8 +3,6 @@ import numpy as np
 import os
 import imageio.v3 as iio
 
-import discrete.util
-
 
 class AbstractField:
 	"""Field without specific array backing storage, just doing symbolic manipulation"""
@@ -43,9 +41,9 @@ class AbstractField:
 			for eqi in range(len(op.subspace))
 		])
 
-	def term_to_str(self):
-		domain = discrete.util.split(',')
-		field = discrete.util.split(',')
+	def term_to_str(self) -> str:
+		domain = self.domain.named_str.split(',')
+		field = self.subspace.named_str.replace('1', 's').split(',')
 		sign = {-1: '-', +1: '+'}
 		ei = {0: 'e', 1: 'i'}
 		def inner(t):
@@ -54,7 +52,7 @@ class AbstractField:
 
 	def generate(self, op) -> str:
 		"""textual version of a derivative operator"""
-		output = discrete.util.split(',')
+		output = op.subspace.named_str.util.split(',')
 		term_to_str = self.term_to_str()
 		return '\n'.join([
 			f'{output[eq_idx]} = ' + ''.join([term_to_str(term) for term in eq])
@@ -75,17 +73,16 @@ class AbstractField:
 	def meshgrid(self):
 		xs = [np.linspace(-1, 1, s, endpoint=False) for s in self.shape]
 		c = np.array(np.meshgrid(*xs, indexing='ij'))
-		# d = deltas(self.subspace.algebra.subspace.scalar(), self.subspace)[:, 0, :]
-		from discrete.util import deltas
-		d = deltas(self.subspace, self.algebra.subspace.scalar())
+		# from discrete.util import deltas
+		# d = deltas(self.subspace, self.algebra.subspace.scalar())
 		return c    # FIXME: add version with per element offset
 
 	def quadratic(self, sigma=1, location=0):
 		x = (self.meshgrid().T - location)
-		return ((x ** 2) / sigma**2).sum(axis=-1).T
+		return ((x ** 2) / np.array(sigma)**2).sum(axis=-1).T
 
 	def gauss(self, sigma=0.1, location=0):
-		return np.exp(-self.quadratic(sigma, location))
+		return np.exp(-self.quadratic(np.array(sigma), np.array(location)))
 
 	def smooth_noise(self, sigma):
 		arr = np.random.normal(size=self.arr.shape)
@@ -120,8 +117,9 @@ class AbstractField:
 
 	# visualization functions
 
-	def write_animation_base(self, image, basepath, components, pre='', post='', gamma=True, anim=True):
+	def write_animation_base(self, image, components, basepath='.', pre='', post='', gamma=True, anim=True):
 		basename = '_'.join([pre, str(self.shape), self.algebra.description.description_str, self.subspace.pretty_str, components, post])
+		basename = basename.replace(" ", '')
 		os.makedirs(basepath, exist_ok=True)
 
 		def tonemap(image):
@@ -141,7 +139,7 @@ class AbstractField:
 		else:
 			raise
 
-	def write_animation(self, selector, basepath, components, **kwargs):
+	def write_animation(self, selector, components, **kwargs):
 		def get_components(f, components):
 			"""sample field components as a numpy array, with field components last, for rendering"""
 			return np.moveaxis(getattr(f, components), 0, -1)
@@ -149,7 +147,7 @@ class AbstractField:
 			image = selector(get_components(self, components))
 			return np.moveaxis(image, -2, 0)  # t first
 		image = to_animation(components)
-		self.write_animation_base(image, basepath, components, **kwargs)
+		self.write_animation_base(image, components, **kwargs)
 
 	def write_gif_1d(self, **kwargs):
 		def selector(arr):

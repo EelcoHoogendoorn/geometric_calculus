@@ -24,6 +24,26 @@ def filter_massive(field, axis=1):
 	return field.copy(field.arr.at[...].set(field.arr.mean(axis=axis, keepdims=True)))
 
 
+def test_wxyt_even_conservation():
+	"""test amplitude conservation"""
+	print()
+	algebra = Algebra.from_str('w+x+y+t-')
+	shape, steps = (16, 16, 16), 32
+	field = FieldSlice.from_subspace(algebra.subspace.even_grade(), shape)
+
+	field = field.random_gaussian([0.3, 0.3, 0.3], [0, 0, 0.1])
+	dimple = (1-field.gauss([0.6, 0.6, 0.6])*0.5)
+	metric = {'w': dimple / 4, 't': 0.1}
+
+	ff = field.rollout(steps, metric=metric)
+	# test amplitude conservation over time
+	print(ff.arr.sum((0, 1, 2, 3)))
+	metric = {'w': dimple[..., None] / 4, 't': 0.1}   # broadcast over time dims
+	res = ff.geometric_derivative(metric=metric)
+	print(np.unravel_index(res.arr.argmax(), res.arr.shape))
+	print (res.arr.max())
+
+
 def test_1d():
 	print()
 	algebra = Algebra.from_str('x+t-')
@@ -52,7 +72,7 @@ def test_1d_mass():
 
 	metric = {'t': (1-field.gauss(0.3)*0.5)}
 
-	full_field = field.rollout(steps, mass=mass, metric=metric)
+	full_field = field.rollout(steps, mass=mass)#, metric=metric)
 
 	full_field.write_gif_1d(basepath='../../output', components='x_t_xt', post='mass_metric')
 

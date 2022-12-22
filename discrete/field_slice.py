@@ -2,7 +2,6 @@ from typing import Iterator
 
 import numpy as np
 
-import discrete.util
 from discrete.field import AbstractField
 from discrete.util import split
 
@@ -55,14 +54,19 @@ class AbstractFieldSlice(AbstractField):
 
 
 
-	def write_animation(self, selector, generator, basepath, components, **kwargs):
+	def write_animation(self, selector, generator, components, **kwargs):
 		def get_components(f, components):
 			"""sample field components as a numpy array, with field components last, for rendering"""
 			return np.moveaxis(getattr(f, components), 0, -1)
 		def to_animation(generator, components):
 			return np.array([selector(get_components(f, components)) for f in generator])
 		image = to_animation(generator, components)
-		self.write_animation_base(image, basepath, components, **kwargs)
+		self.write_animation_base(image, components, **kwargs)
+
+	def write_gif_1d_generator(self, *args, **kwargs):
+		def selector(arr):
+			return np.abs(arr)
+		self.write_animation(selector, *args, **kwargs)
 
 	def write_gif_2d_generator(self, *args, **kwargs):
 		def selector(arr):
@@ -73,6 +77,12 @@ class AbstractFieldSlice(AbstractField):
 		def selector(arr):
 			mid = lambda a: a[a.shape[0] // 2]
 			return mid(np.abs(arr))
+		self.write_animation(selector, *args, **kwargs)
+
+	def write_gif_2d_generator_compact(self, *args, **kwargs):
+		def selector(arr):
+			mean = lambda a: a.mean(0)
+			return mean(np.abs(arr))
 		self.write_animation(selector, *args, **kwargs)
 
 	def write_gif_3d_generator_compact(self, *args, **kwargs):

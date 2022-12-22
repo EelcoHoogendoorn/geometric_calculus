@@ -42,6 +42,14 @@ def test_generate_sta_21():
 	print(field.subspace)
 
 
+def test_generate_sta_11():
+	algebra = Algebra.from_str('x+t-')
+	field = AbstractFieldSlice(algebra.subspace.full())
+	print()
+	print(field.generate_geometric())
+	print(field.subspace)
+
+
 def test_generate_TE():
 	algebra = Algebra.from_str('x+y+z+t-')
 	field = AbstractField(
