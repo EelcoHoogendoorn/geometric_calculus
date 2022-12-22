@@ -11,34 +11,34 @@ def test_generate_11():
 
 	field = AbstractField(algebra.subspace.full())
 	print()
-	print(field.generate_geometric())
+	print(field.geometric_to_str())
 
 
 def test_generate_30():
 	algebra = Algebra.from_str('x+y+z+')
 	field = AbstractField(algebra.subspace.bivector())
 	print()
-	print(field.generate_interior())
+	print(field.interior_to_str())
 
 
 def test_generate_sta_11():
 	algebra = Algebra.from_str('x+t-')
 	field = AbstractFieldSlice(algebra.subspace.full())
 	print()
-	print(field.generate_geometric())
+	print(field.geometric_to_str())
 
 
 def test_generate_sta_31():
 	algebra = Algebra.from_str('x+y+z+t-')
 	field = AbstractFieldSlice(algebra.subspace.even_grade())
 	print()
-	print(field.generate_geometric())
+	print(field.geometric_to_str())
 
 def test_generate_sta_21():
 	algebra = Algebra.from_str('w+x+t-')
 	field = AbstractFieldSlice(algebra.subspace.full())
 	print()
-	print(field.generate_geometric())
+	print(field.geometric_to_str())
 	print(field.subspace)
 
 
@@ -46,7 +46,7 @@ def test_generate_sta_11():
 	algebra = Algebra.from_str('x+t-')
 	field = AbstractFieldSlice(algebra.subspace.full())
 	print()
-	print(field.generate_geometric())
+	print(field.geometric_to_str())
 	print(field.subspace)
 
 
@@ -56,7 +56,7 @@ def test_generate_TE():
 		algebra.subspace.xt_yt_xy,
 		domain=algebra.subspace.x_y_t)
 	print()
-	print(field.generate_geometric())
+	print(field.geometric_to_str())
 
 def test_generate_TM():
 	algebra = Algebra.from_str('x+y+z+t-')
@@ -64,7 +64,7 @@ def test_generate_TM():
 		algebra.subspace.xz_yz_zt,
 		domain=algebra.subspace.x_y_t)
 	print()
-	print(field.generate_geometric())
+	print(field.geometric_to_str())
 
 
 def test_generate_odd():
@@ -72,7 +72,7 @@ def test_generate_odd():
 	field = AbstractFieldSlice(
 		algebra.subspace.odd_grade())
 	print()
-	print(field.generate_geometric())
+	print(field.geometric_to_str())
 
 
 

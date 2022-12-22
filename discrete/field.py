@@ -50,23 +50,23 @@ class AbstractField:
 			return f'{sign[t.sign]}{ei[t.contraction]}d{domain[t.d_idx]}({field[t.f_idx]})'
 		return inner
 
-	def generate(self, op) -> str:
+	def operator_to_str(self, op) -> str:
 		"""textual version of a derivative operator"""
-		output = op.subspace.named_str.util.split(',')
+		output = op.subspace.named_str.split(',')
 		term_to_str = self.term_to_str()
 		return '\n'.join([
 			f'{output[eq_idx]} = ' + ''.join([term_to_str(term) for term in eq])
 			for eq_idx, eq in self.process_op(op)
 		])
 
-	def generate_geometric(self):
-		return self.generate(self.algebra.operator.geometric_product(self.domain, self.subspace))
+	def geometric_to_str(self):
+		return self.operator_to_str(self.algebra.operator.geometric_product(self.domain, self.subspace))
 
-	def generate_exterior(self):
-		return self.generate(self.algebra.operator.outer_product(self.domain, self.subspace))
+	def exterior_to_str(self):
+		return self.operator_to_str(self.algebra.operator.outer_product(self.domain, self.subspace))
 
-	def generate_interior(self):
-		return self.generate(self.algebra.operator.inner_product(self.domain, self.subspace))
+	def interior_to_str(self):
+		return self.operator_to_str(self.algebra.operator.inner_product(self.domain, self.subspace))
 
 
 	# utility functions

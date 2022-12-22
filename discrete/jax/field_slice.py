@@ -20,14 +20,6 @@ class FieldSlice(Field, AbstractFieldSlice):
 		# FIXME: currently only works over last axis named t
 		assert self.algebra.description.basis_names[-1] == 't'
 
-	@property
-	def dimensions(self):
-		return int((np.array(self.shape) > 1).sum())
-
-	@property
-	def courant(self):
-		return float(self.dimensions) ** (-0.5)
-
 	def geometric_derivative_leapfrog(self, mass=None, metric={}) -> "FieldSlice":
 		op = self.algebra.operator.geometric_product(self.domain, self.subspace)
 		partial = self.partial_term(metric)

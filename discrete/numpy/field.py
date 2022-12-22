@@ -62,9 +62,11 @@ class Field(AbstractField):
 		op = self.subspace.algebra.operator.restrict(self.subspace, subspace)
 		return self.copy(subspace=subspace, arr=np.einsum('io,i...->o...', op.kernel, self.arr))
 
-	def generate(self, op) -> str:
-		"""textual version of a derivative operator in numpy syntax"""
-		output = op.subspace.named_str.replace('1', 's').split(',')
+	def operator_to_str(self, op) -> str:
+		"""textual version of a derivative operator in numpy syntax.
+		Output components are uppercase
+		"""
+		output = op.subspace.named_str.replace('1', 's').upper().split(',')
 		term_to_str = self.term_to_str()
 		return '\n'.join([
 			f'{output[eq_idx]} = ' + ''.join([term_to_str(term) for term in eq])

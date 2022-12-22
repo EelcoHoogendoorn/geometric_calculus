@@ -10,6 +10,14 @@ class AbstractFieldSlice(AbstractField):
 	"""Field with special axis t, where we assume a full field over t is never allocated,
 	but rather traversed by timestepping"""
 
+	@property
+	def dimensions(self):
+		return int((np.array(self.shape) > 1).sum())
+
+	# @property
+	# def courant(self):
+	# 	return float(self.dimensions) ** (-0.5)
+
 	def cfl(self, unroll, metric, kwargs):
 		"""work safe CFL condition into metric scaling and unroll parameter
 
@@ -43,7 +51,7 @@ class AbstractFieldSlice(AbstractField):
 		# split into equations defined on spacelike and timelike elements
 		return split(eqs, is_spacelike_equation)
 
-	def generate(self, op) -> str:
+	def operator_to_str(self, op) -> str:
 		"""Text representation of a leapfrog geometric derivative operator"""
 		equation = op.subspace.named_str.replace('1', 's').split(',')
 		term_to_str = self.term_to_str()
@@ -53,8 +61,8 @@ class AbstractFieldSlice(AbstractField):
 			for eq_idx, (tt, ts) in T + S
 		])
 
-	def generate_geometric(self) -> str:
-		return self.generate(self.algebra.operator.geometric_product(self.domain, self.subspace))
+	def geometric_to_str(self) -> str:
+		return self.operator_to_str(self.algebra.operator.geometric_product(self.domain, self.subspace))
 
 
 

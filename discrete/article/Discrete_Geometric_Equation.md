@@ -433,9 +433,9 @@ It is characterized by light-like modes that oscillate between different field c
 
 <img src="31_compact_even_sps_mass_xy.gif" width="256" height="256"/>
 
-A zero order term `m * phi * t`, implemented naively, appears unconditionally unstable. Taking the average of present and future values in this equation, and solving this pointwise implicit equation for the future value, does not appear to resolve the instability. We have only tried to make it work in the even subalgebra of `x+y+t-`; but since the same update rule should be contained as a subset of the update rule in higher dimensional spaces, the instability in this space does spell trouble for higher dimensions as well.
+A zero order term `m * phi * t`, implemented naively, appears unconditionally [unstable](./../numpy/minimal_t.py). Taking the average of present and future values in this equation, and solving this pointwise implicit equation for the future value, does not appear to resolve the instability. We have only tried to make it work in the even subalgebra of `x+y+t-`; but since the same update rule should be contained as a subset of the update rule in higher dimensional spaces, the instability in this space does spell trouble for higher dimensions as well. If we clamp the norm of the field to a fixed value at each timestep, the picture that emerges is qualitatively similar to the direct zero order mass term, and does not exhibit the unique dynamics of the SPS dual term.
 
-Pure dual terms, and the implicit dependence on the future time stencil they imply, are not something we have tried yet.
+Pure dual terms, and the implicit dependence on the future time stencil they imply, are not something we have tried to implement yet.
 
 
 ### Discussion

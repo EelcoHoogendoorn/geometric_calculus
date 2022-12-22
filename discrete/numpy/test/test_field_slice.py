@@ -48,6 +48,8 @@ def test_wxt_full_mass():
 	shape, steps = (2, 256,), 512
 	field = FieldSlice.from_subspace(algebra.subspace.full(), shape)
 	print(field.subspace)
+	print(field.geometric_to_str())
+	# return
 
 	field = field.random_gaussian([0.3])
 	# mass = 0.4 + field.quadratic() / 2# + 0.1

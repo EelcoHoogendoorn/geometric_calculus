@@ -16,14 +16,6 @@ class FieldSlice(Field, AbstractFieldSlice):
 		# FIXME: currently only works over last axis named t
 		assert self.algebra.description.basis_names[-1] == 't'
 
-	@property
-	def dimensions(self):
-		return int((np.array(self.shape) > 1).sum())
-
-	@property
-	def courant(self):
-		return float(self.dimensions) ** (-0.5)
-
 	def geometric_derivative_leapfrog_inplace(self, mass=None, metric={}) -> "FieldSlice":
 		op = self.algebra.operator.geometric_product(self.domain, self.subspace)
 		partial = self.partial_term(metric)
@@ -61,10 +53,23 @@ class FieldSlice(Field, AbstractFieldSlice):
 		import time
 		tt = time.time()
 
-		field = self.copy()    # lets not mutate self
+		field = self.copy()    # lets not mutate self so our interface isnt more mutable than it needs to be
 		for t in range(steps):
 			yield field
 			for i in range(unroll):
 				field.geometric_derivative_leapfrog_inplace(**kwargs, metric=metric)
 
 		print('time: ', time.time() - tt)
+
+
+	def operator_to_str(self, op) -> str:
+		"""Text representation of a leapfrog geometric derivative operator"""
+		term_to_str = self.term_to_str()
+		def line(eq):
+			eq_idx, (tt, ts) = eq
+			s, *r, _ = term_to_str(tt)
+			r = ''.join(r)
+			rhs = ''.join([term_to_str(t) for t in ts])
+			return f'{r}, {s}({rhs}))'
+		T, S = self.process_op_leapfrog(op)
+		return '\n'.join(line(l) for l in T+S)
