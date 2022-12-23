@@ -69,10 +69,11 @@ def test_wxt_full_mass():
 
 def test_xyt_full_mass():
 	print()
-	algebra = Algebra.from_str('x+y+t-')
-	shape = (128, 128)
+	algebra = Algebra.from_str('x+y+z+t-')
+	shape = (128, 128, 127)
 	steps = 256
 	field = FieldSlice.from_subspace(algebra.subspace.multivector(), shape)
+	print(field.subspace)
 	print(field.geometric_to_str())
 	return
 	field = field.random_gaussian(0.1)

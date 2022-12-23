@@ -65,11 +65,12 @@ class FieldSlice(Field, AbstractFieldSlice):
 	def operator_to_str(self, op) -> str:
 		"""Text representation of a leapfrog geometric derivative operator in numpy syntax"""
 		term_to_str = self.term_to_str()
+		equation = op.subspace.named_str.replace('1', 's').split(',')
 		def line(eq):
 			eq_idx, (tt, ts) = eq
 			s, *r, _ = term_to_str(tt)
 			r = ''.join(r)
 			rhs = ''.join([term_to_str(t) for t in ts])
-			return f'{r}, {s}({rhs}))'
+			return f'{r}, {s}({rhs}))' + f'\t # {equation[eq_idx]}'
 		T, S = self.process_op_leapfrog(op)
 		return '\n'.join(line(l) for l in T + S)
