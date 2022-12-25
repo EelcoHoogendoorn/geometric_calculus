@@ -142,7 +142,7 @@ t00 xt00 t10 xt10 t20
 
 This completes one cycle of the discrete geometric derivative over the full multivector field in the algebra `xt`.
 
-We may summarize the above in the following notation, in terms of component-wise 1-dimensional interior and exterior derivative operators:
+We may summarize the above in the following notation, in terms of component-wise 1-dimensional interior and exterior partial derivative operators:
 ```python
 +edt(s)  = +idx(xt)
 -edt(x)  = +edx(t)
@@ -299,7 +299,7 @@ Also, note that through the addition of this zero order term, the equations no l
 
 We suggestively use the name `m`, noting that such a zero-order addition to the equation, also leads to the emergence of solutions to the multivector wave equation that not merely lie along the light-cone, but may be stationary in space, or follow any path within the lightcone, and obey a frequency/momentum relationship, as one would expect of massive excitations of a field.
 
-Should we make the mass term a function of the domain variables, we may realize a ‘potential’ term, where increasing overlap between the potential and the wave function is associated with higher energies, which the evolution of the wave function will seek to minimize. Unlike a potential well formed by a variable time dilation, such a potential term may trap both massive and massless excitations alike. 
+Should we make the mass term a function of the domain variables, we may realize a ‘scalar potential’ term, where increasing overlap between the potential and the wave function is associated with higher energies, which the evolution of the wave function will seek to minimize. Unlike a potential well formed by a variable time dilation, such a potential term may trap both massive and massless excitations alike. 
 
 We note that the term under consideration here is something different from masslike terms in a typical geometric algebra formulation of the Dirac electron. The direct zero order term couples variables being updated, to the element they are being updated over; a difference of grade 1. A model formulated over the even subalgebra, where all odd grade components are 0 a priori, will see such a mass term vanish. Put differently, in an equation over the even subalgebra, the edges only participate as the locations of the equations, or constraints; not as carriers of field values themselves. We will return to this in the section on alternative zero order terms.
 
@@ -331,17 +331,20 @@ In a `x-t+` metric, of reversed signs to those considered thus far, we observe d
 
 Graphing a trace of the sum of amplitudes over the spatial dimensions, for an evolving field having a zero order term, we may see that an exact conservation of amplitudes no longer holds in a direct sense; infact the total amplitude may even reverse sign; but its long term evolution still seems constrained by a form of conservation principle; and the sum-of-squares evolution of the field, is qualitativeiy similar, with or without direct zero order term.
 
-We note that there is no obstacle to adding an extra dimension and a zero-order term. Nor to the addition of  multitude of extra dimensions.
 
+We further note that if variations in the length of the spatial 1-vectors that form our vector-geometric-derivative are introduced in a symmetric manner (a product with [-x, +x] becomes a product with [-m*x, +m*x]; everything substracted from one side is added to the other side), then temporal slices of the solution evolving in time, retain their exact amplitude conservation, the same as they would in the case that m=1. For variations in the length of the temporal 1-vector, or time-dilations, it is the product of amplitudes with that temporal 1-vector which is the exactly conserved quantity, on every temporal slice. [link to unit test]()
+
+
+We note that there is no obstacle to adding an extra dimension and a zero-order term. Nor to the addition of  multitude of extra dimensions.
 
 We note that adding an extra dimension, doubles the number of distinct elements in the algebra. Likewise, adding a zero order term, through coupling the even and odd grades, allows us to construct a wave-equation with double the number of coupled components, compared to the situation without a zero-order term. Again, this hints at an isomorphism; and rather than thinking in terms of a zero-order terms on the full algebra, we may elect to think in terms of specific excitations of an even-grade subalgebra in a one-up space. We note that extra dimensions do not merely expand the number of algebraic elements, but also may expand the number of degrees of freedom.
 
 ### Potentials as metric variations
-To continue this line of analysis; insofar as the effects of a zero order term are isomorphic to a gradient along a compact dimension; spatial variations of that zero order term, or 'potentials', should be isomorphic to spatial variations of the compact metric. One famous example of an application of such a potential V, is as modelling the coulomb interaction when solving for the Dirac electron energy levels. Insofar as this isomorphism holds, replacing that spatially variable coulomb potential with a spatially variable compact metric, should 'just work'. We consider this an interesting geometric perspective on the electromagnetic force, which to our knowledge is not usually thought of in terms of variable metrics. [NOTE: this isnt true it would seem; the Kaluza–Klein models does exactly that]
+To continue this line of analysis; insofar as the effects of a zero order term are isomorphic to a gradient along a compact dimension; spatial variations of that zero order term, or 'potentials', should be isomorphic to spatial variations of the compact metric. 
 
 Massive excitations, travelling primarily along the compact dimension, feel the effects of a spatial variation in the length of temporal edges, qualitatively different, than those excitations traveling orthogonal to the compact dimension. One might say that by 'loitering in place on the gradient', the massive excitations get more of chance to experience that gradient, than the lightlike excitations, not wasting any time going in circles, skipping over them along the shortest geodesic.
 
-Similarly, we may reason about the effects of spatial variations in the length of the compact dimension, and the effects this would have on massive and lightlike excitations. For massive excitations, we expect an effect isomorphic to a coulomb potential; a slowing down of propagation along the compact dimension inside the potential, would cause waves to refract into the potential. For lightlike excitations, we would not expect them to experience variations in the compact dimension at all, travelling orthogonal to the compact dimension, as they do by definition. In this, we may see a geometric explanation, of the empirical observation, that we do not find massless charged particles in nature.
+Similarly, we may reason about the effects of spatial variations in the length of the compact dimension, and the effects this would have on massive and lightlike excitations. For massive excitations, we expect a slowing down of propagation along the compact dimension inside the potential, would cause waves to refract into the potential. For lightlike excitations, we would not expect them to experience variations in the compact dimension at all, travelling orthogonal to the compact dimension, as they do by definition. 
 
 Running the numerical experiment indeed satisfies the above expectations:
 
@@ -349,20 +352,14 @@ Running the numerical experiment indeed satisfies the above expectations:
 
 <i>Pure geometric equation, `d(phi) = 0` over `x+y+t-`, compact y dimension, `dy = 1-gauss(x) / 2`
 
-Indeed by modulation of the length of the compact dimension, we attain a trapping of the massive excitation, identical to a coulomb potential `V * phi` of the same spatial profile; and indeed this effect is orthogonal to the propagation of lightlike excitations, in contrast to the direct zero order term.</i>
+Indeed by modulation of the length of the compact dimension, we attain a trapping of the massive excitation, identical to a scalar potential `V * phi` of the same spatial profile; and indeed this effect is orthogonal to the propagation of lightlike excitations, in contrast to the direct zero order term.</i>
 
 
 ### Discussion
 
-Insofar as we can view electromagnetic forces as a metric effect in a one-up space, this can be said to be a unifying perspective with gravity, where we are used explaining in metric terms. However, even if it does predict the hydrogen spectrum, the coulomb potential in the Dirac equation is considered somewhat of a hack rather than a full model of electrodynamics. Similarly, it is also not difficult to point out limitations of this model of electrostatics. 
+Our intent is to set the scope of this article to a self-contained presentation of the discrete geometric derivative, with some illustration of its properties amd utility. This limited scope should not be construed, as an exhaustive exploration of all such possibilities appearing to be in sight.
 
-For instance, it is not obvious how to model both attraction and repulsion. Seeing as how all excitations of the geometric equation are either orthogonal to, or will diffract into such a potential well, this simple model by itself provides no more repulsion, than metric variations in the non-compact dimensions provide anti-gravity. Of course one might consider variations of the metric going the other way; but to retain the geometric picture, that it is the curvature of the compact dimension that generates the apparent force on waves travelling along geodesics, this would seemingly require us to think of positive and negative charged excitations as travelling around distinct compact dimensions, experiencing complimentary effects on their compact metrics. Which raises at least as many questions as it attempts to answer.
-
-[NOTE: it is not clear to me how Kaluza–Klein gets around this; does it claim to be able to model both positive and negative charge purely as a metric effect, and if it does, what is wrong with the argument above?]
-
-Again, our intent is to set the scope of this article to a self-contained presentation of the discrete geometric derivative, with some illustration of its properties amd utility. This limited scope should not be construed, as an exhaustive exploration of all such possibilities appearing to be in sight.
-
-But for those purposes, in summary, we note that the dynamics of a direct zero order 'mass' term, can be viewed as a subset of the dynamics of a one-up-compact model. And that 'spatially varying mass'; or 'potential' terms are homologous to a spatial variation in the metric of the one-up-compact dimension.
+But for those purposes, in summary, we note that the dynamics of a direct zero order 'mass' term, can be viewed as a subset of the dynamics of a one-up-compact model. And that 'spatially varying mass'; or 'scalar potential' terms are homologous to a spatial variation in the metric of the one-up-compact dimension.
 
 ## Alternative field excitations
 
@@ -442,13 +439,16 @@ Pure dual terms, and the implicit dependence on the future time stencil they imp
 
 ### Discussion
 
+We note that our exploration of the stability of various zero order terms is not comprehensive; at present there are gaps in our theoretical understanding of the factors that influence stability. Stability properties can vary alongside the total dimensionality of the space, and we have not explored all possible permutations of involutions, reversions and various dualizations, signatures and dimensions; or interactions between multitudes of such zero order terms being present concurrently.
+
 All put together, the discrete setting certainly does seem to bring out the direct zero order term as the most natural choice. While the SPS dual brings its own unique dynamic to the table, the requirement for interpolation of field values does give one pause; it is a break from considering only field values themselves, and their immediate adjecent values on the grid; and it does raise the question, as to where one draws the line, in terms of action-at-a-distance. If the unique impulse response behavior of the SPS dual, hints at a dynamic that is sufficient or necessary for physical modeling, is not clear to us at present. And it is only on the even-dimensional spaces with an odd-grade SPS, that it results in a leapfrog-compatible update scheme.
 
 However, this conclusion does appear to be at odds, with the usual formulation of the Dirac electron in geometric algebra.
 
-We note that of the zero order terms, the direct zero order term is the most mathematically elegant, and works equally in all dimensions. We note that at least numerically, there exists a meaningfull difference between the one-up model, and the subset of its dynamics that we may describe with a direct zero order term; the one-up model can indeed be observed to conserve amplitudes to machine precision; whereas addition of a zero order term complicates this nice and simple picture; in pragmatic terms conservation properties are still looking excellent, but we are not certain what this means for the long term evolution of the solution.
+We note that of the direct zero order terms works equally in all dimensions. We note that at least numerically, there exists a meaningfull difference between the one-up model, and the subset of its dynamics that we may describe with a direct zero order term; the one-up model can indeed be observed to conserve amplitudes to machine precision; whereas addition of a zero order term complicates this nice and simple picture; in pragmatic terms conservation properties are still looking excellent for the direct zero order term, but we are not certain what this means for the long term evolution of the solution.
 
-In any case, the dynamics even of the more attractive zero order term, appears to be at best a computational simplification, of a subset of the dynamics of a one-up model.
+In any case, even the dynamics of the more attractive zero order term, appears to be at best a computational simplification, of a subset of the dynamics of a one-up model.
+
 
 ## Systems of equations
 

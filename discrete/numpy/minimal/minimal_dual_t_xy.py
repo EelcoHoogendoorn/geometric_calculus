@@ -8,6 +8,7 @@ Note that with the even grade spatial pseudoscalar xy, the leapfrog scheme is br
 """
 import numpy as np
 import matplotlib.pyplot as plt
+import matplotlib.animation as animation
 
 def edt(lhs, rhs, courant=0.33):
 	lhs -= rhs * courant
@@ -22,6 +23,8 @@ id = lambda d: lambda a: a - np.roll(a, shift=+1, axis=d)
 edx, edy, edw = [ed(d) for d in range(3)]
 idx, idy, idw = [id(d) for d in range(3)]
 
+x2 = np.linspace(-1, 1, 64) ** 2
+quad = np.add.outer(x2, x2)
 m = 0.1
 def leapfrog(phi):
 	s, xy, xt, yt = phi
@@ -30,10 +33,22 @@ def leapfrog(phi):
 	idt(xt, +edx(s) - idy(xy) + m * interpolate(yt, (+1, -1)))  # x
 	idt(yt, +idx(xy) + edy(s) - m * interpolate(xt, (-1, +1)))  # y
 
-x2 = np.linspace(-1, 1, 64) ** 2
-phi = np.random.normal(size=(4, 1, 1)) * np.exp(-np.add.outer(x2, x2) * 16)
-for i in range(4):
-	plt.imshow(np.abs(phi[1:4]).T * 8)
-	plt.show()
-	for t in range(64):
-		leapfrog(phi)
+phi = np.random.normal(size=(4, 1, 1)) * np.exp(-quad * 32)
+color = lambda phi: np.clip((np.abs(phi[1:4])).T * 4, 0, 1)
+im = plt.imshow(color(phi), animated=True, interpolation='bilinear')
+def updatefig(*args):
+	leapfrog(phi)
+	# pin the squared norm of the solution
+	# phi[...] /= np.linalg.norm(phi) / norm
+	im.set_array(color(phi))
+	return im,
+ani = animation.FuncAnimation(plt.gcf(), updatefig, interval=10, blit=True)
+plt.show()
+
+# x2 = np.linspace(-1, 1, 64) ** 2
+# phi = np.random.normal(size=(4, 1, 1)) * np.exp(-np.add.outer(x2, x2) * 16)
+# for i in range(4):
+# 	plt.imshow(np.abs(phi[1:4]).T * 8)
+# 	plt.show()
+# 	for t in range(64):
+# 		leapfrog(phi)

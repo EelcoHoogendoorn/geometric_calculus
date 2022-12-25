@@ -10,11 +10,14 @@ and we note that this is known to make a difference to some other zero order ter
 
 If we constrain the norm of the solution every timestep as a hack to stabilize the scheme,
 in spite of its intrinsic tendencies, the qualitative impression is that the t-mass term
-produces similar dynamics as the direct mass term;
+produces similar dynamics as the direct mass term for constant mass terms;
 not the unique dynamics observed with the spatial-speudoscalar mass term.
+
+Given spatial variable mass terms, the result are quite hopeless
 """
 import numpy as np
 import matplotlib.pyplot as plt
+import matplotlib.animation as animation
 
 if False:
 	def edt(lhs, rhs, m, ts, courant=0.33):
@@ -36,21 +39,35 @@ id = lambda d: lambda a: a - np.roll(a, shift=+1, axis=d)
 edx, edy, edw = [ed(d) for d in range(3)]
 idx, idy, idw = [id(d) for d in range(3)]
 
-m = 0.1
+x2 = np.linspace(-1, 1, 128) ** 2
+quad = np.add.outer(x2, x2) / 2
+# m = quad
+m = 0.5
+
 def leapfrog(phi):
 	s, xy, xt, yt = phi
 	edt(s, +idx(xt) + idy(yt), -m, +1)  # t
 	edt(xy, +edx(yt) - edy(xt), -m, +1)  # xyt
-	idt(xt, +edx(s) - idy(xy), -m, +1)  # x
-	idt(yt, +idx(xy) + edy(s), -m, +1)  # y
+	idt(xt, +edx(s) - idy(xy), -m, -1)  # x
+	idt(yt, +idx(xy) + edy(s), -m, -1)  # y
 
-x2 = np.linspace(-1, 1, 64) ** 2
-phi = np.random.normal(size=(4, 1, 1)) * np.exp(-np.add.outer(x2, x2) * 32)
+phi = np.random.normal(size=(4, 1, 1)) * np.exp(-quad * 32)
 norm = np.linalg.norm(phi)
-for i in range(64):
-	plt.imshow(np.abs(phi[1:4]).T * 8)
-	plt.show()
-	for t in range(4):
-		leapfrog(phi)
-		# pin the squared norm of the solution
-		phi /= np.linalg.norm(phi) / norm
+color = lambda phi: np.clip((np.abs(phi[1:4])).T * 4, 0, 1)
+im = plt.imshow(color(phi), animated=True, interpolation='bilinear')
+def updatefig(*args):
+	leapfrog(phi)
+	# pin the squared norm of the solution
+	phi[...] /= np.linalg.norm(phi) / norm
+	im.set_array(color(phi))
+	return im,
+ani = animation.FuncAnimation(plt.gcf(), updatefig, interval=10, blit=True)
+plt.show()
+
+# for i in range(64):
+# 	plt.imshow(np.abs(phi[1:4]).T * 8)
+# 	plt.show()
+# 	for t in range(4):
+# 		leapfrog(phi)
+# 		# pin the squared norm of the solution
+# 		phi /= np.linalg.norm(phi) / norm

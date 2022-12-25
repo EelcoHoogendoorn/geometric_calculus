@@ -15,7 +15,10 @@ edx, edy = [ed(a) for a in range(2)]
 idx, idy = [id(a) for a in range(2)]
 
 x2 = np.linspace(-1, 1, 64) ** 2
-m = (1 - np.exp(-np.add.outer(x2, x2) * 3)) * 0.6
+# m = (1 - np.exp(-np.add.outer(x2, x2) * 3)) * 0.6
+# x2 = np.linspace(-1, 1, 64)**2
+quad = np.add.outer(x2, x2)
+m = quad
 
 def leapfrog(phi):
 	s, x, y, t, xy, xt, yt, xyt = phi
@@ -28,7 +31,7 @@ def leapfrog(phi):
 	idt(yt,  -(+idx(xy)  +edy(s)   +m*y))
 	idt(xyt, +(+edx(y)   -edy(x)   +m*xy))
 
-phi = np.random.normal(size=(8, 1, 1)) * np.exp(-np.add.outer(x2, x2) * 16)
+phi = np.random.normal(size=(8, 1, 1)) * np.exp(-np.add.outer(x2, x2) * 36)
 
 color = lambda phi: np.clip((np.abs(phi[4:7])).T * 4, 0, 1)
 im = plt.imshow(color(phi), animated=True, interpolation='bilinear')

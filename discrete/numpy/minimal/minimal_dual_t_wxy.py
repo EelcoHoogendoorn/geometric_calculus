@@ -8,6 +8,7 @@ Note that with an odd grade spatial pseudoscalar xyz, the leapfrog scheme is pre
 """
 import numpy as np
 import matplotlib.pyplot as plt
+import matplotlib.animation as animation
 
 def edt(lhs, rhs, courant=0.33):
 	lhs -= rhs * courant
@@ -22,7 +23,11 @@ id = lambda d: lambda a: a - np.roll(a, shift=+1, axis=d)
 edx, edy, edw = [ed(d) for d in range(3)]
 idx, idy, idw = [id(d) for d in range(3)]
 
-m = 0.0
+x2 = np.linspace(-1, 1, 64) ** 2
+quad = np.add.outer(np.add.outer(x2, x2), x2)
+# m = 0.5
+m = quad
+
 def leapfrog(phi):
 	s, xy, xw, yw, xt, yt, wt, xywt = phi
 	edt(s, +idx(xt) + idy(yt) + idw(wt)     + m*interpolate(xywt, (-1, -1, -1)))  # t
@@ -34,19 +39,13 @@ def leapfrog(phi):
 	idt(wt, +idx(xw) + idy(yw) + edw(s)     + m*interpolate(xy, (-1, -1, +1)))  # z
 	idt(xywt, +edx(yw) - edy(xw) + edw(xy)  - m*interpolate(s, (+1, +1, +1)))  # xyz
 
-phi = np.zeros((8, 64, 64, 2))
-x2 = np.linspace(-1, 1, 64) ** 2
-phi[..., 0] = np.random.normal(size=(8, 1, 1)) * np.exp(-np.add.outer(x2, x2) * 16)
-amp, norm = [], []
-for i in range(256):
-	norm.append(np.linalg.norm(phi))
-	amp.append(phi.sum())
-	# plt.imshow(np.abs(phi[1:4]).mean(axis=-1).T * 8)
-	# plt.show()
-	for t in range(8):
-		leapfrog(phi)
-plt.figure()
-plt.plot(amp)
-plt.figure()
-plt.plot(norm)
+phi = np.random.normal(size=(8, 1, 1, 1)) * np.exp(-quad * 16)
+
+color = lambda phi: np.clip((np.abs(phi[1:4, 32])).T * 4, 0, 1)
+im = plt.imshow(color(phi), animated=True, interpolation='bilinear')
+def updatefig(*args):
+	leapfrog(phi)
+	im.set_array(color(phi))
+	return im,
+ani = animation.FuncAnimation(plt.gcf(), updatefig, interval=10, blit=True)
 plt.show()

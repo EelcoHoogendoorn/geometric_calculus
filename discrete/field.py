@@ -22,19 +22,24 @@ class AbstractField:
 		return self.arr.shape[1:]
 
 	def process_op(self, op):
-		"""preprocess operator into easily consumable terms"""
+		"""preprocess operator into easily consumable partial derivative terms"""
 		from collections import namedtuple
-		# FIXME: add string names here
-		Term = namedtuple('Term', ['contraction', 'd_idx', 'f_idx', 'sign'])
+		Term = namedtuple('Term', ['contraction', 'e', 'e_idx', 'd', 'd_idx', 'f', 'f_idx', 'sign'])
+		domain = self.domain.named_str.split(',')
+		field = self.subspace.named_str.replace('1', 's').split(',')
+		output = op.subspace.named_str.replace('1', 's').upper().split(',')
 
-		is_id = lambda di, fi: 1 if np.bitwise_and(self.domain.blades[di], self.subspace.blades[fi]) else 0
 		return tuple([
 			(eqi, tuple([
 				Term(
-					contraction=is_id(di, fi),
+					contraction=int(domain[di] in field[fi]),
+					e=output[eqi],
+					e_idx=int(eqi),
+					d=domain[di],
 					d_idx=int(di),
+					f=field[fi],
 					f_idx=int(fi),
-					sign=int(op.kernel[di, fi, eqi])
+					sign=int(op.kernel[di, fi, eqi]),
 				)
 				for di, fi in zip(*np.nonzero(op.kernel[..., eqi]))
 			]))
@@ -42,17 +47,18 @@ class AbstractField:
 		])
 
 	def term_to_str(self) -> str:
-		domain = self.domain.named_str.split(',')
-		field = self.subspace.named_str.replace('1', 's').split(',')
+		"""String representation of a partial derivative term"""
+		# domain = self.domain.named_str.split(',')
+		# field = self.subspace.named_str.replace('1', 's').split(',')
 		sign = {-1: '-', +1: '+'}
 		ei = {0: 'e', 1: 'i'}
 		def inner(t):
-			return f'{sign[t.sign]}{ei[t.contraction]}d{domain[t.d_idx]}({field[t.f_idx]})'
+			return f'{sign[t.sign]}{ei[t.contraction]}d{t.d}({t.f})'
 		return inner
 
 	def operator_to_str(self, op) -> str:
 		"""textual version of a derivative operator"""
-		output = op.subspace.named_str.split(',')
+		output = op.subspace.named_str.replace('1', 's').upper().split(',')
 		term_to_str = self.term_to_str()
 		return '\n'.join([
 			f'{output[eq_idx]} = ' + ''.join([term_to_str(term) for term in eq])

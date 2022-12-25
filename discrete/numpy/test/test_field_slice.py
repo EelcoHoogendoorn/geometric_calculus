@@ -90,12 +90,13 @@ def test_xyt_full_mass():
 def test_wxyt_even_mw():
 	print()
 	algebra = Algebra.from_str('w+x+y+t-')
-	shape, steps = (2, 256, 256), 512
+	shape, steps = (2, 128, 128), 256
 	field = FieldSlice.from_subspace(algebra.subspace.even_grade(), shape)
 
 	field = field.random_gaussian([0.3], [0, 0, 0.1])
-	dimple = (1-field.gauss([1e16, 0.6, 0.6])*0.5)
-	metric = {'w': dimple / 4}
+	# dimple = (1-field.gauss([1e16, 0.6, 0.6])*0.5) / 4
+	dimple = field.quadratic([1e16, 1, 1]) / 2
+	metric = {'w': dimple}
 
 	bivecs = ['wt_xt_yt', 'wx_wy_wt']
 	for bv in bivecs:
@@ -135,3 +136,23 @@ def test_xyzt_full_mass():
 		field.rollout_generator(steps, mass=mass),
 		basepath='../../output', components='xt_yt_zt', post='mass',
 	)
+
+def test_wxyzt_even_mw():
+	print()
+	algebra = Algebra.from_str('w+x+y+z+t-')
+	shape, steps = (2, 32, 32, 32), 64
+	field = FieldSlice.from_subspace(algebra.subspace.odd_grade(), shape)
+	print(field.subspace)
+	print(field.geometric_to_str())
+	return
+	field = field.random_gaussian([0.3], [0, 0, 0, 0.1])
+	# dimple = (1-field.gauss([1e16, 0.6, 0.6])*0.5) / 4
+	dimple = field.quadratic([1e16, 1, 1, 1]) / 3
+	metric = {'w': dimple}
+
+	bivecs = ['wt_xt_yt', 'wx_wy_wt']
+	for bv in bivecs:
+		field.write_gif_4d_generator_compact(
+			field.rollout_generator(steps, metric=metric),
+			basepath='../../output', components=bv, pre='numpy',
+		)

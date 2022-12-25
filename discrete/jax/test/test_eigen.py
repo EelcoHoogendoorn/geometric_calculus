@@ -104,7 +104,7 @@ def test_scalar_wave_1d():
 	# plt.show()
 
 
-def solve_eigen(field, l, mass=0, iterations=1001, metric={}):
+def solve_eigen(field, l, mass, iterations=1001, metric={}):
 	"""solve first order eigenproblem via periodic discretized time axis
 
 	not very fast; and not sure its bugfree either
@@ -116,7 +116,7 @@ def solve_eigen(field, l, mass=0, iterations=1001, metric={}):
 		q = field.copy(arr=arr)
 		metric['t'] = l
 		residual = q.geometric_derivative(metric=metric)
-		res = residual.arr #- arr * mass
+		res = residual.arr + arr * mass * l
 		return optax.huber_loss(res, delta=1).mean() + optax.huber_loss((arr**2).sum(), 1, delta=1)
 
 	l = jnp.array(l)
@@ -138,6 +138,7 @@ def solve_eigen(field, l, mass=0, iterations=1001, metric={}):
 
 	new_field, new_l = params
 	print(new_l)
+	print(np.linalg.norm(new_field))
 	field = field.copy(arr=new_field)
 	return field, new_l
 
@@ -149,30 +150,36 @@ def test_first_order_wave_11():
 	shape = (64, 64)
 	field = Field.from_subspace(algebra.subspace.full(), shape)
 	field = field.smooth_noise([4, 4])
-	mass = 1 - field.gauss(jnp.array([0.4, 1e16])) / 2
+	mass = 1 - field.gauss([0.4, 1e16]) / 2
 
-	field, new_l = solve_eigen(field, 0.5, mass)
+	field, new_l = solve_eigen(field, 0.5, mass, iterations=10000)
 
 	# mass = mass[..., 0]
 	# anim = slc.rollout(64, metric={'t': new_l / 128}, mass=mass)
-	field.write_gif_1d('../../output', 'x_t_xt', post='eigen', norm=99, gamma=False)
+	field.write_gif_1d(basepath='../../output', components='x_t_xt', post='eigen', gamma=False)
 
 
 def test_first_order_wave_21():
 	"""compute eigenmodes by expliticly constructing a periodic time domain"""
 	algebra = Algebra.from_str('x+y+t-')
-	shape = (64, 64, 4)
+	shape = (64, 64, 8)
 	field = Field.from_subspace(algebra.subspace.full(), shape)
-	field = field.smooth_noise(field, [1, 0])
-	mass = 1 - field.gauss(jnp.array([0.6, 0.6, 1e16])) / 3
+	field = field.smooth_noise([1, 1, 0])
+	# mass = 1 - field.gauss([0.6, 0.6, 1e16]) / 3
+	mass = field.quadratic([0.6, 0.6, 1e16]) / 3
 
-	field, new_l = solve_eigen(field, 40., mass)
+	field, new_l = solve_eigen(field, 11.1, mass)
+	print('new_l', new_l)
 	slc = field.slice(0)
 
 	mass = mass[..., 0]
 	# NOTE: need division here, since we have dt metric term on 'wrong side' in leapfrog
 	anim = slc.rollout(64, metric={'t': 8/new_l}, mass=mass)
-	anim.write_gif_2d('../../output', 'xy_xt_yt', post='eigen', norm=99, gamma=False)
+	anim.write_gif_2d(
+		basepath='../../output',
+		components='xy_xt_yt',
+		post='eigen',
+		gamma=False)
 
 
 def test_first_order_wave_21_direct():

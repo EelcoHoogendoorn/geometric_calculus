@@ -2,6 +2,7 @@
 """
 
 import jax.numpy as jnp
+import matplotlib.pyplot as plt
 import numpy as np
 
 from numga.algebra.algebra import Algebra
@@ -33,13 +34,19 @@ def test_wxyt_even_conservation():
 
 	field = field.random_gaussian([0.3, 0.3, 0.3], [0, 0, 0.1])
 	dimple = (1-field.gauss([0.6, 0.6, 0.6])*0.5)
-	metric = {'w': dimple / 4, 't': 0.1}
+	metric = {'w': dimple / 4, 't': dimple}
 
 	ff = field.rollout(steps, metric=metric)
 	# test amplitude conservation over time
 	print(ff.arr.sum((0, 1, 2, 3)))
+	print((ff.arr / metric['t'][..., None]).sum((0, 1, 2, 3)))
+	return
+
 	metric = {'w': dimple[..., None] / 4, 't': 0.1}   # broadcast over time dims
+	# FIXME: why is this not closer to zero?
 	res = ff.geometric_derivative(metric=metric)
+	plt.hist(res.arr.ravel())
+	plt.show()
 	print(np.unravel_index(res.arr.argmax(), res.arr.shape))
 	print (res.arr.max())
 
