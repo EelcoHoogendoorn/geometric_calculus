@@ -9,6 +9,8 @@ class Geometry:
 			algebra = Algebra.from_pqr(algebra, 0, 0)
 		if isinstance(algebra, tuple):
 			algebra = Algebra.from_pqr(*algebra)
+		if isinstance(algebra, str):
+			algebra = Algebra.from_str(*algebra)
 		self.algebra = algebra
 		self.domain = self.algebra.subspace.vector()
 		if constant:

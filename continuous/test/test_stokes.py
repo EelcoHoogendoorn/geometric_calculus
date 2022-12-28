@@ -1,5 +1,3 @@
-import jax.numpy as jnp
-import jax
 from optax import huber_loss
 
 from continuous.domain import *
@@ -12,10 +10,10 @@ from numga.algebra.algebra import Algebra
 
 def navier_stokes(phi: Field, Re=1) -> Field:
 	"""steady-state incompressible navier-stokes"""
-	velocity = phi.interior_derivative()            # 1-form
-	vorticity = velocity.exterior_derivative()      # 2-form
-	shear = vorticity.interior_derivative()         # 1-form
-	diffusion = shear.exterior_derivative()         # 2-form
+	velocity = phi.interior_derivative()            # 1-field
+	vorticity = velocity.exterior_derivative()      # 2-field
+	shear = vorticity.interior_derivative()         # 1-field
+	diffusion = shear.exterior_derivative()         # 2-field
 	advection = velocity.directional_derivative(vorticity)
 	return diffusion + Re * advection               # momentum balance
 
@@ -37,7 +35,7 @@ def test_navier_stokes_potential_2d():
 		scale=1e0,
 	)
 	# visualize initial random starting field
-	plot_2d_0form_contour(domain, model(params).dual_inverse())
+	plot_2d_0field_contour(domain, model(params).dual_inverse())
 	# plot_2d_1form_grid(domain, model(params).interior_derivative())
 	plt.show()
 
@@ -76,7 +74,7 @@ def test_navier_stokes_potential_2d():
 	print('time', time.time() - t)
 
 	# visualize solution
-	plot_2d_0form_contour(domain, model(params).dual_inverse())
+	plot_2d_0field_contour(domain, model(params).dual_inverse())
 	# plot_2d_1form_grid(domain, model(params).interior_derivative())
 	plt.show()
 
@@ -98,7 +96,7 @@ def test_navier_stokes_potential_23d():
 		scale=3e0,
 	)
 	# visualize initial random starting field
-	plot_2d_0form_contour(domain, model(params).dual_inverse())
+	plot_2d_0field_contour(domain, model(params).dual_inverse())
 
 	# satisfy NS in interior of domain
 	def objective_internal(phi: Field, x):
@@ -135,4 +133,4 @@ def test_navier_stokes_potential_23d():
 	print('time', time.time() - t)
 
 	# visualize solution
-	plot_2d_0form_contour(domain, model(params).dual_inverse())
+	plot_2d_0field_contour(domain, model(params).dual_inverse())

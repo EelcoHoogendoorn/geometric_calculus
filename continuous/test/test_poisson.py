@@ -1,12 +1,11 @@
 import jax.numpy as jnp
-import jax
 from optax import huber_loss
 
-from calculus.domain import plot_2d_0form, UnitCube, UnitSphere
-from calculus.models import make_field_model
-from calculus.geometry import Geometry
-from calculus.optimize import optimize
-from calculus.field import Field
+from continuous.domain import plot_2d_0field, UnitCube
+from continuous.models import make_field_model
+from continuous.geometry import Geometry
+from continuous.optimize import optimize
+from continuous.field import Field
 
 
 def test_laplace():
@@ -24,7 +23,7 @@ def test_laplace():
 		scale=1e+0,
 	)
 	# visualize initial random starting field
-	plot_2d_0form(domain, model(params))
+	plot_2d_0field(domain, model(params))
 
 	# the PDE to solve
 	def laplacian(u):
@@ -55,4 +54,6 @@ def test_laplace():
 	params = optimize(model, params, objectives, n_steps=201)
 
 	# visualize solution
-	plot_2d_0form(domain, model(params))
+	plot_2d_0field(domain, model(params))
+	import matplotlib.pyplot as plt
+	plt.show()

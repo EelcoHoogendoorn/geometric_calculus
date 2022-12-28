@@ -63,11 +63,3 @@ def updatefig(*args):
 	return im,
 ani = animation.FuncAnimation(plt.gcf(), updatefig, interval=10, blit=True)
 plt.show()
-
-# for i in range(64):
-# 	plt.imshow(np.abs(phi[1:4]).T * 8)
-# 	plt.show()
-# 	for t in range(4):
-# 		leapfrog(phi)
-# 		# pin the squared norm of the solution
-# 		phi /= np.linalg.norm(phi) / norm

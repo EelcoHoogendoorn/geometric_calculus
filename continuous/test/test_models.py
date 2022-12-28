@@ -29,7 +29,7 @@ def test_image_fit():
 		n_hidden=[128]*2,
 		scale=3e1,
 	)
-	plot_2d_0form(domain, model(params), n=512)
+	plot_2d_0field(domain, model(params), n=512)
 
 
 	shape = jnp.array(gray.shape[:-1]) / 2 - 1
@@ -43,7 +43,7 @@ def test_image_fit():
 	params = optimize(model, params, objectives, n_steps=301)
 
 	# visualize solution
-	plot_2d_0form(domain, model(params), 512)
+	plot_2d_0field(domain, model(params), 512)
 
 
 def test_multi_output():
@@ -65,8 +65,8 @@ def test_multi_output():
 	import matplotlib.pyplot as plt
 	plt.figure()
 	print(model(params)['f0'](jnp.zeros(2)).shape)
-	plot_2d_0form(domain, model(params)['f0'], n=512)
+	plot_2d_0field(domain, model(params)['f0'], n=512)
 	plt.figure()
 	print(model(params)['f1'](jnp.zeros(2)).shape)
-	plot_2d_1form_grid(domain, model(params)['f1'], n=64)
+	plot_2d_1field_grid(domain, model(params)['f1'], n=64)
 	plt.show()

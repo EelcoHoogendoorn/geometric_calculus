@@ -28,67 +28,80 @@ from numga.algebra.algebra import Algebra
 import matplotlib.pyplot as plt
 
 
-
-def elastostatics(potential: "Field02", lame: "MultiVector02") -> Field:
-	displacement = potential.geometric_derivative()
-	derivatives = displacement.geometric_derivative()
-	momentum = (derivatives * lame).geometric_derivative()
-	return momentum.geometric_derivative()
-	# return (P.dg.dg * lame).dg.dg
-
-
 def elasticity(displacement: Field, mu=1, lamb=1) -> Field:
-	"""elastostatics"""
-	compression = displacement.interior_derivative()    # 0-form
-	pressure = compression.exterior_derivative()        # 1-form
-	rotation = displacement.exterior_derivative()       # 2-form
-	shear = rotation.interior_derivative()              # 1-form
+	"""Elastostatics"""
+	compression = displacement.interior_derivative()    # 0-field
+	pressure = compression.exterior_derivative()        # 1-field
+	rotation = displacement.exterior_derivative()       # 2-field
+	shear = rotation.interior_derivative()              # 1-field
 	momentum = shear * mu + pressure * lamb             # momentum balance
 	return momentum.geometric_derivative()              # lets nuke those gradients
 
 
 def elasticity_rubber(phi: Field) -> Field:
 	"""incompresible elastostatics"""
-	displacement = phi.interior_derivative()            # 1-form
-	rotation = displacement.exterior_derivative()       # 2-form
-	shear = rotation.interior_derivative()              # 1-form
+	displacement = phi.interior_derivative()            # 1-field
+	rotation = displacement.exterior_derivative()       # 2-field
+	shear = rotation.interior_derivative()              # 1-field
 	return shear.exterior_derivative()
 
 
 def elasticity_multi(fields: Dict[str, Field], mu=.1, lamb=10) -> Field:
 	"""elastostatics in multi-component formulation;
-	only first order derivatives between loss and fields"""
+	only first order derivatives between loss and fields
+	want to be able to compare convergence properties
+	"""
 	displacement = fields['displacement']
 	compression = fields['compression']
 	rotation = fields['rotation']
 
-	pressure = compression.exterior_derivative()        # 1-form
-	shear = rotation.interior_derivative()              # 1-form
+	pressure = compression.exterior_derivative()        # 1-field
+	shear = rotation.interior_derivative()              # 1-field
 	return (
 		(shear * mu + pressure * lamb).geometric_derivative(), # momentum balance
 		compression - displacement.interior_derivative(),
-		rotation - displacement.exterior_derivative()       # 2-form
+		rotation - displacement.exterior_derivative()       # 2-field
 	)
 
 
-# def elasticity_potential(potential: Field, mu=.1, lamb=1) -> Field:
-# 	"""elastostatics in potential formulation"""
-# 	displacement = potential.geometric_derivative()
-# 	return elasticity(displacement, mu=mu, lamb=lamb)
+def test_elastic_2d_compact():
+	"""attempt at most compact formulation of elasticity"""
+	geometry = Geometry(2)
+	domain = UnitCube(geometry)
 
+	# create a parametric function that maps points in the domain, to a (dict of) multivector fields
+	model, params = make_field_model(
+		geometry=geometry,
+		inputs=geometry.domain,
+		outputs=geometry.algebra.subspace.even_grade(),
+		n_frequencies=64,
+		n_hidden=[64]*3,
+		scale=3e-1,
+	)
 
-# def elasticity_potentials(fields: Dict[str, Field], mu=1, lamb=1) -> Field:
-# 	"""elastostatics in potential formulation"""
-# 	phi = fields['phi']
-# 	psi = fields['psi']
-# 	displacement = phi.exterior_derivative() + psi.interior_derivative()
-# 	return elasticity(displacement, mu=mu, lamb=lamb)
+	delta = jnp.array([0, -1])
+	# satisfy bivector potential equation in interior of domain
+	def objective_internal(phi: Field, x):
+		return huber_loss(phi.gd().gd().gd().gd()(x), 0, 1e-6)
+	# hydraulic press; prescribe displacement along one axis
+	def objective_boundary(phi: Field, x):
+		return huber_loss(phi.gd()(x), domain.which_side(x, d=1) * delta, 1e-6)
+
+	objectives = [
+		(objective_internal, domain.sample_interior, 256, 1e-0),
+		(objective_boundary, domain.sample_boundary_axis(1), 64, 1e+1),
+	]
+
+	params = optimize(model, params, objectives, n_steps=301)
+
+	displacement = model(params).gd()
+	plot_2d_1field_grid(domain, displacement)
+	plt.show()
 
 
 def test_elastic_2d_rubber():
 	"""incompressible elasticity"""
-	algebra = Algebra.from_str('x+y+')
-	geometry = Geometry(algebra)
+	geometry = Geometry(2)
 	domain = UnitCube(geometry)
 
 	delta = jnp.array([0, -1])
@@ -114,9 +127,9 @@ def test_elastic_2d_rubber():
 		# visualize initial random starting field
 		displacement = model(params).interior_derivative()
 		plt.figure()
-		plot_2d_1form_grid(domain, displacement)
+		plot_2d_1field_grid(domain, displacement)
 		plt.figure()
-		plot_2d_0form(domain, displacement.exterior_derivative().dual())
+		plot_2d_0field(domain, displacement.exterior_derivative().dual())
 		plt.show()
 
 	# satisfy NS in interior of domain
@@ -151,20 +164,15 @@ def test_elastic_2d_rubber():
 		# # visualize solution
 		displacement = model(params).interior_derivative()
 		plt.figure()
-		plot_2d_1form_grid(domain, displacement)
+		plot_2d_1field_grid(domain, displacement)
 		plt.figure()
-		plot_2d_0form(domain, displacement.exterior_derivative().dual())
+		plot_2d_0field(domain, displacement.exterior_derivative().dual())
 		plt.show()
-
-
-	# plot_2d_1form(domain, model(params))
-	# plt.show()
 
 
 def test_elastic_2d_potential02():
 	"""0-2 grade potential elasticity"""
-	algebra = Algebra.from_str('x+y+')
-	geometry = Geometry(algebra)
+	geometry = Geometry(2)
 	domain = UnitCube(geometry)
 
 	delta = -jnp.eye(domain.n)[-1]
@@ -187,18 +195,18 @@ def test_elastic_2d_potential02():
 	def get_displacement(potential):
 		return potential.geometric_derivative(subspace=geometry.algebra.subspace.vector())
 
-	if True:
+	if False:
 		# visualize initial random starting field
 		displacement = get_displacement(model(params))
 		plt.figure()
-		plot_2d_1form_grid(domain, displacement)
+		plot_2d_1field_grid(domain, displacement)
 		plt.figure()
-		plot_2d_0form(domain, displacement.exterior_derivative().dual())
+		plot_2d_0field(domain, displacement.exterior_derivative().dual())
 		plt.figure()
-		plot_2d_0form(domain, displacement.interior_derivative())
+		plot_2d_0field(domain, displacement.interior_derivative())
 		plt.show()
 
-	# satisfy NS in interior of domain
+	# satisfy biharmonic potential in interior of domain
 	def objective_internal(phi: Field, x):
 		return huber_loss(
 			elasticity(get_displacement(phi), mu=.1, lamb=1)(x),
@@ -222,7 +230,7 @@ def test_elastic_2d_potential02():
 
 	import time
 	t = time.time()
-	params = optimize(model, params, objectives, n_steps=301)
+	params = optimize(model, params, objectives, n_steps=3001)
 	print('time', time.time() - t)
 
 
@@ -230,22 +238,16 @@ def test_elastic_2d_potential02():
 		# # visualize solution
 		displacement = get_displacement(model(params))
 		plt.figure()
-		plot_2d_1form_grid(domain, displacement)
+		plot_2d_1field_grid(domain, displacement)
 		plt.figure()
-		plot_2d_0form(domain, displacement.exterior_derivative().dual())
+		plot_2d_0field(domain, displacement.exterior_derivative().dual())
 		plt.figure()
-		plot_2d_0form(domain, displacement.interior_derivative())
+		plot_2d_0field(domain, displacement.interior_derivative())
 		plt.show()
 
 
-	# plot_2d_1form(domain, model(params))
-	# plt.show()
-
-
-
 def test_elastic_2d():
-	algebra = Algebra.from_str('x+y+')
-	geometry = Geometry(algebra)
+	geometry = Geometry(2)
 	domain = UnitCube(geometry)
 
 	delta = jnp.array([1, 0])
@@ -270,15 +272,11 @@ def test_elastic_2d():
 		# visualize initial random starting field
 		displacement = model(params)
 		plt.figure()
-		plot_2d_1form_grid(domain, displacement)
+		plot_2d_1field_grid(domain, displacement)
 		plt.figure()
-		plot_2d_0form(domain, displacement.interior_derivative())
+		plot_2d_0field(domain, displacement.interior_derivative())
 		plt.figure()
-		plot_2d_0form(domain, displacement.exterior_derivative())
-		# plt.figure()
-		# plot_2d_0form(domain, displacement.anti_interior_derivative())
-		# plt.figure()
-		# plot_2d_0form(domain, displacement.anti_exterior_derivative())
+		plot_2d_0field(domain, displacement.exterior_derivative())
 		plt.show()
 
 	# satisfy NS in interior of domain
@@ -301,8 +299,6 @@ def test_elastic_2d():
 		(objective_boundary, domain.sample_boundary_axis(0), 64, 1e+1),
 	]
 
-	# plot_sampling(objectives)
-
 	import time
 	t = time.time()
 	params = optimize(model, params, objectives, n_steps=301)
@@ -313,21 +309,16 @@ def test_elastic_2d():
 		# # visualize solution
 		displacement = model(params)
 		plt.figure()
-		plot_2d_1form_grid(domain, displacement)
+		plot_2d_1field_grid(domain, displacement)
 		plt.figure()
-		plot_2d_0form(domain, displacement.interior_derivative())
+		plot_2d_0field(domain, displacement.interior_derivative())
 		plt.figure()
-		plot_2d_0form(domain, displacement.exterior_derivative())
+		plot_2d_0field(domain, displacement.exterior_derivative())
 		plt.show()
 
 
-	# plot_2d_1form(domain, model(params))
-	# plt.show()
-
-
 def test_elastic_2d_multi():
-	algebra = Algebra.from_str('x+y+')
-	geometry = Geometry(algebra)
+	geometry = Geometry(2)
 	domain = UnitCube(geometry)
 
 	delta = jnp.array([1, 0])
@@ -355,31 +346,12 @@ def test_elastic_2d_multi():
 	if True:
 		# visualize initial random starting field
 		fields = model(params)
-		# grid = domain.sample_grid(128)
-		# values = jax.vmap(jax.vmap(fields))(grid)
-		# plt.figure()
-		# plt.imshow(values['displacement'][..., 0].T, extent=(-1, +1, -1, +1), origin='lower')
-		# plt.colorbar()
-		# plt.figure()
-		# plt.imshow(values['compression'][..., 0].T, extent=(-1, +1, -1, +1), origin='lower')
-		# plt.colorbar()
-		# plt.figure()
-		# plt.imshow(values['rotation'][..., 0].T, extent=(-1, +1, -1, +1), origin='lower')
-		# plt.colorbar()
-		# plt.show()
-		# return
 		plt.figure()
-		plot_2d_1form_grid(domain, fields['displacement'])
+		plot_2d_1field_grid(domain, fields['displacement'])
 		plt.figure()
-		plot_2d_0form(domain, fields['rotation'].dual())
+		plot_2d_0field(domain, fields['rotation'].dual())
 		plt.figure()
-		plot_2d_0form(domain, fields['compression'])
-		# plt.figure()
-		# plot_2d_0form(domain, displacement.exterior_derivative())
-		# plt.figure()
-		# plot_2d_0form(domain, displacement.anti_interior_derivative())
-		# plt.figure()
-		# plot_2d_0form(domain, displacement.anti_exterior_derivative())
+		plot_2d_0field(domain, fields['compression'])
 		plt.show()
 
 	# satisfy NS in interior of domain
@@ -417,12 +389,9 @@ def test_elastic_2d_multi():
 		# # visualize solution
 		fields = model(params)
 		plt.figure()
-		plot_2d_1form_grid(domain, fields['displacement'])
+		plot_2d_1field_grid(domain, fields['displacement'])
 		plt.figure()
-		plot_2d_0form(domain, fields['rotation'].dual())
+		plot_2d_0field(domain, fields['rotation'].dual())
 		plt.figure()
-		plot_2d_0form(domain, fields['compression'])
+		plot_2d_0field(domain, fields['compression'])
 		plt.show()
-
-	# plot_2d_1form(domain, model(params))
-	# plt.show()

@@ -142,3 +142,8 @@ class Field:
 	def dual_inverse(self) -> "Field":
 		op = self.operator.dual_inverse(self.subspace)
 		return self.make_unary(op)
+
+	gd = geometric_derivative
+	id = interior_derivative
+	ed = exterior_derivative
+	dd = directional_derivative

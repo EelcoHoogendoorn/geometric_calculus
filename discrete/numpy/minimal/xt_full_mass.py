@@ -15,7 +15,7 @@ edx = ed(0)
 idx = id(0)
 
 x2 = np.linspace(-1, 1, 256) ** 2
-m = -x2[:] / 6
+m = x2[:] / 6
 
 def leapfrog(phi):
 	s, x, t, xt = phi

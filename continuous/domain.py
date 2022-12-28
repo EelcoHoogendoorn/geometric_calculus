@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 import matplotlib.collections
 
 
-def plot_2d_0form(domain, model, n=128):
+def plot_2d_0field(domain, model, n=128):
 	assert model.subspace.equals.scalar()
 	grid = domain.sample_grid(n)
 	values = jax.vmap(jax.vmap(model))(grid)
@@ -15,7 +15,7 @@ def plot_2d_0form(domain, model, n=128):
 	# plt.show()
 
 
-def plot_2d_0form_contour(domain, model, n=128):
+def plot_2d_0field_contour(domain, model, n=128):
 	# assert model.subspace.equals.scalar()
 	grid = domain.sample_grid(n)
 	values = jax.vmap(jax.vmap(model))(grid)
@@ -24,7 +24,7 @@ def plot_2d_0form_contour(domain, model, n=128):
 	plt.show()
 
 
-def plot_2d_1form(domain, model, n=32):
+def plot_2d_1field(domain, model, n=32):
 	assert model.subspace.equals.vector()
 	grid = domain.sample_grid(n)
 	values = jax.vmap(jax.vmap(model))(grid)
@@ -32,6 +32,7 @@ def plot_2d_1form(domain, model, n=32):
 	plt.quiver(*grid.reshape(-1,2).T, *values.reshape(-1, 2).T)
 	# plt.colorbar()
 	# plt.show()
+
 
 def plot_sampling(objectives):
 	key = jax.random.PRNGKey(0)
@@ -44,7 +45,7 @@ def plot_sampling(objectives):
 	plt.show()
 
 
-def plot_2d_1form_grid(domain, field, n=32, scale=1e-2):
+def plot_2d_1field_grid(domain, field, n=32, scale=1e-2):
 	def plot_grid(segs1, ax=None, **kwargs):
 		ax = ax or plt.gca()
 		segs2 = segs1.transpose(1, 0, 2)
@@ -69,6 +70,9 @@ class Domain:
 
 class UnitCube(Domain):
 	def __init__(self, geometry):
+		from continuous.geometry import Geometry
+		if not isinstance(geometry, Geometry):
+			geometry = Geometry(geometry)
 		self.geometry = geometry
 		self.n = len(self.geometry.domain)
 

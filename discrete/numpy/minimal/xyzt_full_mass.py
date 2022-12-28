@@ -37,7 +37,8 @@ def leapfrog(phi):
 	idt(yzt, +(+idx(xyz)+edy(z)-edz(y) + m*yz))	 # yz
 	idt(xyzt, -(+edx(yz)-edy(xz)+edz(xy) + m*xyz))	 # xyz
 
-phi = (np.random.normal(size=(16, 1, 1, 1)) * np.exp(-quad * 25)).astype(np.float32)
+phi = (np.random.normal(size=(16, 1, 1, 1)) * np.exp(-quad * 9)).astype(np.float32)
+print(phi.size)
 color = lambda phi: np.clip((np.abs(phi[-4:-1, 32])).T * 4, 0, 1)
 im = plt.imshow(color(phi), animated=True, interpolation='bilinear')
 def updatefig(*args):

@@ -2,6 +2,7 @@
 import jax
 from continuous.domain import UnitCube, UnitSphere
 
+
 def test_cube():
 	domain = UnitCube(2)
 	key = jax.random.PRNGKey(0)
@@ -11,6 +12,7 @@ def test_cube():
 	plt.figure()
 	plt.scatter(*jax.vmap(domain.sample_interior)(jax.random.split(key, ni)).T)
 	plt.scatter(*jax.vmap(domain.sample_boundary)(jax.random.split(key, nb)).T)
+	plt.show()
 	plt.figure()
 	plt.scatter(*domain.sample_grid(16).reshape(-1, 2).T)
 	plt.show()
