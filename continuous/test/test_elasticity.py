@@ -12,6 +12,10 @@ clearly, phi-only formulation converges a lot more robustly.
 0-2 potential seems to run about twice as slow as grade-2 only potential
 
 should we add a cylinder case?
+
+seems that only incompressible case is really working still...
+seems to be an issue with the convergence of our NN based solver,
+rather than the fundamental math involved
 """
 from typing import Dict
 
@@ -73,7 +77,7 @@ def test_elastic_2d_compact():
 	model, params = make_field_model(
 		geometry=geometry,
 		inputs=geometry.domain,
-		outputs=geometry.algebra.subspace.even_grade(),
+		outputs=geometry.algebra.subspace.vector(),
 		n_frequencies=64,
 		n_hidden=[64]*3,
 		scale=3e-1,
@@ -81,11 +85,11 @@ def test_elastic_2d_compact():
 
 	delta = jnp.array([0, -1])
 	# satisfy bivector potential equation in interior of domain
-	def objective_internal(phi: Field, x):
-		return huber_loss(phi.gd().gd().gd().gd()(x), 0, 1e-6)
+	def objective_internal(displacement: Field, x):
+		return huber_loss(displacement.gd().gd().gd()(x), 0, 1e-6)
 	# hydraulic press; prescribe displacement along one axis
-	def objective_boundary(phi: Field, x):
-		return huber_loss(phi.gd()(x), domain.which_side(x, d=1) * delta, 1e-6)
+	def objective_boundary(displacement: Field, x):
+		return huber_loss(displacement(x), domain.which_side(x, d=1) * delta, 1e-6)
 
 	objectives = [
 		(objective_internal, domain.sample_interior, 256, 1e-0),
@@ -94,22 +98,23 @@ def test_elastic_2d_compact():
 
 	params = optimize(model, params, objectives, n_steps=301)
 
-	displacement = model(params).gd()
+	displacement = model(params)
 	plot_2d_1field_grid(domain, displacement)
 	plt.show()
 
 
-def test_elastic_2d_rubber():
+def test_elastic_2d_rubber_compression():
 	"""incompressible elasticity"""
 	geometry = Geometry(2)
 	domain = UnitCube(geometry)
 
+	dir = 1
 	delta = jnp.array([0, -1])
 
 	# FIXME: this window applies to displacement, not potential!
 	def window(f, x):
 		# return f
-		c = x[1]
+		c = x[dir]
 		q = (1+c) * (1-c)
 		return f + c * delta
 	# create a parametric function that maps points in the domain, to a (dict of) multivector fields
@@ -123,7 +128,7 @@ def test_elastic_2d_rubber():
 		# window=window,
 	)
 
-	if True:
+	if False:
 		# visualize initial random starting field
 		displacement = model(params).interior_derivative()
 		plt.figure()
@@ -143,13 +148,13 @@ def test_elastic_2d_rubber():
 	def objective_boundary(phi: Field, x):
 		return huber_loss(
 			phi.interior_derivative()(x),
-			domain.which_side(x, d=1) * delta,
+			domain.which_side(x, dir) * delta,
 			1e-6
 		)
 
 	objectives = [
 		(objective_internal, domain.sample_interior, 256, 1e-0),
-		(objective_boundary, domain.sample_boundary_axis(1), 64, 1e+1),
+		(objective_boundary, domain.sample_boundary_axis(dir), 64, 1e+1),
 	]
 
 	# plot_sampling(objectives)
@@ -159,6 +164,69 @@ def test_elastic_2d_rubber():
 	params = optimize(model, params, objectives, n_steps=301)
 	print('time', time.time() - t)
 
+	if True:
+		# # visualize solution
+		displacement = model(params).interior_derivative()
+		plt.figure()
+		plot_2d_1field_grid(domain, displacement)
+		plt.figure()
+		plot_2d_0field(domain, displacement.exterior_derivative().dual())
+		plt.show()
+
+
+def test_elastic_2d_rubber_shear():
+	"""incompressible elasticity"""
+	geometry = Geometry(2)
+	domain = UnitCube(geometry)
+
+	dir = 1
+	delta = jnp.array([1, 0])
+
+	# create a parametric function that maps points in the domain, to a (dict of) multivector fields
+	model, params = make_field_model(
+		geometry=geometry,
+		inputs=geometry.domain,
+		outputs=geometry.algebra.subspace.bivector(),
+		n_frequencies=64,
+		n_hidden=[64]*3,
+		scale=3e-1,
+	)
+
+	if False:
+		# visualize initial random starting field
+		displacement = model(params).interior_derivative()
+		plt.figure()
+		plot_2d_1field_grid(domain, displacement)
+		plt.figure()
+		plot_2d_0field(domain, displacement.exterior_derivative().dual())
+		plt.show()
+
+	# satisfy NS in interior of domain
+	def objective_internal(phi: Field, x):
+		return huber_loss(
+			elasticity_rubber(phi)(x),
+			0,
+			1e-6
+		)
+	# hydraulic press; prescribe displacement along one axis
+	def objective_boundary(phi: Field, x):
+		return huber_loss(
+			phi.interior_derivative()(x),
+			domain.which_side(x, d=dir) * delta,
+			1e-6
+		)
+
+	objectives = [
+		(objective_internal, domain.sample_interior, 256, 1e-0),
+		(objective_boundary, domain.sample_boundary_axis(dir), 64, 1e+1),
+	]
+
+	# plot_sampling(objectives)
+
+	import time
+	t = time.time()
+	params = optimize(model, params, objectives, n_steps=301)
+	print('time', time.time() - t)
 
 	if True:
 		# # visualize solution
@@ -175,6 +243,7 @@ def test_elastic_2d_potential02():
 	geometry = Geometry(2)
 	domain = UnitCube(geometry)
 
+	dir = 0
 	delta = -jnp.eye(domain.n)[-1]
 
 	def window(f, c):
@@ -209,7 +278,7 @@ def test_elastic_2d_potential02():
 	# satisfy biharmonic potential in interior of domain
 	def objective_internal(phi: Field, x):
 		return huber_loss(
-			elasticity(get_displacement(phi), mu=.1, lamb=1)(x),
+			elasticity(get_displacement(phi), mu=1, lamb=1)(x),
 			0,
 			1e-6
 		)
@@ -217,20 +286,20 @@ def test_elastic_2d_potential02():
 	def objective_boundary(phi: Field, x):
 		return huber_loss(
 			get_displacement(phi)(x),
-			domain.which_side(x, d=1) * delta,
+			domain.which_side(x, d=dir) * delta,
 			1e-6
 		)
 
 	objectives = [
 		(objective_internal, domain.sample_interior, 256, 1e-0),
-		(objective_boundary, domain.sample_boundary_axis(1), 64, 1e+1),
+		(objective_boundary, domain.sample_boundary_axis(dir), 64, 1e+1),
 	]
 
 	# plot_sampling(objectives)
 
 	import time
 	t = time.time()
-	params = optimize(model, params, objectives, n_steps=3001)
+	params = optimize(model, params, objectives, n_steps=301)
 	print('time', time.time() - t)
 
 
@@ -250,7 +319,7 @@ def test_elastic_2d():
 	geometry = Geometry(2)
 	domain = UnitCube(geometry)
 
-	delta = jnp.array([1, 0])
+	delta = jnp.array([0, -1])
 
 	# FIXME: still fail to understand why this works so awefully
 	def window(f, x):
@@ -264,8 +333,7 @@ def test_elastic_2d():
 		outputs=geometry.algebra.subspace.vector(),
 		n_frequencies=64,
 		n_hidden=[64]*3,
-		scale=1e-0,
-		# window=window,
+		scale=3e-1,
 	)
 
 	if True:
@@ -276,13 +344,13 @@ def test_elastic_2d():
 		plt.figure()
 		plot_2d_0field(domain, displacement.interior_derivative())
 		plt.figure()
-		plot_2d_0field(domain, displacement.exterior_derivative())
+		plot_2d_0field(domain, displacement.exterior_derivative().dual())
 		plt.show()
 
 	# satisfy NS in interior of domain
 	def objective_internal(displacement: Field, x):
 		return huber_loss(
-			elasticity(displacement, mu=.1, lamb=1)(x),
+			elasticity(displacement, mu=1e-1, lamb=1e+1)(x),
 			0,
 			1e-6
 		)
@@ -301,7 +369,7 @@ def test_elastic_2d():
 
 	import time
 	t = time.time()
-	params = optimize(model, params, objectives, n_steps=301)
+	params = optimize(model, params, objectives, n_steps=1001)
 	print('time', time.time() - t)
 
 
@@ -313,7 +381,7 @@ def test_elastic_2d():
 		plt.figure()
 		plot_2d_0field(domain, displacement.interior_derivative())
 		plt.figure()
-		plot_2d_0field(domain, displacement.exterior_derivative())
+		plot_2d_0field(domain, displacement.exterior_derivative().dual())
 		plt.show()
 
 
@@ -321,6 +389,7 @@ def test_elastic_2d_multi():
 	geometry = Geometry(2)
 	domain = UnitCube(geometry)
 
+	dir = 0
 	delta = jnp.array([1, 0])
 
 	def window(f, c):
@@ -368,13 +437,13 @@ def test_elastic_2d_multi():
 	def objective_boundary(fields: Field, x):
 		return huber_loss(
 			fields['displacement'](x),
-			domain.which_side(x, d=0) * delta,
+			domain.which_side(x, dir) * delta,
 			1e-6
 		)
 
 	objectives = [
 		(objective_internal, domain.sample_interior, 256, 1e-0),
-		(objective_boundary, domain.sample_boundary_axis(0), 64, 1e+1),
+		(objective_boundary, domain.sample_boundary_axis(dir), 64, 1e+1),
 	]
 
 	# plot_sampling(objectives)
@@ -383,7 +452,6 @@ def test_elastic_2d_multi():
 	t = time.time()
 	params = optimize(model, params, objectives, n_steps=301)
 	print('time', time.time() - t)
-
 
 	if True:
 		# # visualize solution
