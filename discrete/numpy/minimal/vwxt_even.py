@@ -1,6 +1,6 @@
 """Minimal self contained numpy example of the leapfrog scheme
 for the equation geometric_derivative(phi) = m * phi,
-in the full algebra of x+w+t-, where w is a compact dimension
+in the full algebra of v+w+x+t-, where v and w are a compact dimension
 """
 from common import *
 
@@ -25,5 +25,6 @@ def leapfrog(phi):
 	idt(vwxt, -(+edv(wx) - edw(vx) + edx(vw)))  # vwx
 
 phi = np.random.normal(size=(8, 2, 2, 1)) * np.exp(-quad * 32)
+# phi -= phi.mean((1,2), keepdims=True)
 color = lambda phi: np.abs(phi[1:4]).mean(axis=(1, 2))
 plot_xt(leapfrog, color, phi, 512, 3)

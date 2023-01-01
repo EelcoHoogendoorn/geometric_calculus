@@ -50,7 +50,7 @@ def interpolate(phi, *axes):
 	return phi
 
 
-def animate(leapfrog, color, phi):
+def animate(leapfrog, color, phi, unroll=1):
 	"""animate the given leapfrog scheme"""
 	c = color(phi)
 	cmax = c.max() / 2
@@ -59,7 +59,8 @@ def animate(leapfrog, color, phi):
 	im = plt.imshow(color_scaled(phi), animated=True, interpolation='bilinear')
 	plt.axis('off')
 	def updatefig(*args):
-		leapfrog(phi)
+		for _ in range(unroll):
+			leapfrog(phi)
 		im.set_array(color_scaled(phi))
 		return im,
 
