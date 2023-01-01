@@ -2,21 +2,15 @@
 for the equation geometric_derivative(phi) = m * phi,
 in the full algebra of x+y+z+t-
 """
-import numpy as np
-import matplotlib.pyplot as plt
-import matplotlib.animation as animation
+from common import *
 
-def edt(lhs, rhs, courant=0.33):
-	lhs -= rhs * courant
-idt = edt
-ed = lambda d: lambda a: np.roll(a, shift=-1, axis=d) - a
-id = lambda d: lambda a: a - np.roll(a, shift=+1, axis=d)
-edx, edy, edz = [ed(a) for a in range(3)]
-idx, idy, idz = [id(a) for a in range(3)]
-
-x2 = np.linspace(-1, 1, 64)**2
-quad = np.add.outer(np.add.outer(x2, x2), x2)
+quad = quadratic((64, 64, 64))
 m = quad
+
+edx, idx = ds(0)
+edy, idy = ds(1)
+edz, idz = ds(2)
+edt, idt = dt(1/3)
 
 def leapfrog(phi):
 	s,x,y,z,t,xy,xz,yz,xt,yt,zt,xyz,xyt,xzt,yzt,xyzt = phi
@@ -37,13 +31,7 @@ def leapfrog(phi):
 	idt(yzt, +(+idx(xyz)+edy(z)-edz(y) + m*yz))	 # yz
 	idt(xyzt, -(+edx(yz)-edy(xz)+edz(xy) + m*xyz))	 # xyz
 
-phi = (np.random.normal(size=(16, 1, 1, 1)) * np.exp(-quad * 9)).astype(np.float32)
-print(phi.size)
-color = lambda phi: np.clip((np.abs(phi[-4:-1, 32])).T * 4, 0, 1)
-im = plt.imshow(color(phi), animated=True, interpolation='bilinear')
-def updatefig(*args):
-	leapfrog(phi)
-	im.set_array(color(phi))
-	return im,
-ani = animation.FuncAnimation(plt.gcf(), updatefig, interval=10, blit=True)
-plt.show()
+phi = np.random.normal(size=(16, 1, 1, 1)) * np.exp(-quad * 9)
+filter_stationary(leapfrog, phi)
+color = lambda phi: np.abs(phi[1:4, 32])
+animate(leapfrog, color, phi)
