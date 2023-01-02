@@ -5,7 +5,6 @@ in the full algebra of v+w+x+t-, where v and w are a compact dimension
 from common import *
 
 quad = quadratic((256,))
-
 (edv, idv), (edw, idw), (edx, idx), (edt, idt) = partials(quad/12, quad/6, 1, 1/3)
 
 def leapfrog(phi):

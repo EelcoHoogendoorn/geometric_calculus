@@ -146,6 +146,7 @@ def unpack(field, name='phi'):
 	lhs = field.subspace.named_str.replace('1', 's')
 	return f'{lhs} = {name}'
 
+
 def test_xyz_term():
 	print()
 	algebra = Algebra.from_str('w+x+y+z+t-')
@@ -157,7 +158,20 @@ def test_xyz_term():
 	# op = xyz_mass_term(field)
 	# print(op)
 	print(unpack(field))
-	print(geometric_to_str(field))#, xyz_mass_term(field)))
+	print(geometric_to_str(field, xyz_mass_term(field)))
+
+
+def test_vwxyt_term():
+	print()
+	algebra = Algebra.from_str('v+w+x+y+t-')
+	shape = (2, 2, 32, 32)
+	field = FieldSlice.from_subspace(algebra.subspace.even_grade(), shape)
+
+	print(partials(field))
+	# op = xyz_mass_term(field)
+	# print(op)
+	print(unpack(field))
+	print(geometric_to_str(field))
 
 
 

@@ -27,10 +27,11 @@ def partials(*metric):
 
 def meshgrid(shape):
 	return np.array(np.meshgrid([np.linspace(-1, 1, s) for s in shape], indexing='ij'))
-def quadratic(shape):
+def quadratic(shape, loc=None):
 	quad = 0
-	for s in shape:
-		x2 = np.linspace(-1, 1, s) ** 2
+	loc = [0] * len(shape) if loc is None else loc
+	for s, l in zip(shape, loc):
+		x2 = (np.linspace(-1, 1, s) - l) ** 2
 		quad = np.add.outer(quad, x2)
 	return quad
 
@@ -66,7 +67,7 @@ def interpolate(phi, *axes):
 def animate(leapfrog, color, phi, unroll=1):
 	"""animate the given leapfrog scheme"""
 	c = color(phi)
-	cmax = np.percentile(c, 99) / 2
+	cmax = np.percentile(c, 98) / 1.3
 	color_scaled = lambda phi: np.clip(color(phi) / cmax, 0, 1).T
 
 	im = plt.imshow(color_scaled(phi), animated=True, interpolation='bilinear')

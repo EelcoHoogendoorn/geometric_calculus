@@ -4,11 +4,8 @@ in the full algebra of x+w+t-, where w is a compact dimension
 """
 from common import *
 
-x = np.linspace(-1, 1, 256)
-x2 = x ** 2
-m = x2 / 6
+m = quadratic((256,)) / 6
 mw = 0.1
-
 (edw, idw), (edx, idx), (edt, idt) = partials(mw, 1, 1/3)
 
 def leapfrog(phi):
@@ -22,6 +19,6 @@ def leapfrog(phi):
 	idt(xt,  -(+idw(wx)+edx(s)	+m*x)) # x
 	idt(wxt, +(+edw(x)-edx(w)	+m*wx)) # wx
 
-phi = np.random.normal(size=(8, 2, 1)) * np.exp(-(x-0.5)**2 * 16)
+phi = np.random.normal(size=(8, 2, 1)) * np.exp(-quadratic((256,), (0.5,)) * 16)
 color = lambda phi: np.abs(phi[1:4]).mean(axis=1)
 plot_xt(leapfrog, color, phi, 1024, 3)

@@ -2,7 +2,7 @@
 for the equation geometric_derivative(phi) = 0,
 over the bivectors of x+y+z+t-
 
-This is just the classic Yee scheme
+This is just the classic Yee scheme for the Maxwell equation
 """
 from common import *
 

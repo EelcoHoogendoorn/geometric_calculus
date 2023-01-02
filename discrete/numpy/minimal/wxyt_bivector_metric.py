@@ -10,7 +10,6 @@ from common import *
 quad = quadratic((64, 64))
 mw = .08#quad / 4
 mx = my = mt = 1 - np.exp(-quad * 2) / 1.5
-
 (edw, idw), (edx, idx), (edy, idy), (edt, idt) = partials(mw, mx, my, mt / 2)
 
 def leapfrog(phi):
