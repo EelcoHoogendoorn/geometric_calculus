@@ -6,10 +6,10 @@ import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 
 
-def dt(courant):
+def dt(metric):
 	"""Construct exterior and interior temporal derivative operators"""
 	def inner(lhs, rhs):
-		lhs -= rhs * courant
+		lhs += rhs * metric
 	return inner, inner
 def ds(d, m=None):
 	"""Construct exterior and interior spatial derivative operators along an axis d, and optional metric m"""
@@ -19,8 +19,10 @@ def ds(d, m=None):
 		return ed, id
 	else:
 		return lambda a: ed(a*m), lambda a: id(a*m)
-# def ds(*metric):
-# 	return [ds_(i, m) for i, m in enumerate(metric)]
+def partials(*metric):
+	"""Construct spatio-temporal partial derivative operators"""
+	*ms, mt = metric
+	return [ds(i, m) for i, m in enumerate(ms)] + [dt(mt)]
 
 
 def meshgrid(shape):
@@ -33,10 +35,21 @@ def quadratic(shape):
 	return quad
 
 
-def filter_stationary(leapfrog, phi):
+def filter_stationary(leapfrog, phi, repeats=1):
 	"""remove field components that are stationary under the action of the leapfrog scheme"""
+	for _ in range(repeats):
+		old = phi.copy()
+		leapfrog(phi)
+		phi -= old
+
+def filter_lightlike(phi, axis=0):
+	"""filter out lightlike modes"""
+	phi -= phi.mean(axis=axis+1, keepdims=True)
+
+def filter_massive(phi, axis=0):
+	"""filter out massive modes"""
 	old = phi.copy()
-	leapfrog(phi)
+	filter_lightlike(old, axis = axis)
 	phi -= old
 
 
@@ -53,7 +66,7 @@ def interpolate(phi, *axes):
 def animate(leapfrog, color, phi, unroll=1):
 	"""animate the given leapfrog scheme"""
 	c = color(phi)
-	cmax = c.max() / 2
+	cmax = np.percentile(c, 99) / 2
 	color_scaled = lambda phi: np.clip(color(phi) / cmax, 0, 1).T
 
 	im = plt.imshow(color_scaled(phi), animated=True, interpolation='bilinear')

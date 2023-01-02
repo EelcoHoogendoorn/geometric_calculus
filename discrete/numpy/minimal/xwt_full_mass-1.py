@@ -9,9 +9,7 @@ x2 = x ** 2
 m = x2 / 6
 mw = 0.1
 
-edw, idw = ds(0, mw)
-edx, idx = ds(1)
-edt, idt = dt(1/3)
+(edw, idw), (edx, idx), (edt, idt) = partials(mw, 1, 1/3)
 
 def leapfrog(phi):
 	s, w, x, t, wx, wt, xt, wxt = phi

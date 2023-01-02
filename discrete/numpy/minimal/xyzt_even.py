@@ -7,11 +7,7 @@ This is a model of massless neutrinos
 from common import *
 
 quad = quadratic((64, 64, 64))
-
-edx, idx = ds(0)
-edy, idy = ds(1)
-edz, idz = ds(2)
-edt, idt = dt(1/3)
+(edx, idx), (edy, idy), (edz, idz), (edt, idt) = partials(1, 1, 1, 1/3)
 
 def leapfrog(phi):
 	s, xy, xz, yz, xt, yt, zt, xyzt = phi

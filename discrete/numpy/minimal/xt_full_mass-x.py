@@ -8,11 +8,9 @@ does appear to diverge.
 """
 from common import *
 
-edx, idx = ds(0)
-edt, idt = dt(1/2)
-
 quad = quadratic((256,))
-m = quad[:] / 6
+m = quad / 6
+(edx, idx), (edt, idt) = partials(1, 1/2)
 
 def leapfrog(phi):
 	s, x, t, xt = phi

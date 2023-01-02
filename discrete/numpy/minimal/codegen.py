@@ -133,6 +133,19 @@ def xyz_mass_term(field, symbol='m', side='right'):
 # 	return {output[o]: f'{sign[kernel[i,o]]}{symbol}*{input[i]}' for i,o in zip(*np.nonzero(kernel))}
 
 
+def partials(field):
+	"""generate partials initialization call"""
+	term = lambda t: f'(ed{t}, id{t})'
+	q = field.algebra.description.basis_names
+	lhs = ', '.join(term(t) for t in q)
+	args = ', '.join(['1' for _ in q[:-1]] + [f'1/{len(q)-1}'])
+	rhs = f'partials({args})'
+	return f'{lhs} = {rhs}'
+
+def unpack(field, name='phi'):
+	lhs = field.subspace.named_str.replace('1', 's')
+	return f'{lhs} = {name}'
+
 def test_xyz_term():
 	print()
 	algebra = Algebra.from_str('w+x+y+z+t-')
@@ -140,10 +153,11 @@ def test_xyz_term():
 	shape = (2, 32, 32, 32)
 	field = FieldSlice.from_subspace(algebra.subspace.even_grade(), shape)
 
+	print(partials(field))
 	# op = xyz_mass_term(field)
 	# print(op)
-	print(field.subspace)
-	print(geometric_to_str(field, xyz_mass_term(field)))
+	print(unpack(field))
+	print(geometric_to_str(field))#, xyz_mass_term(field)))
 
 
 

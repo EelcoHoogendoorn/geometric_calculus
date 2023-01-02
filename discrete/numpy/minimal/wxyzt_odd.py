@@ -6,12 +6,7 @@ from common import *
 
 quad = quadratic((32, 32, 32))
 metric_w = quad / 1.5
-
-edw, idw = ds(0, metric_w)
-edx, idx = ds(1)
-edy, idy = ds(2)
-edz, idz = ds(3)
-edt, idt = dt(1 / 4)
+(edw, idw), (edx, idx), (edy, idy), (edz, idz), (edt, idt) = partials(metric_w, 1, 1, 1, 1/4)
 
 def leapfrog(phi):
 	w, x, y, z, t, wxy, wxz, wyz, xyz, wxt, wyt, wzt, xyt, xzt, yzt, wxyzt = phi
@@ -33,8 +28,7 @@ def leapfrog(phi):
 	idt(wxyzt, +(+edw(xyz) - edx(wyz) + edy(wxz) - edz(wxy)))  # wxyz
 
 phi = (np.random.normal(size=(16, 2, 1, 1, 1)) * np.exp(-quad * 16)).astype(np.float32)
-phi -= phi.mean(1, keepdims=True)   # filter out lightlike modes
-filter_stationary(leapfrog, phi)    # filter non-propagating modes
-
+filter_lightlike(phi)
+filter_stationary(leapfrog, phi)
 color = lambda phi: np.abs(phi[-4:-1, :, 16]).mean(1)
 animate(leapfrog, color, phi)

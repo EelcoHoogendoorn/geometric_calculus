@@ -6,11 +6,7 @@ from common import *
 
 quad = quadratic((64, 64, 64))
 m = quad
-
-edx, idx = ds(0)
-edy, idy = ds(1)
-edz, idz = ds(2)
-edt, idt = dt(1/3)
+(edx, idx), (edy, idy), (edz, idz), (edt, idt) = partials(1, 1, 1, 1/3)
 
 def leapfrog(phi):
 	s,x,y,z,t,xy,xz,yz,xt,yt,zt,xyz,xyt,xzt,yzt,xyzt = phi

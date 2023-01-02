@@ -8,13 +8,10 @@ which produces qualitatively different bound states from a scalar potential
 from common import *
 
 quad = quadratic((64, 64))
-metric_w = .08#quad / 4
-metric_n = 1 - np.exp(-quad * 2) / 1.5
+mw = .08#quad / 4
+mx = my = mt = 1 - np.exp(-quad * 2) / 1.5
 
-edw, idw = ds(0, metric_w)
-edx, idx = ds(1, metric_n)
-edy, idy = ds(2, metric_n)
-edt, idt = dt(metric_n / 2)
+(edw, idw), (edx, idx), (edy, idy), (edt, idt) = partials(mw, mx, my, mt / 2)
 
 def leapfrog(phi):
 	wx, wy, xy, wt, xt, yt = phi
@@ -26,10 +23,7 @@ def leapfrog(phi):
 	idt(yt, -(+idw(wy) + idx(xy)))  # y
 
 phi = (np.random.normal(size=(6, 2, 1, 1)) * np.exp(-quad * 16)).astype(np.float32)
-phi -= phi.mean(1, keepdims=True)   # filter out lightlike modes
-filter_stationary(leapfrog, phi)    # filter non-propagating modes
-# filter_stationary(leapfrog, phi)
-# filter_stationary(leapfrog, phi)
-
+filter_lightlike(phi)
+filter_stationary(leapfrog, phi)
 color = lambda phi: np.abs(phi[[2, 4, 5]]).mean(1)
 animate(leapfrog, color, phi, 3)

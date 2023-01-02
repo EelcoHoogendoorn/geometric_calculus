@@ -8,15 +8,10 @@ does not manage to bind the initial excitation in this space.
 from common import *
 
 quad = quadratic((32, 32, 32))
-metric_w = 1#quad / 1.5
-m = quad * 2
+mw = 1#quad / 1.5
+m = quad * .2
 M = quad * 1
-
-edw, idw = ds(0, metric_w)
-edx, idx = ds(1)
-edy, idy = ds(2)
-edz, idz = ds(3)
-edt, idt = dt(1 / 4)
+(edw, idw), (edx, idx), (edy, idy), (edz, idz), (edt, idt) = partials(mw, 1, 1, 1, 1/4)
 
 def leapfrog(phi):
 	s, w, x, y, z, t, wx, wy, xy, wz, xz, yz, wt, xt, yt, zt, wxy, wxz, wyz, xyz, wxt, wyt, xyt, wzt, xzt, yzt, wxyz, wxyt, wxzt, wyzt, xyzt, wxyzt = phi
@@ -54,8 +49,7 @@ def leapfrog(phi):
 	idt(wxyzt, +(+edw(xyz) - edx(wyz) + edy(wxz) - edz(wxy) + m * interpolate(s, -1, -1, -1, -1) + M * wxyz))  # wxyz
 
 phi = (np.random.normal(size=(32, 2, 1, 1, 1)) * np.exp(-quad * 16)).astype(np.float32)
-phi -= phi.mean(1, keepdims=True)   # filter out lightlike modes
-filter_stationary(leapfrog, phi)    # filter non-propagating modes
-
+filter_lightlike(phi)
+filter_stationary(leapfrog, phi)
 color = lambda phi: np.abs(phi[2:5, :, 16]).mean(1)
 animate(leapfrog, color, phi)

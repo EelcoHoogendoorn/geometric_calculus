@@ -5,14 +5,9 @@ in the even subalgebra of w+x+y+z+t-, where w is a compact dimension
 from common import *
 
 quad = quadratic((32, 32, 32))
-metric_w = 1#quad / 1.5
-m = quad * 1
-
-edw, idw = ds(0, metric_w)
-edx, idx = ds(1)
-edy, idy = ds(2)
-edz, idz = ds(3)
-edt, idt = dt(1 / 3)
+mw = quad / 1.5
+m = quad * .1
+(edw, idw), (edx, idx), (edy, idy), (edz, idz), (edt, idt) = partials(mw, 1, 1, 1, 1 / 3)
 
 def leapfrog(phi):
 	(s, wx, wy, wz, xy, xz, yz, wxyz), (wt, xt, yt, zt, wxyt, wxzt, wyzt, xyzt) = phi
@@ -34,8 +29,7 @@ def leapfrog(phi):
 	idt(xyzt, -(+idw(wxyz) + edx(yz) - edy(xz) + edz(xy) - m * interpolate(s, 0, -1, -1, -1)))  # xyz
 
 phi = (np.random.normal(size=(2, 8, 2, 1, 1, 1)) * np.exp(-quad * 16)).astype(np.float32)
-phi -= phi.mean(2, keepdims=True)   # filter out lightlike modes
-filter_stationary(leapfrog, phi)    # filter non-propagating modes
-
+filter_lightlike(phi, 1)
+filter_stationary(leapfrog, phi)
 color = lambda phi: np.abs(phi[0, 1:4, :, 16]).mean(1)
 animate(leapfrog, color, phi)

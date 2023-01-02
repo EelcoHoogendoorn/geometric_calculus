@@ -3,18 +3,13 @@ for the equation geometric_derivative(phi) = m * phi * I * t = m * phi * xy,
 in the full algebra of x-y-t+
 
 We have been unable to find a configuration with nonzero mass term, that does not diverge.
-
 """
 from common import *
 
 quad = quadratic((64, 64))
 m = quad / 4
 M = quad / 2
-# m = 1 - np.exp(-quad*4)
-
-edx, idx = ds(0)
-edy, idy = ds(1)
-edt, idt = dt(1/4)
+(edx, idx), (edy, idy), (edt, idt) = partials(1, 1, 1/3)
 
 def leapfrog(phi):
 	s, x, y, xy, t, xt, yt, xyt = phi

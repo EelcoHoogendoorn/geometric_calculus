@@ -13,7 +13,7 @@ in spite of its intrinsic tendencies, the qualitative impression is that the t-m
 produces similar dynamics as the direct mass term for constant mass terms;
 not the unique dynamics observed with the spatial-speudoscalar mass term.
 
-Given spatial variable mass terms, the result are quite hopeless
+Given spatial variable mass terms, the result appear quite hopeless
 """
 import numpy as np
 import matplotlib.pyplot as plt

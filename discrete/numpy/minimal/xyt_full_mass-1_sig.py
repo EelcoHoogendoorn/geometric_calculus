@@ -8,12 +8,8 @@ Note that for opposing space-time signature, stable configurations do exist.
 from common import *
 
 quad = quadratic((64, 64))
-# m = 1 - np.exp(-quad / 4)
 m = quad
-
-edx, idx = ds(0)
-edy, idy = ds(1)
-edt, idt = dt(1/4)
+(edx, idx), (edy, idy), (edt, idt) = partials(1, 1, 1/3)
 
 def leapfrog(phi):
 	s, x, y, xy, t, xt, yt, xyt = phi
