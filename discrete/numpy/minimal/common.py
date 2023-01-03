@@ -64,10 +64,10 @@ def interpolate(phi, *axes):
 	return phi
 
 
-def animate(leapfrog, color, phi, unroll=1):
+def animate(leapfrog, color, phi, unroll=1, scale=1.3):
 	"""animate the given leapfrog scheme"""
 	c = color(phi)
-	cmax = np.percentile(c, 98) / 1.3
+	cmax = np.percentile(c, 98) / scale
 	color_scaled = lambda phi: np.clip(color(phi) / cmax, 0, 1).T
 
 	im = plt.imshow(color_scaled(phi), animated=True, interpolation='bilinear')

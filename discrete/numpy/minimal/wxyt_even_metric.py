@@ -1,16 +1,30 @@
 """Minimal self contained numpy example of the leapfrog scheme
 for the equation geometric_derivative(phi) = 0,
 where phi is an even grade field of w+x+y+t-, and w is a compact dimension
+
+This is a setup where the compact dimension is held constant,
+and the non-compact metrics have a strong distortion applied to them,
+whereby clocks inside the potential well, run at 20% of the speed of those outside.
+Arguably contrary to expectation, it seems one may trap the wave function to an arbitrary degree,
+no matter how low the mass term, by further (finite!) increases to the steepness of the metric distortion,
+despite the fact that this is still a fully linear setup, and there are no singularities involved.
+
+Note that our 20% compares to about 70% clock speed for the surface of a neutron star;
+so this setup is going well beyond those values.
+At the neutron star values, lightlike rays are still qualitatively very lightlike,
+and easily escape merely with some redshift.
+But there appears to be somewhat of a phase transition around the 30% value,
+where the majority of the wavefunction remains in a bound state in the potential.
 """
 from common import *
 
-quad = quadratic((64, 64))
-mw = quad / 4
-mx = my = mt = 1 - np.exp(-quad * 2) / 2
+quad = quadratic((128, 128))
+mw = 0.01#quad / 4
+mx = my = mt = 1 - np.exp(-quad * 3) * (1 - 0.2)
 (edw, idw), (edx, idx), (edy, idy), (edt, idt) = partials(mw, mx, my, mt / 2)
 
 def leapfrog(phi):
-	# print((phi / mt).sum())
+	# print((phi / mt).sum())   # this is a conserved quantity
 	s, wx, wy, xy, wt, xt, yt, wxyt = phi
 	edt(s, -(+idw(wt) + idx(xt) + idy(yt)))  # t
 	edt(wx, -(+edw(xt) - edx(wt) + idy(wxyt)))  # wxt
@@ -21,8 +35,8 @@ def leapfrog(phi):
 	idt(yt, -(+idw(wy) + idx(xy) + edy(s)))  # y
 	idt(wxyt, -(+edw(xy) - edx(wy) + edy(wx)))  # wxy
 
-phi = (np.random.normal(size=(8, 2, 1, 1)) * np.exp(-quad * 32)).astype(np.float64)
-filter_lightlike(phi)
-filter_stationary(leapfrog, phi, 2)
+phi = (np.random.normal(size=(8, 2, 1, 1)) * np.exp(-quad * 9**2)).astype(np.float64)
+# filter_lightlike(phi)
+filter_stationary(leapfrog, phi, 1)
 color = lambda phi: np.abs(phi[[3, 5, 6]]).mean(1)
-animate(leapfrog, color, phi, 3)
+animate(leapfrog, color, phi, 10, scale=0.9)
