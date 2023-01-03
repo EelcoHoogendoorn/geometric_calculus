@@ -5,16 +5,17 @@ where phi is an even grade field of w+x+y+t-, and w is a compact dimension
 This is a setup where the compact dimension is held constant,
 and the non-compact metrics have a strong distortion applied to them,
 whereby clocks inside the potential well, run at 20% of the speed of those outside.
-Arguably contrary to expectation, it seems one may trap the wave function to an arbitrary degree,
-no matter how low the mass term, by further (finite!) increases to the steepness of the metric distortion,
-despite the fact that this is still a fully linear setup, and there are no singularities involved.
+Note that one may trap the wave function to an arbitrary degree,
+no matter how low the mass term, by further increases to the steepness of the metric distortion.
 
 Note that our 20% compares to about 70% clock speed for the surface of a neutron star;
 so this setup is going well beyond those values.
 At the neutron star values, lightlike rays are still qualitatively very lightlike,
 and easily escape merely with some redshift.
 But there appears to be somewhat of a phase transition around the 30% value,
-where the majority of the wavefunction remains in a bound state in the potential.
+where the majority of the wavefunction remains in a bound state in the potential,
+and one might say they are 'within the Schwarzschild radius' of the metric distortion applied here,
+despite the fact that its a distortion without a singularity, not a Schwarzschild metric.
 """
 from common import *
 
