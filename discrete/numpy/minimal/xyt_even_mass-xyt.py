@@ -29,4 +29,4 @@ def leapfrog(phi):
 
 phi = np.random.normal(size=(4, 1, 1)) * np.exp(-quad * 32)
 color = lambda phi: np.abs(phi[1:])
-animate(leapfrog, color, phi)
+show_animation(leapfrog, color, phi)

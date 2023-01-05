@@ -23,4 +23,4 @@ phi = (np.random.normal(size=(8, 2, 1, 1)) * np.exp(-quad * 16)).astype(np.float
 filter_lightlike(phi)
 filter_stationary(leapfrog, phi, 3)
 color = lambda phi: np.abs(phi[4:7]).mean(1)
-animate(leapfrog, color, phi)
+show_animation(leapfrog, color, phi)

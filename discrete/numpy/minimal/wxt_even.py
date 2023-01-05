@@ -16,4 +16,4 @@ def leapfrog(phi):
 
 phi = np.random.normal(size=(4, 2, 1)) * np.exp(-quad * 32)
 color = lambda phi: np.abs(phi[1:]).mean(1)
-plot_xt(leapfrog, color, phi, 512, 3)
+show_xt(leapfrog, color, phi, 512, 3)

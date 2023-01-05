@@ -15,9 +15,7 @@ not the unique dynamics observed with the spatial-speudoscalar mass term.
 
 Given spatial variable mass terms, the result appear quite hopeless
 """
-import numpy as np
-import matplotlib.pyplot as plt
-import matplotlib.animation as animation
+from common import *
 
 if False:
 	def edt(lhs, rhs, m, ts, courant=0.33):
@@ -39,8 +37,7 @@ id = lambda d: lambda a: a - np.roll(a, shift=+1, axis=d)
 edx, edy, edw = [ed(d) for d in range(3)]
 idx, idy, idw = [id(d) for d in range(3)]
 
-x2 = np.linspace(-1, 1, 128) ** 2
-quad = np.add.outer(x2, x2) / 2
+quad = quadratic((128, 128))
 # m = quad
 m = 0.5
 
@@ -52,14 +49,5 @@ def leapfrog(phi):
 	idt(yt, +idx(xy) + edy(s), -m, -1)  # y
 
 phi = np.random.normal(size=(4, 1, 1)) * np.exp(-quad * 32)
-norm = np.linalg.norm(phi)
-color = lambda phi: np.clip((np.abs(phi[1:4])).T * 4, 0, 1)
-im = plt.imshow(color(phi), animated=True, interpolation='bilinear')
-def updatefig(*args):
-	leapfrog(phi)
-	# pin the squared norm of the solution
-	phi[...] /= np.linalg.norm(phi) / norm
-	im.set_array(color(phi))
-	return im,
-ani = animation.FuncAnimation(plt.gcf(), updatefig, interval=10, blit=True)
-plt.show()
+color = lambda phi: np.abs(phi[1:])
+show_animation(leapfrog, color, phi)

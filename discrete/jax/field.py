@@ -37,12 +37,12 @@ class Field(AbstractField):
 	def dual(self):
 		# FIXME: create unary op for this?
 		op = self.algebra.operator.dual(self.subspace)
-		arr = jnp.einsum('oc,c...->o...', op.kernel, self.arr, out=self.arr)
+		arr = jnp.einsum('oc,c...->o...', op.kernel, self.arr)
 		return self.copy(subspace=op.subspace, arr=arr)
 	def reverse(self):
 		# FIXME: create unary op for this?
 		op = self.algebra.operator.reverse(self.subspace)
-		arr = jnp.einsum('oc,c...->o...', op.kernel, self.arr, out=self.arr)
+		arr = jnp.einsum('oc,c...->o...', op.kernel, self.arr)
 		return self.copy(subspace=op.subspace, arr=arr)
 
 	def copy(self, arr=None, subspace=None):
@@ -56,11 +56,22 @@ class Field(AbstractField):
 			assert self.subspace == other.subspace
 			return self.copy(self.arr + other.arr)
 		return self.copy(self.arr + other)
-	def __mul__(self, other):
+	def __sub__(self, other):
 		if isinstance(other, type(self)):
 			assert self.subspace == other.subspace
+			return self.copy(self.arr - other.arr)
+		return self.copy(self.arr - other)
+	def __mul__(self, other):
+		if isinstance(other, type(self)):
+			# user discretion is advised!
+			# assert self.subspace == other.subspace
 			return self.copy(self.arr * other.arr)
 		return self.copy(self.arr * other)
+	def __truediv__(self, other):
+		if isinstance(other, type(self)):
+			assert other.subspace.equals.scalar()
+			return self.copy(self.arr / other.arr)
+		return self.copy(self.arr / other)
 
 	def restrict(self, subspace):
 		op = self.subspace.algebra.operator.restrict(self.subspace, subspace)

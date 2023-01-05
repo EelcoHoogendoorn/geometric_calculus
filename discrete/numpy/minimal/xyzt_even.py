@@ -23,4 +23,4 @@ def leapfrog(phi):
 phi = np.random.normal(size=(8, 1, 1, 1)) * np.exp(-quad * 32)
 filter_stationary(leapfrog, phi)
 color = lambda phi: np.abs(phi[1:4, 32])
-animate(leapfrog, color, phi)
+show_animation(leapfrog, color, phi)

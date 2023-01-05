@@ -7,9 +7,10 @@ This configuration produces some of its own interesting dynamics
 from common import *
 
 quad = quadratic((64, 64))
-mv = 0.1
-mw = quad / 2
+mv = 0.4
+mw = 0.+quad / 2
 (edv, idv), (edw, idw), (edx, idx), (edy, idy), (edt, idt) = partials(mv, mw, 1, 1, 1/3)
+quad = quadratic((64, 64), [0.3, 0.3])
 
 def leapfrog(phi):
 	s, vw, vx, wx, vy, wy, xy, vt, wt, xt, yt, vwxy, vwxt, vwyt, vxyt, wxyt = phi
@@ -35,4 +36,4 @@ filter_lightlike(phi, 0)
 filter_lightlike(phi, 1)
 filter_stationary(leapfrog, phi, 3)
 color = lambda phi: np.abs(phi[[6, 8, 9]]).mean((1, 2))
-animate(leapfrog, color, phi)
+show_animation(leapfrog, color, phi)

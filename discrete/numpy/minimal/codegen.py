@@ -163,8 +163,8 @@ def test_xyz_term():
 
 def test_vwxyt_term():
 	print()
-	algebra = Algebra.from_str('v+w+x+y+t-')
-	shape = (2, 2, 32, 32)
+	algebra = Algebra.from_str('w+x+t-')
+	shape = (2, 32)
 	field = FieldSlice.from_subspace(algebra.subspace.even_grade(), shape)
 
 	print(partials(field))
@@ -178,12 +178,13 @@ def test_vwxyt_term():
 
 def test_xyt_full_sps():
 	print()
-	algebra = Algebra.from_str('w+x+y+t-')
+	algebra = Algebra.from_str('x+y+t-')
 	# algebra = Algebra.from_str('x-y-t+')
-	shape = (2, 32, 32)
-	field = FieldSlice.from_subspace(algebra.subspace.even_grade(), shape)
-	print(field.subspace)
-	print(geometric_to_str(field, sps_mass_term(field)))
+	shape = (32, 32)
+	field = FieldSlice.from_subspace(algebra.subspace.full(), shape)
+	print(partials(field))
+	print(unpack(field))
+	print(geometric_to_str(field, direct_mass_term(field)))
 
 def test_xt_full_sps():
 	print()
