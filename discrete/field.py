@@ -1,0 +1,186 @@
+import numpy as np
+
+import os
+import imageio.v3 as iio
+
+
+class AbstractField:
+	"""Field without specific array backing storage, just doing symbolic manipulation"""
+	def __init__(self, subspace, domain=None):
+		self.subspace = subspace
+		self.algebra = subspace.algebra
+		self.domain = self.algebra.subspace.vector() if domain is None else domain
+
+	@property
+	def components(self):
+		return len(self.subspace)
+	@property
+	def dimensions(self):
+		return len(self.domain)
+	@property
+	def shape(self):
+		return self.arr.shape[1:]
+
+	def process_op(self, op):
+		"""preprocess operator into easily consumable partial derivative terms"""
+		from collections import namedtuple
+		Term = namedtuple('Term', ['contraction', 'e', 'e_idx', 'd', 'd_idx', 'f', 'f_idx', 'sign'])
+		domain = self.domain.named_str.split(',')
+		field = self.subspace.named_str.replace('1', 's').split(',')
+		output = op.subspace.named_str.replace('1', 's').upper().split(',')
+
+		return tuple([
+			(eqi, tuple([
+				Term(
+					contraction=int(domain[di] in field[fi]),
+					e=output[eqi],
+					e_idx=int(eqi),
+					d=domain[di],
+					d_idx=int(di),
+					f=field[fi],
+					f_idx=int(fi),
+					sign=int(op.kernel[di, fi, eqi]),
+				)
+				for di, fi in zip(*np.nonzero(op.kernel[..., eqi]))
+			]))
+			for eqi in range(len(op.subspace))
+		])
+
+	def term_to_str(self) -> str:
+		"""String representation of a partial derivative term"""
+		# domain = self.domain.named_str.split(',')
+		# field = self.subspace.named_str.replace('1', 's').split(',')
+		sign = {-1: '-', +1: '+'}
+		ei = {0: 'e', 1: 'i'}
+		def inner(t):
+			return f'{sign[t.sign]}{ei[t.contraction]}d{t.d}({t.f})'
+		return inner
+
+	def operator_to_str(self, op) -> str:
+		"""textual version of a derivative operator"""
+		output = op.subspace.named_str.replace('1', 's').upper().split(',')
+		term_to_str = self.term_to_str()
+		return '\n'.join([
+			f'{output[eq_idx]} = ' + ''.join([term_to_str(term) for term in eq])
+			for eq_idx, eq in self.process_op(op)
+		])
+
+	def geometric_to_str(self):
+		return self.operator_to_str(self.algebra.operator.geometric_product(self.domain, self.subspace))
+
+	def exterior_to_str(self):
+		return self.operator_to_str(self.algebra.operator.outer_product(self.domain, self.subspace))
+
+	def interior_to_str(self):
+		return self.operator_to_str(self.algebra.operator.inner_product(self.domain, self.subspace))
+
+
+	# utility functions
+	def meshgrid(self):
+		xs = [np.linspace(-1, 1, s, endpoint=False) for s in self.shape]
+		c = np.array(np.meshgrid(*xs, indexing='ij'))
+		# from discrete.util import deltas
+		# d = deltas(self.subspace, self.algebra.subspace.scalar())
+		return c    # FIXME: add version with per element offset
+
+	def quadratic(self, sigma=1, location=0):
+		x = (self.meshgrid().T - location)
+		return ((x ** 2) / np.array(sigma)**2).sum(axis=-1).T
+
+	def gauss(self, sigma=0.1, location=0):
+		return np.exp(-self.quadratic(np.array(sigma), np.array(location)))
+
+	def smooth_noise(self, sigma):
+		arr = np.random.normal(size=self.arr.shape)
+		import scipy
+		s = [0] * arr.ndim
+		s[1:] = sigma
+		arr = scipy.ndimage.gaussian_filter(arr, sigma=s, mode='wrap')
+		return self.copy(arr=arr)
+
+	def random_gaussian(self, sigma, location=0, seed=None):
+		"""initialize a field with a random gaussian"""
+		if seed:
+			np.random.seed(seed)
+		gauss = self.gauss(np.array(sigma), np.array(location))
+		vec = np.random.normal(size=(self.components,))
+		vec = vec / np.linalg.norm(vec)
+		q = np.einsum('c, ...->c...', vec, gauss)
+		return self.copy(arr=q)
+
+	def upscale_array(self, arr, nums):
+		import scipy.signal
+		for i, s in enumerate(arr.shape):
+			if nums[i] > 1:
+				arr = scipy.signal.resample(arr, num=s*nums[i], axis=i)
+		return arr
+
+	def upscale(self, s=None):
+		if s is None:
+			s = [2]*self.dimensions
+		return self.copy(arr=self.upscale_array(self.arr, [1]+s))
+
+
+	# visualization functions
+
+	def write_animation_base(self, image, components, basepath='.', pre='', post='', gamma=True, anim=True):
+		basename = '_'.join([pre, str(self.shape), self.algebra.description.description_str, self.subspace.pretty_str, components, post])
+		basename = basename.replace(" ", '')
+		os.makedirs(basepath, exist_ok=True)
+
+		def tonemap(image):
+			# image = np.abs(image)
+			if gamma:
+				image = np.sqrt(image)
+			scale = np.percentile(image.flatten(), 99)
+			image = np.clip(image / scale * 255, 0, 255).astype(np.uint8)
+			return image
+
+		if image.ndim == 4:
+			if anim:
+				iio.imwrite(os.path.join(basepath, basename + '_anim.gif'), tonemap(image))
+			iio.imwrite(os.path.join(basepath, basename + '_xt.gif'), tonemap(image[::-1, image.shape[1] // 2]))
+		elif image.ndim == 3:
+			iio.imwrite(os.path.join(basepath, basename + '_xt.gif'), tonemap(image[::-1]))
+		else:
+			raise
+
+	def write_animation(self, selector, components, **kwargs):
+		def get_components(f, components):
+			"""sample field components as a numpy array, with field components last, for rendering"""
+			return np.moveaxis(getattr(f, components), 0, -1)
+		def to_animation(components):
+			image = selector(get_components(self, components))
+			return np.moveaxis(image, -2, 0)  # t first
+		image = to_animation(components)
+		self.write_animation_base(image, components, **kwargs)
+
+	def write_gif_1d(self, **kwargs):
+		def selector(arr):
+			return np.abs(arr)
+		self.write_animation(selector, **kwargs)
+	def write_gif_2d(self, **kwargs):
+		def selector(arr):
+			return np.abs(arr)
+		self.write_animation(selector, **kwargs)
+	def write_gif_2d_compact(self, **kwargs):
+		def selector(arr):
+			return np.abs(arr).mean(0)
+		self.write_animation(selector, **kwargs)
+	def write_gif_3d(self, **kwargs):
+		def selector(arr):
+			mid = lambda a: a[a.shape[0] // 2]
+			return mid(np.abs(arr))
+		self.write_animation(selector, **kwargs)
+	def write_gif_3d_compact(self, **kwargs):
+		def selector(arr):
+			return np.abs(arr).mean(0)
+		self.write_animation(selector, **kwargs)
+	def write_gif_4d_compact(self, **kwargs):
+		def selector(arr):
+			mean = lambda a: a.mean(0)
+			mid = lambda a: a[a.shape[0] // 2]
+			return mid(mean(np.abs(arr)))
+		self.write_animation(selector, **kwargs)
+
+

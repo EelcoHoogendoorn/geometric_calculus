@@ -1,0 +1,28 @@
+[tool.poetry]
+name = "geometric_calculus"
+version = "0.1.0"
+description = "Geometric Calculus over discrete and continuous fields"
+authors = ["Eelco Hoogendoorn <hoogendoorn.eelco@gmail.com>"]
+license = "Copy-Left-Academic"
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.10"
+numpy = "^1.2"
+numga = { git = "https://github.com/EelcoHoogendoorn/numga.git" }
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^7"
+jax = "^0.3.25"
+jaxlib = "*"
+optax = "*"
+flax = "*"
+einops = "*"
+imageio = "*"
+matplotlib = "*"
+pyopencl = "*"
+loopy = "*"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
